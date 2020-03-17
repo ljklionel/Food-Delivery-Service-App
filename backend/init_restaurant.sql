@@ -6,7 +6,7 @@ CREATE TABLE RestaurantStaffs (
 DROP TABLE IF EXISTS Restaurants;
 CREATE TABLE Restaurants (
     rname VARCHAR(64) PRIMARY KEY,
-    minSpending FLOAT
+    minSpending FLOAT NOT NULL
 );
 
 DROP TABLE IF EXISTS WorksAt;
@@ -18,11 +18,11 @@ CREATE TABLE WorksAt (
 
 DROP TABLE IF EXISTS Promotions;
 CREATE TABLE Promotions (
-    promoId SERIAL, 
+    promoId VARCHAR(64), 
     rname VARCHAR(64) REFERENCES Restaurants ON DELETE CASCADE,
-    startDate DATE,
-    endDate DATE,
-    discount NUMERIC(2,2),
+    startDate DATE NOT NULL,
+    endDate DATE NOT NULL,
+    discount NUMERIC(4,2) NOT NULL,
     PRIMARY KEY (promoId, rname)
 );
 
@@ -41,8 +41,8 @@ DROP TABLE IF EXISTS Sells;
 CREATE TABLE Sells (
     fname VARCHAR(64) REFERENCES Food,
     rname VARCHAR(64) REFERENCES Restaurants,
-    avail INTEGER,
-    maxLimit INTEGER,
-    price FLOAT,
+    avail INTEGER NOT NULL,
+    maxLimit INTEGER NOT NULL,
+    price FLOAT NOT NULL,
     PRIMARY KEY (fname, rname)
 );
