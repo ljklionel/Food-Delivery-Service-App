@@ -18,5 +18,5 @@ CREATE TABLE FDSPromotions (
     endDate DATE NOT NULL,
     discount NUMERIC(4,2) NOT NULL,
 	promoDescription VARCHAR(64),
-	createdBy VARCHAR(64) REFERENCES FDSManagers
+	createdBy VARCHAR(64) NOT NULL REFERENCES FDSManagers
 );
