@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS DeliveryRiders;
-CREATE TABLE Riders (
+CREATE TABLE DeliveryRiders (
     username VARCHAR(64) PRIMARY KEY REFERENCES Users ON DELETE CASCADE, 
     salary INTEGER;
 );
