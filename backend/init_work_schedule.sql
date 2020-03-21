@@ -1,56 +1,3 @@
-DROP TABLE IF EXISTS DeliveryRiders;
-CREATE TABLE DeliveryRiders (
-    username VARCHAR(64) PRIMARY KEY REFERENCES Users ON DELETE CASCADE, 
-    salary INTEGER;
-);
-
-DROP TABLE IF EXISTS PartTimers;
-CREATE TABLE PartTimers (
-    username VARCHAR(64) PRIMARY KEY REFERENCES Riders ON DELETE CASCADE,
-    workHours INTEGER,
-);
-
-DROP TABLE IF EXISTS FullTimers;
-CREATE TABLE FullTimers (
-    username VARCHAR(64) PRIMARY KEY REFERENCES Riders ON DELETE CASCADE,
-);
-
-DROP TABLE IF EXISTS PartTimeShifts;
-CREATE TABLE PartTimeShifts (
-    workDay INTEGER,
-    startHour INTEGER,
-    endHour INTEGER,
-    workHours INTEGER NOT NULL,
-    PRIMARY KEY (startHour, endHour, workDay),
-);
-
-DROP TABLE IF EXISTS FullTimeShifts;
-CREATE TABLE FullTimeShifts (
-    workDay INTEGER,
-    startHour INTEGER,
-    endHour INTEGER,
-    breakStart INTEGER NOT NULL,
-    PRIMARY KEY (workDay, startHour, endHour),
-);
-
-DROP TABLE IF EXISTS MonthlyWorkSched;
-CREATE TABLE MonthlyWorkSched (
-    username VARCHAR(64) REFERENCES FullTimers ON DELETE CASCADE,
-    workDay INTEGER REFERENCES FullTimeShifts,
-    startHour INTEGER REFERENCES FullTimeShifts,
-    endHour INTEGER REFERENCES FullTimeShifts,
-    PRIMARY KEY (username, workDay, startHour, endHour),
-);
-
-DROP TABLE IF EXISTS WeeklyWorkSched;
-CREATE TABLE WeeklyWorkSched (
-    username VARCHAR(64) REFERENCES PartTimers ON DELETE CASCADE,
-    workDay INTEGER REFERENCES PartTimeShifts,
-    startHour INTEGER REFERENCES PartTimeShifts,
-    endHour INTEGER REFERENCES PartTimeShifts,
-    PRIMARY KEY (username, workDay, startHour, endHour),
-);
-
 CREATE OR REPLACE FUNCTION check_total_hours_trigger () RETURNS TRIGGER AS $$
 DECLARE
     totalHours INTEGER;
@@ -107,14 +54,14 @@ CREATE CONSTRAINT TRIGGER part_time_break_check
 DROP TRIGGER IF EXISTS update_hours_part_time ON WeeklyWorkSched CASCADE;
 CREATE CONSTRAINT TRIGGER update_hours_part_time
     AFTER UPDATE OF username, workDay,startHour, endHour OR INSERT ON WeeklyWorkSched
-    DEFERRABLE INITIALLY DEFERED
+    DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW
     EXECUTE FUNCTION update_hours_part_time();
 
 DROP TRIGGER IF EXISTS check_total_hours_trigger ON PartTimers CASCADE;
 CREATE CONSTRAINT TRIGGER check_total_hours_trigger
     AFTER UPDATE OF username, workHours ON PartTimers
-    DEFERRABLE INITIALLY DEFERED
+    DEFERRABLE INITIALLY DEFERRED
     FOR EACH ROW
     EXECUTE FUNCTION check_total_hours_trigger();
     
