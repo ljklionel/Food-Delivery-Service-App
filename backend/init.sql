@@ -23,9 +23,10 @@ DROP TABLE IF EXISTS ContainsFood CASCADE;
 
 CREATE TABLE Users (
 	username VARCHAR(64) PRIMARY KEY,
-	hashedPassword VARCHAR(128) NOT NULL,
+	hashedPassword VARCHAR(64) NOT NULL,
 	phoneNumber VARCHAR(12) NOT NULL,
-	name VARCHAR(64) NOT NULL
+	firstName VARCHAR(64) NOT NULL,
+	lastName VARCHAR(64) NOT NULL
 );
 
 -- FDS MANAGERS --
@@ -235,5 +236,3 @@ AFTER DELETE OR UPDATE of orderid ON ContainsFood deferrable initially deferred
 FOR EACH ROW
 EXECUTE FUNCTION
 total_participation_orders_wrt_containsfood();
-
-

@@ -1,26 +1,14 @@
 import React from 'react';
-import axios from 'axios';
+import 'semantic-ui-css/semantic.min.css'
 import './App.css';
+import Main from './Main.js'
 
 class App extends React.Component {
-
-  async componentDidMount() {
-    // Load async data.
-    // Update state with new data.
-    // Re-render our component.
-    try {
-      const response = await axios.get('.');
-      console.log('👉 Returned data:', response);
-    } catch (e) {
-      console.log(`😱 Axios request failed: ${e}`);
-    }
-  }
-
 
   render() {
     return (
       <div className="App">
-        hello world
+        <Main />
       </div>
     );
   }
