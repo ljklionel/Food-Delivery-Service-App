@@ -1,44 +1,83 @@
 import React from 'react';
-import { List, Segment, Grid, Button, Image, Form, Divider, Header, Loader, Card } from 'semantic-ui-react';
-import { Link, Redirect } from 'react-router-dom';
+import { Grid, Image, Header, Loader, Card } from 'semantic-ui-react';
 import RestaurantSearch from '../../components/staffs/RestaurantSearch.js'
+import myAxios from '../../webServer.js'
 
 class StaffDashboard extends React.Component {
   constructor() {
     super()
-    this.state = {isLoading: false, currentRestaurant: 'abc'}
+    this.state = {isLoadingRestaurantList: true, 
+      isLoadingRestaurant: true, 
+      restaurantList: null, 
+      currentRestaurant: null}
   }
 
   async componentDidMount() {
     // Load async data.
     // Update state with new data.
     // Re-render our component.
-   
+    myAxios.get('/my_restaurants')
+    .then(response => {
+      console.log(response);
+      const list = []
+      response.data.result.forEach(element => {
+        list.push(element[0])
+      });
+      this.setState({restaurantList: list,
+        currentRestaurant: list ? list[0] : null,
+        isLoadingRestaurantList: false,
+        isLoadingRestaurant: false})
+    })
+    .catch(error => {
+      console.log(error);
+    });
   } 
 
+
   workRestaurantList() {
+    if (this.state.isLoadingRestaurantList) {
+      return <Loader size='massive' active/>
+    }
     const headerStyle = {
       fontSize:'28px'
     }
-    const itemStyle = {
-      fontSize: '32px',
+    
+    const colors = ['red','orange','yellow','olive','green','teal','blue','violet','purple','pink','brown','grey','black']
+    const random_color = () => colors[Math.floor(Math.random() * colors.length)]
+
+    const onJoinRestaurant = (rest) => {
+      const update = {}
+      this.state.restaurantList.push(rest)
+      update.restaurantList = this.state.restaurantList
+      if (this.state.currentRestaurant == null) {
+        update.currentRestaurant = rest
+      }
+      this.setState(update)
     }
+
     return (
       <div>
         <Header style={headerStyle}><i>Your Restaurants</i></Header>
         <br/>
         <Card.Group>
-          <Card as='a' fluid color='red' header='KFC' />
-          <Card as='a' fluid color='orange' header='Pines' />
-          <Card as='a' fluid color='yellow' header='The Deck' />
+          {this.state.restaurantList.map((rest) => (
+            <Card as='a' 
+              key={rest}
+              onClick={() => {this.setState({currentRestaurant: rest})}} 
+              fluid 
+              color={random_color()} 
+              header={rest} />
+          ))}
         </Card.Group>
+        <br/><br/>
+        <RestaurantSearch whenjoin={onJoinRestaurant} />
       </div>
       
     )
   }
 
   restaurantContent() {
-    if (this.state.isLoading) {
+    if (this.state.isLoadingRestaurant) {
       return (
         <Loader size='massive' active/>
       );
@@ -46,22 +85,8 @@ class StaffDashboard extends React.Component {
 
     if (this.state.currentRestaurant) {
      return (
-       <Grid celled style={{height: '100vh'}}>
-        <Grid.Row style={{height: '30%'}}>
-          <Grid.Column style={{width:'60%'}}>
-            123
-          </Grid.Column>
-          <Grid.Column style={{width:'40%'}}>
-            456
-          </Grid.Column>
-        </Grid.Row>
-
-        <Grid.Row style={{height: '70%'}}>
-          <Grid.Column width={10000}>
-            123
-          </Grid.Column>
-        </Grid.Row>
-      </Grid>);
+      <p>{this.state.currentRestaurant}</p>
+      );
     } else {
       return (
         <div>
@@ -76,15 +101,12 @@ class StaffDashboard extends React.Component {
   render() {
     return (
       <Grid celled style={{height: '100vh'}}>
-        <Grid.Column centered style={{width: '82%', background: '#edf8ff'}}>
+        <Grid.Column style={{width: '82%', background: '#edf8ff'}}>
           {this.restaurantContent()}
         </Grid.Column>
 
         <Grid.Column style={{width: '18%'}}>
           {this.workRestaurantList()}
-          <br/><br/>
-          
-          <RestaurantSearch />
         </Grid.Column>
       </Grid>
     );

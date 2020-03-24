@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types'
 import _ from 'lodash'
 import React, { Component } from 'react'
-import { Search, Grid, Button, Header, Label } from 'semantic-ui-react'
+import { Search, Grid } from 'semantic-ui-react'
 import myAxios from '../../webServer.js'
 
 const initialState = { isLoading: false, results: [], value: '' }
@@ -18,6 +17,9 @@ class RestaurantSearch extends Component {
       })
       .then(response => {
         console.log(response);
+        if (response.data.ok) {
+            this.props.whenjoin(result.title)
+        }
       })
       .catch(error => {
         console.log(error);

@@ -4,7 +4,7 @@ from db import get_db, close_db
 import psycopg2
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager, login_user, current_user
+from flask_login import LoginManager, login_user, current_user, login_required
 from user import User
 
 app = Flask(__name__)
@@ -98,23 +98,34 @@ def get_restaurants():
     return ({'result': result}, 200)
 
 @app.route("/join_restaurant", methods=['POST'])
+@login_required
 def join_restaurant():
     username = current_user.get_id()
     data = request.json
     rname = data['restaurant']
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT 1 FROM WorksAt WHERE rname = '%s' AND username = '%s';" % (rname, username))
+    cursor.execute("SELECT 1 FROM WorksAt WHERE rname = %s AND username = %s;", (rname, username))
     result = cursor.fetchone()
     if result:
         return ({'ok': 0, 'msg': '%s already works at %s' % (username, rname)}, 200)
 
     cursor = conn.cursor()
     cursor.execute("BEGIN;")
-    cursor.execute("INSERT INTO WorksAt(rname, username) VALUES ('%s', '%s');" % (rname, username))
+    cursor.execute("INSERT INTO WorksAt(rname, username) VALUES (%s, %s);", (rname, username))
     cursor.execute("COMMIT;")
 
     return ({'ok': 1, 'msg': '%s now works at %s!' % (username, rname)}, 200)
+
+@app.route("/my_restaurants")
+@login_required
+def get_my_restaurants():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT rname FROM WorksAt WHERE username = '%s';" % username)
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
 
 if __name__ == '__main__':
     app.run()

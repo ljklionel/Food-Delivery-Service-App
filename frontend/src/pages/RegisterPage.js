@@ -1,7 +1,7 @@
 import React from 'react';
 import queryString from 'query-string'
 import AppLogo from '../components/AppLogo.js'
-import { Link, Redirect, browserHistory } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 import { Button, Form, Grid, Message, Segment, Image, Header } from 'semantic-ui-react'
 import myAxios from '../webServer.js'
 
