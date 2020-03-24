@@ -1,6 +1,6 @@
 import React from 'react';
 
-class DriverDashboard extends React.Component {
+class RiderDashboard extends React.Component {
 
   async componentDidMount() {
     // Load async data.
@@ -11,10 +11,10 @@ class DriverDashboard extends React.Component {
   render() {
     return (
       <div>
-        <h1>Driver Dashboard</h1>
+        <h1>Rider Dashboard</h1>
       </div>
     );
   }
 }
 
-export default DriverDashboard;
+export default RiderDashboard;
