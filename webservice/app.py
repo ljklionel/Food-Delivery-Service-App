@@ -25,7 +25,7 @@ roles_dict = {
 def load_user(id):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT 1 FROM Users WHERE username='%s'" % id)
+    cursor.execute("SELECT 1 FROM Users WHERE username='%s';" % id)
     res = cursor.fetchone()
     return User(id) if res else None
 
@@ -68,14 +68,14 @@ def signin():
     conn = get_db()
 
     cursor1 = conn.cursor()
-    cursor1.execute("SELECT 1 FROM %s WHERE username='%s'" % (roles_dict[role], username)) # check if role is correct
+    cursor1.execute("SELECT 1 FROM %s WHERE username='%s';" % (roles_dict[role], username)) # check if role is correct
     result1 = cursor1.fetchone()
 
     if not result1:
         return not_ok
 
     cursor2 = conn.cursor()
-    cursor2.execute("SELECT hashedPassword FROM Users WHERE username='%s'" % (username)) # check if password is correct
+    cursor2.execute("SELECT hashedPassword FROM Users WHERE username='%s';" % (username)) # check if password is correct
     result2 = cursor2.fetchone()
     pw_hash = result2[0]
 
@@ -87,6 +87,34 @@ def signin():
         return not_ok
 
     return ok
+
+@app.route("/restaurants")
+def get_restaurants():
+    keyword = request.args.get('keyword')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT rname FROM Restaurants WHERE rname ILIKE '%s%%';" % keyword)
+    result = cursor.fetchmany(10)
+    return ({'result': result}, 200)
+
+@app.route("/join_restaurant", methods=['POST'])
+def join_restaurant():
+    username = current_user.get_id()
+    data = request.json
+    rname = data['restaurant']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM WorksAt WHERE rname = '%s' AND username = '%s';" % (rname, username))
+    result = cursor.fetchone()
+    if result:
+        return ({'ok': 0, 'msg': '%s already works at %s' % (username, rname)}, 200)
+
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("INSERT INTO WorksAt(rname, username) VALUES ('%s', '%s');" % (rname, username))
+    cursor.execute("COMMIT;")
+
+    return ({'ok': 1, 'msg': '%s now works at %s!' % (username, rname)}, 200)
 
 if __name__ == '__main__':
     app.run()

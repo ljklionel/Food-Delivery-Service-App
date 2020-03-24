@@ -180,9 +180,9 @@ CREATE TABLE ContainsFood (
 
 ----- INSERT DATA -----
 
+\COPY Restaurants(rname, minSpending) FROM './csv/restaurants.csv' CSV HEADER;
 \COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
 \COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
-
 
 
 ------ TRIGGERS ------

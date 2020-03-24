@@ -5,9 +5,9 @@ class RiderDashboard extends React.Component {
   async componentDidMount() {
     // Load async data.
     // Update state with new data.
-    // Re-render our component.
-   
+    // Re-render our component. 
   } 
+  
   render() {
     return (
       <div>
