@@ -5,7 +5,7 @@ import myAxios from '../../webServer.js'
 class AddPromoModal extends Component {
     render() {
         return (
-        <Modal trigger={<Button fluid basic>View All</Button>}>
+        <Modal trigger={<Button fluid basic>Add</Button>}>
             <Modal.Header>Add Promotion</Modal.Header>
             <Modal.Content image>
             <Image wrapped size='medium' src='/images/avatar/large/rachel.png' />
