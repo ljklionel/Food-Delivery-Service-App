@@ -5,6 +5,7 @@ import MenuList from '../../components/staffs/MenuList.js'
 import OrderList from '../../components/staffs/OrderList.js'
 import MonthlySummary from '../../components/staffs/MonthlySummary.js'
 import myAxios from '../../webServer.js'
+import PromoList from '../../components/staffs/PromoList.js';
 
 class StaffDashboard extends React.Component {
   constructor() {
@@ -96,7 +97,7 @@ class StaffDashboard extends React.Component {
         <div>
           <Header textAlign='left' style={{fontSize:'60px'}}>{this.state.currentRestaurant}</Header>
           <br/><br/>
-          <Grid columns={3}>
+          <Grid columns={4}>
             <Grid.Column>
               <MenuList restaurant={this.state.currentRestaurant}/>
             </Grid.Column>
@@ -106,6 +107,11 @@ class StaffDashboard extends React.Component {
 
             <Grid.Column>
               <MonthlySummary restaurant={this.state.currentRestaurant}/>
+            </Grid.Column>
+
+
+            <Grid.Column>
+              <PromoList restaurant={this.state.currentRestaurant}/>
             </Grid.Column>
           </Grid>
           

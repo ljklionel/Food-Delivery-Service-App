@@ -2,30 +2,28 @@ import React, { Component } from 'react'
 import { Grid, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
 
-class OrderList extends Component {
+class PromoList extends Component {
 
     constructor(props) {
         super(props)
         this.state = {
             isLoading: true,
-            orders: [],
+            promotions: [],
             currentRestaurant: props.restaurant
         }
-        this.updateMenu(props.restaurant)
+        this.updatePromo(props.restaurant)
     }
 
-    updateMenu(rname) {
-        myAxios.get('/restaurant_orders', {
+    updatePromo(rname) {
+        myAxios.get('/ongoing_restaurant_promo', {
           params: {
-              restaurant: rname,
-              limit: 20,
-              offset: 0
+              restaurant: rname
           }
         })
         .then(response => {
           console.log(response);
           this.setState({
-            orders: response.data.result,
+            promotions: response.data.result,
             isLoading: false
           })
         })
@@ -39,59 +37,60 @@ class OrderList extends Component {
           currentRestaurant: nextProps.restaurant,
           isLoading: true 
       });  
-      this.updateMenu(nextProps.restaurant)
+      this.updatePromo(nextProps.restaurant)
     }
     
 
     render() {
         if (this.state.isLoading) {
-          return null//<Loader active/>
+            return null// <Loader active/>
         }
         var content
-        if (this.state.orders.length == 0) {
-          content = <p><i>No orders yet!</i></p>
+        if (this.state.promotions.length == 0) {
+          content = <p><i>No ongoing promotions.</i></p>
         } else {
           content = (
             <Table basic='very' celled>
                   <Table.Header>
                   <Table.Row>
-                      <Table.HeaderCell>Item</Table.HeaderCell>
-                      <Table.HeaderCell>Quantity</Table.HeaderCell>
-                      <Table.HeaderCell>Time</Table.HeaderCell>
+                      <Table.HeaderCell>ID</Table.HeaderCell>
+                      <Table.HeaderCell>End</Table.HeaderCell>
+                      <Table.HeaderCell>Orders</Table.HeaderCell>
                   </Table.Row>
                   </Table.Header>
                   <Table.Body>
-                  {this.state.orders.map((item) => (
+                  {this.state.promotions.map((item) => (
                       <Table.Row key={item[0]}>
                           <Table.Cell>
                               {item[0]}
                           </Table.Cell>
                           <Table.Cell>
-                              {item[1]}
+                              {item[1].substring(0,11)}
                           </Table.Cell>
                           <Table.Cell>
-                              {item[2].substring(17,22)}
+                              {item[2]}
                           </Table.Cell>
                       </Table.Row>
                   ))}
                   </Table.Body>
               </Table>
-          );
+          )
         }
         return (
-          <Card color='yellow' style={{maxWidth: 250}}>
+          <Card color='blue' style={{maxWidth: 250}}>
             <Card.Content>
-              <Card.Header>Today's Order</Card.Header>
+              <Card.Header>Ongoing Promotions</Card.Header>
             </Card.Content>
             <Card.Content>
               {content}
             </Card.Content>
             <Card.Content>
-              <Button fluid basic>View All</Button>
+                <Button fluid basic style={{marginBottom:'8px'}}>View All</Button>
+                <Button fluid basic>Add</Button>
             </Card.Content>
           </Card>
         )
     }
 }   
 
-export default OrderList;
+export default PromoList;

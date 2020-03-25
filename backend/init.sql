@@ -67,6 +67,7 @@ CREATE TABLE Promotions (
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
     discount NUMERIC(4,2) NOT NULL,
+    description VARCHAR(128) DEFAULT '',
     PRIMARY KEY (promoId, rname)
 );
 
@@ -148,7 +149,7 @@ CREATE TABLE Customers (
 
 CREATE TABLE Orders (
 	orderid SERIAL PRIMARY KEY,
-	paymentMethod VARCHAR(32) NOT NULL, 
+	paymentMethod VARCHAR(32) NOT NULL,
 
     -- Delivers combined
     rating INTEGER CHECK (rating in (1,2,3,4,5)),
@@ -181,6 +182,7 @@ CREATE TABLE ContainsFood (
 \COPY FoodCategories(category) FROM './csv/food_categories.csv' CSV HEADER;
 \COPY Food(fname,category) FROM './csv/food.csv' CSV HEADER;
 \COPY Restaurants(rname, minSpending) FROM './csv/restaurants.csv' CSV HEADER;
+\COPY Promotions(promoId, rname, startDate, endDate, discount) FROM './csv/promotions.csv' CSV HEADER;
 \COPY Sells(fname,rname,avail,maxLimit,price) FROM './csv/sells.csv' CSV HEADER;
 \COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
 \COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;

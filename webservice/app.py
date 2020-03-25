@@ -150,32 +150,59 @@ def get_restaurant_orders():
     rname, limit, offset = request.args.get('restaurant'), request.args.get('limit'), request.args.get('offset')
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT fname, quantity, time FROM Orders NATURAL JOIN ContainsFood " + 
+    cursor.execute("SELECT fname, quantity, orderTime FROM Orders NATURAL JOIN ContainsFood " + 
         "WHERE rname = %s AND orderTime >= now()::date AND orderTime < now()::date + INTERVAL '1 day' ORDER BY orderTime DESC LIMIT %s OFFSET %s;", (rname, limit, offset))
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
-@app.route("/restaurant_summary")
+def addMonths(d,x):
+    newmonth = ((( d.month - 1) + x ) % 12 ) + 1
+    newyear  = int(d.year + ((( d.month - 1) + x ) / 12 ))
+    return datetime( newyear, newmonth, d.day)
+
+@app.route("/current_restaurant_summary")
 @login_required
 def get_restaurant_summary():
     rname = request.args.get('restaurant')
-    year, month = request.args.get('year'), request.args.get('month')
+    now = datetime.now()
+    year, month = now.year, now.month
     start_time = datetime(year, month, 1)
-    end_time = start_time + timedelta(months=1) - timedelta(seconds=1)
+    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
     conn = get_db()
     # number of completed orders
     cursor = conn.cursor()
     cursor.execute("SELECT count(*) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s", (rname, start_time, end_time))
     completed_orders = cursor.fetchone()[0]
-    # # total cost of all completed orders
+    # total cost of all completed orders
+    cursor = conn.cursor()
+    cursor.execute("SELECT sum(price * quantity) FROM Orders NATURAL JOIN ContainsFood NATURAL JOIN Sells WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+        (rname, start_time, end_time))
+    total_cost = cursor.fetchone()[0]
+    # top 5 favorite food items
+    cursor = conn.cursor()
+    cursor.execute('SELECT fname, sum(quantity) FROM Orders NATURAL JOIN ContainsFood WHERE rname = %s AND deliveryTime BETWEEN %s AND %s GROUP BY fname ORDER BY sum(quantity) DESC LIMIT 5',
+        (rname, start_time, end_time))
+    top_five = cursor.fetchall()
+
+    result = {'completed_orders': completed_orders, 'total_cost': total_cost, 'top_five': top_five}
+    return ({'result': result}, 200)
+
+@app.route("/ongoing_restaurant_promo")
+@login_required
+def get_ongoing_restaurant_promo():
+    rname = request.args.get('restaurant')
+    now = datetime.now()
+    conn = get_db()
+
+
     # cursor = conn.cursor()
-    # cursor.execute
+    # cursor.execute("SELECT promoid, enddate, count(deliverytime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname where P.rname = %s AND %s between startDate and endDate + INTERVAL '1 day' and (deliverytime is NULL or deliverytime between startdate and enddate)", (rname,now))
+    # result = cursor.fetchall()
+    # print(result)
 
-    # # top 5 favorite food items
-    # cursor = conn.cursor()
-
-
-    cursor.execute('')
+    cursor = conn.cursor()
+    cursor.execute("SELECT promoId, endDate, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname WHERE P.rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' " + 
+        "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) GROUP BY promoId, endDate;", (rname, now))
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
