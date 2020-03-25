@@ -1,6 +1,9 @@
 import React from 'react';
-import { Grid, Image, Header, Loader, Card } from 'semantic-ui-react';
+import { Grid, Image, Header, Loader, Card, List, Button, Menu } from 'semantic-ui-react';
 import RestaurantSearch from '../../components/staffs/RestaurantSearch.js'
+import MenuList from '../../components/staffs/MenuList.js'
+import OrderList from '../../components/staffs/OrderList.js'
+import MonthlySummary from '../../components/staffs/MonthlySummary.js'
 import myAxios from '../../webServer.js'
 
 class StaffDashboard extends React.Component {
@@ -9,7 +12,10 @@ class StaffDashboard extends React.Component {
     this.state = {isLoadingRestaurantList: true, 
       isLoadingRestaurant: true, 
       restaurantList: null, 
-      currentRestaurant: null}
+      currentRestaurant: null,
+      isLoadingMenu: true,
+      restaurantMenu: null
+    }
   }
 
   async componentDidMount() {
@@ -42,7 +48,8 @@ class StaffDashboard extends React.Component {
       fontSize:'28px'
     }
     
-    const colors = ['red','orange','yellow','olive','green','teal','blue','violet','purple','pink','brown','grey','black']
+    const colors = ['red','orange','yellow','olive','green','teal',
+            'blue','violet','purple','pink','brown','grey','black']
     const random_color = () => colors[Math.floor(Math.random() * colors.length)]
 
     const onJoinRestaurant = (rest) => {
@@ -76,6 +83,7 @@ class StaffDashboard extends React.Component {
     )
   }
 
+  
   restaurantContent() {
     if (this.state.isLoadingRestaurant) {
       return (
@@ -85,7 +93,23 @@ class StaffDashboard extends React.Component {
 
     if (this.state.currentRestaurant) {
      return (
-      <p>{this.state.currentRestaurant}</p>
+        <div>
+          <Header textAlign='left' style={{fontSize:'60px'}}>{this.state.currentRestaurant}</Header>
+          <br/><br/>
+          <Grid columns={3}>
+            <Grid.Column>
+              <MenuList restaurant={this.state.currentRestaurant}/>
+            </Grid.Column>
+            <Grid.Column>
+              <OrderList restaurant={this.state.currentRestaurant}/>
+            </Grid.Column>
+
+            <Grid.Column>
+              <MonthlySummary restaurant={this.state.currentRestaurant}/>
+            </Grid.Column>
+          </Grid>
+          
+        </div>
       );
     } else {
       return (

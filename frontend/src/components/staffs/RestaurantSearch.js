@@ -5,8 +5,6 @@ import myAxios from '../../webServer.js'
 
 const initialState = { isLoading: false, results: [], value: '' }
 
-
-
 class RestaurantSearch extends Component {
   state = initialState
 

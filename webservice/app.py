@@ -6,6 +6,8 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, current_user, login_required
 from user import User
+from datetime import datetime
+from datetime import timedelta  
 
 app = Flask(__name__)
 app.secret_key = 'super secret key'
@@ -13,6 +15,8 @@ CORS(app, expose_headers=['Access-Control-Allow-Origin'], supports_credentials=T
 bcrypt = Bcrypt()
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+# AUTHENTICATION
 
 roles_dict = {
     'customer': 'Customers',
@@ -88,6 +92,9 @@ def signin():
 
     return ok
 
+
+# RESTAURANT STAFF
+
 @app.route("/restaurants")
 def get_restaurants():
     keyword = request.args.get('keyword')
@@ -124,6 +131,51 @@ def get_my_restaurants():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT rname FROM WorksAt WHERE username = '%s';" % username)
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+@app.route("/restaurant_items")
+@login_required
+def get_restaurant_items():
+    rname = request.args.get('restaurant')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT fname, avail FROM Sells WHERE rname = %s", (rname,))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+@app.route("/restaurant_orders")
+@login_required
+def get_restaurant_orders():
+    rname, limit, offset = request.args.get('restaurant'), request.args.get('limit'), request.args.get('offset')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT fname, quantity, time FROM Orders NATURAL JOIN ContainsFood " + 
+        "WHERE rname = %s AND orderTime >= now()::date AND orderTime < now()::date + INTERVAL '1 day' ORDER BY orderTime DESC LIMIT %s OFFSET %s;", (rname, limit, offset))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+@app.route("/restaurant_summary")
+@login_required
+def get_restaurant_summary():
+    rname = request.args.get('restaurant')
+    year, month = request.args.get('year'), request.args.get('month')
+    start_time = datetime(year, month, 1)
+    end_time = start_time + timedelta(months=1) - timedelta(seconds=1)
+    conn = get_db()
+    # number of completed orders
+    cursor = conn.cursor()
+    cursor.execute("SELECT count(*) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s", (rname, start_time, end_time))
+    completed_orders = cursor.fetchone()[0]
+    # # total cost of all completed orders
+    # cursor = conn.cursor()
+    # cursor.execute
+
+    # # top 5 favorite food items
+    # cursor = conn.cursor()
+
+
+    cursor.execute('')
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
