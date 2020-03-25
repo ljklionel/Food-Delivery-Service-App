@@ -4,7 +4,7 @@ from db import get_db, close_db
 import psycopg2
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager, login_user, current_user, login_required
+from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 from user import User
 from datetime import datetime
 from datetime import timedelta  
@@ -92,10 +92,16 @@ def signin():
 
     return ok
 
+@app.route("/signout", methods=['POST'])
+@login_required
+def logout():
+    logout_user()
+    return {}, 200
 
 # RESTAURANT STAFF
 
 @app.route("/restaurants")
+@login_required
 def get_restaurants():
     keyword = request.args.get('keyword')
     conn = get_db()
@@ -193,13 +199,6 @@ def get_ongoing_restaurant_promo():
     rname = request.args.get('restaurant')
     now = datetime.now()
     conn = get_db()
-
-
-    # cursor = conn.cursor()
-    # cursor.execute("SELECT promoid, enddate, count(deliverytime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname where P.rname = %s AND %s between startDate and endDate + INTERVAL '1 day' and (deliverytime is NULL or deliverytime between startdate and enddate)", (rname,now))
-    # result = cursor.fetchall()
-    # print(result)
-
     cursor = conn.cursor()
     cursor.execute("SELECT promoId, endDate, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname WHERE P.rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' " + 
         "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) GROUP BY promoId, endDate ORDER BY endDate;", (rname, now))

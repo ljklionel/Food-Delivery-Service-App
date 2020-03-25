@@ -6,6 +6,7 @@ import OrderList from '../../components/staffs/OrderList.js'
 import MonthlySummary from '../../components/staffs/MonthlySummary.js'
 import myAxios from '../../webServer.js'
 import PromoList from '../../components/staffs/PromoList.js';
+import AppHeader from '../../components/AppHeader.js'
 
 class StaffDashboard extends React.Component {
   constructor() {
@@ -130,15 +131,19 @@ class StaffDashboard extends React.Component {
 
   render() {
     return (
-      <Grid celled style={{height: '100vh'}}>
-        <Grid.Column style={{width: '82%', background: '#edf8ff'}}>
-          {this.restaurantContent()}
-        </Grid.Column>
+      <div>
+        <AppHeader/>
+        <Grid celled style={{height: '100vh'}}>
+          <Grid.Column style={{width: '82%', background: '#edf8ff'}}>
+            {this.restaurantContent()}
+          </Grid.Column>
 
-        <Grid.Column style={{width: '18%'}}>
-          {this.workRestaurantList()}
-        </Grid.Column>
-      </Grid>
+          <Grid.Column style={{width: '18%'}}>
+            {this.workRestaurantList()}
+          </Grid.Column>
+        </Grid>
+      </div>
+      
     );
   }
 }

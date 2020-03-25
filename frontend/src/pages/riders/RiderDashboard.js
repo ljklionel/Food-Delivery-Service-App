@@ -1,4 +1,5 @@
 import React from 'react';
+import AppHeader from '../../components/AppHeader.js'
 
 class RiderDashboard extends React.Component {
 
@@ -11,6 +12,7 @@ class RiderDashboard extends React.Component {
   render() {
     return (
       <div>
+        <AppHeader/>
         <h1>Rider Dashboard</h1>
       </div>
     );
