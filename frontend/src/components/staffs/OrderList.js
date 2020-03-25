@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Grid, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
+import ViewOrderModal from './ViewOrderModal.js';
 
 class OrderList extends Component {
 
@@ -87,7 +88,7 @@ class OrderList extends Component {
               {content}
             </Card.Content>
             <Card.Content>
-              <Button fluid basic>View All</Button>
+              <ViewOrderModal/>
             </Card.Content>
           </Card>
         )

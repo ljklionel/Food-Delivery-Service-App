@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Grid, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
+import EditMenuModal from './EditMenuModal.js';
 
 class MenuList extends Component {
 
@@ -73,7 +74,7 @@ class MenuList extends Component {
                 </Table>
               </Card.Content>
               <Card.Content>
-                <Button fluid basic>Edit</Button>
+                <EditMenuModal/>
               </Card.Content>
             </Card>
           )

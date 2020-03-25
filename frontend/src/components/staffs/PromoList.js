@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { Grid, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
+import ViewPromoModal from './ViewPromoModal.js';
+import AddPromoModal from './AddPromoModal.js';
 
 class PromoList extends Component {
 
@@ -85,8 +87,8 @@ class PromoList extends Component {
               {content}
             </Card.Content>
             <Card.Content>
-                <Button fluid basic style={{marginBottom:'8px'}}>View All</Button>
-                <Button fluid basic>Add</Button>
+                <ViewPromoModal/>
+                <AddPromoModal/>
             </Card.Content>
           </Card>
         )

@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Statistic, Card, Header, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
+import ViewStatsModal from './ViewStatsModal.js';
 
 class MonthlySummary extends Component {
 
@@ -111,7 +112,7 @@ class MonthlySummary extends Component {
                 {this.top5Statistics()}
               </Card.Content>
               <Card.Content>
-                <Button fluid basic>View All</Button>
+                <ViewStatsModal/>
               </Card.Content>
             </Card>
           )
