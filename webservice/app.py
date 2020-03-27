@@ -8,6 +8,7 @@ from flask_login import LoginManager, login_user, current_user, login_required, 
 from user import User
 from datetime import datetime
 from datetime import timedelta  
+from dateutil.relativedelta import relativedelta # $ pip install python-dateutil
 
 app = Flask(__name__)
 app.secret_key = 'super secret key'
@@ -193,6 +194,40 @@ def get_restaurant_summary():
     result = {'completed_orders': completed_orders, 'total_cost': total_cost, 'top_five': top_five}
     return ({'result': result}, 200)
 
+@app.route("/all_restaurant_summary")
+@login_required
+def get_all_restaurant_summary():
+    rname = request.args.get('restaurant')
+
+    now = datetime.now()
+    year, month = now.year, now.month
+    start_time = datetime(year, month, 1)
+    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    conn = get_db()
+    result = []
+    for i in range(0, 25): # show at most the last 2 years of summary
+        cur_start_time = start_time - relativedelta(months=i)
+        cur_end_time = end_time - relativedelta(months=i)
+        # number of completed orders
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(*) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s", (rname, cur_start_time, cur_end_time))
+        completed_orders = cursor.fetchone()[0]
+        if completed_orders == 0 and i != 0: 
+            continue
+        # total cost of all completed orders
+        cursor = conn.cursor()
+        cursor.execute("SELECT sum(price * quantity) FROM Orders NATURAL JOIN ContainsFood NATURAL JOIN Sells WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+            (rname, cur_start_time, cur_end_time))
+        total_cost = cursor.fetchone()[0]
+        # top 5 favorite food items
+        cursor = conn.cursor()
+        cursor.execute('SELECT fname, sum(quantity) FROM Orders NATURAL JOIN ContainsFood WHERE rname = %s AND deliveryTime BETWEEN %s AND %s GROUP BY fname ORDER BY sum(quantity) DESC LIMIT 5',
+            (rname, cur_start_time, cur_end_time))
+        top_five = cursor.fetchall()
+        res = {'year':cur_start_time.year, 'month':cur_start_time.month, 'completed_orders': completed_orders, 'total_cost': total_cost, 'top_five': top_five}
+        result.append(res)
+    return ({'result': result}, 200)
+
 @app.route("/ongoing_restaurant_promo")
 @login_required
 def get_ongoing_restaurant_promo():
@@ -204,6 +239,36 @@ def get_ongoing_restaurant_promo():
         "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) GROUP BY promoId, endDate ORDER BY endDate;", (rname, now))
     result = cursor.fetchall()
     return ({'result': result}, 200)
+
+@app.route("/restaurant_promo")
+@login_required
+def get_restaurant_promo():
+    rname = request.args.get('restaurant')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT promoId, description, startDate, endDate, discount, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname WHERE P.rname = %s GROUP BY promoId, P.rname ORDER BY startDate DESC, endDate DESC;", (rname,))
+    result = cursor.fetchall()
+
+    for i, r in enumerate(result): # fix decimal is not serializable
+        l = list(result[i])
+        l[4] = float(l[4])
+        result[i] = tuple(l)
+    return ({'result': result}, 200)
+
+@app.route("/edit_availability", methods=['POST'])
+@login_required
+def edit_availability():
+    data = request.json
+    rname, updates = data['restaurant'], data['updates']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    print(updates)
+    for fname in updates:
+        cursor.execute("UPDATE Sells SET avail = %s WHERE fname = %s AND rname = %s;", (updates[fname], fname, rname))
+    cursor.execute("COMMIT;")
+
+    return ({}, 200)
 
 if __name__ == '__main__':
     app.run()

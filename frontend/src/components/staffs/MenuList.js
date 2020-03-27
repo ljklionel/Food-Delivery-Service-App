@@ -15,7 +15,7 @@ class MenuList extends Component {
         this.updateMenu(props.restaurant)
     }
 
-    updateMenu(rname) {
+    updateMenu = rname => {
         myAxios.get('/restaurant_items', {
           params: {
               restaurant: rname
@@ -74,7 +74,7 @@ class MenuList extends Component {
                 </Table>
               </Card.Content>
               <Card.Content>
-                <EditMenuModal/>
+                <EditMenuModal restaurant={this.state.currentRestaurant} submitHandler={this.updateMenu}/>
               </Card.Content>
             </Card>
           )

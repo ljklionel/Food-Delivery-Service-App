@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import { Grid, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
 import ViewPromoModal from './ViewPromoModal.js';
-import AddPromoModal from './AddPromoModal.js';
 
 class PromoList extends Component {
 
@@ -56,8 +55,8 @@ class PromoList extends Component {
                   <Table.Header>
                   <Table.Row>
                       <Table.HeaderCell>ID</Table.HeaderCell>
-                      <Table.HeaderCell>End</Table.HeaderCell>
                       <Table.HeaderCell>Orders</Table.HeaderCell>
+                      <Table.HeaderCell>End</Table.HeaderCell>
                   </Table.Row>
                   </Table.Header>
                   <Table.Body>
@@ -67,10 +66,10 @@ class PromoList extends Component {
                               {item[0]}
                           </Table.Cell>
                           <Table.Cell>
-                              {item[1].substring(0,11)}
+                              {item[2]}
                           </Table.Cell>
                           <Table.Cell>
-                              {item[2]}
+                              {item[1].substring(0,11)}
                           </Table.Cell>
                       </Table.Row>
                   ))}
@@ -87,8 +86,7 @@ class PromoList extends Component {
               {content}
             </Card.Content>
             <Card.Content>
-                <ViewPromoModal/>
-                <AddPromoModal/>
+                <ViewPromoModal restaurant={this.state.currentRestaurant}/>
             </Card.Content>
           </Card>
         )

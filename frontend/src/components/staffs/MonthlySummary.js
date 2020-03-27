@@ -112,7 +112,7 @@ class MonthlySummary extends Component {
                 {this.top5Statistics()}
               </Card.Content>
               <Card.Content>
-                <ViewStatsModal/>
+                <ViewStatsModal restaurant={this.state.currentRestaurant}/>
               </Card.Content>
             </Card>
           )
