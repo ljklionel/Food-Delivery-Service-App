@@ -44,14 +44,9 @@ class OrderMenuModal extends Component {
         const avail = {}
 
         this.state.restaurantMenu.forEach((item, i) => {
-            avail[i] = this.state.avail[i] - this.state.order[i]
+            this.state.avail[i] -= this.state.order[i]
             updates[item[0]] = this.state.avail[i]
             order[item[0]] = this.state.order[i]
-        })
-
-        this.setState({
-            order: order,
-            avail: avail
         })
 
         myAxios.post('edit_availability', {

@@ -25,9 +25,7 @@ class CustomerDashboard extends React.Component {
   updateOrder = order => {console.log("Order received at customer dashboard: ", order)}
 
   handleLocationChange = (e, {value }) => {
-    this.setState({ 
-      location: value
-    });  
+    this.state.location = value
   }
 
   async componentDidMount() {
@@ -115,7 +113,7 @@ class CustomerDashboard extends React.Component {
           <br/><br/>
           <Grid columns={4}>
             <Grid.Column>
-              <MenuList restaurant={this.state.currentRestaurant}/>
+              {/* <MenuList restaurant={this.state.currentRestaurant}/> */}
               <MenuForCustomer submitOrder={this.updateOrder} restaurant={this.state.currentRestaurant}/>
             </Grid.Column>
             <Grid.Column>
