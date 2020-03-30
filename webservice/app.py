@@ -270,5 +270,29 @@ def edit_availability():
 
     return ({}, 200)
 
+# == Customers Begin ==
+
+@app.route("/my_info")
+@login_required
+def get_my_info():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Customers WHERE username = '%s';" % username)
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+@app.route("/restaurant_sells")
+@login_required
+def get_restaurant_sells():
+    rname = request.args.get('restaurant')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT fname, price, avail FROM Sells WHERE rname = %s", (rname,))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+# == Customers End ==
+
 if __name__ == '__main__':
     app.run()
