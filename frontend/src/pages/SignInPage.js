@@ -1,6 +1,6 @@
 import React from 'react';
 import queryString from 'query-string'
-import { Link, Redirect, browserHistory } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 import { Button, Form, Grid, Message, Segment, Header, Image } from 'semantic-ui-react'
 import AppLogo from '../components/AppLogo.js'
 import myAxios from '../webServer.js'

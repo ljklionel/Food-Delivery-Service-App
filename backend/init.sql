@@ -67,6 +67,7 @@ CREATE TABLE Promotions (
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
     discount NUMERIC(4,2) NOT NULL,
+    description VARCHAR(128) DEFAULT '',
     PRIMARY KEY (promoId, rname)
 );
 
@@ -148,19 +149,17 @@ CREATE TABLE Customers (
 
 CREATE TABLE Orders (
 	orderid SERIAL PRIMARY KEY,
-	price FLOAT NOT NULL,
-	time TIME NOT NULL,
-	paymentMethod VARCHAR(32) NOT NULL, 
+	paymentMethod VARCHAR(32) NOT NULL,
 
     -- Delivers combined
     rating INTEGER CHECK (rating in (1,2,3,4,5)),
 	location VARCHAR(256) NOT NULL,
 	fee FLOAT NOT NULL,
-	orderTime TIME,
-	departTime1 TIME,
-	arriveTime TIME,
-	departTime2 TIME,
-	deliveryTime TIME,
+	orderTime TIMESTAMP,
+	departTime1 TIMESTAMP,
+	arriveTime TIMESTAMP,
+	departTime2 TIMESTAMP,
+	deliveryTime TIMESTAMP,
     riderUsername VARCHAR(64) NOT NULL REFERENCES DeliveryRiders,
 
     -- Makes combined
@@ -171,7 +170,7 @@ CREATE TABLE Orders (
 );
 
 CREATE TABLE ContainsFood (
-	quantity INTEGER,
+	quantity INTEGER NOT NULL,
 	review VARCHAR(500),
     fname VARCHAR(64) REFERENCES Food,
     orderid INTEGER REFERENCES Orders,
@@ -180,9 +179,13 @@ CREATE TABLE ContainsFood (
 
 ----- INSERT DATA -----
 
+\COPY FoodCategories(category) FROM './csv/food_categories.csv' CSV HEADER;
+\COPY Food(fname,category) FROM './csv/food.csv' CSV HEADER;
+\COPY Restaurants(rname, minSpending) FROM './csv/restaurants.csv' CSV HEADER;
+\COPY Promotions(promoId, rname, startDate, endDate, discount) FROM './csv/promotions.csv' CSV HEADER;
+\COPY Sells(fname,rname,avail,maxLimit,price) FROM './csv/sells.csv' CSV HEADER;
 \COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
 \COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
-
 
 
 ------ TRIGGERS ------
@@ -198,7 +201,7 @@ BEGIN
     IF (TG_TABLE_NAME = 'Orders') THEN
         order_id = NEW.orderid;
     ELSE
-        order_id = OLD.oid;
+        order_id = OLD.orderid;
     END IF;
 
     SELECT true INTO ok
