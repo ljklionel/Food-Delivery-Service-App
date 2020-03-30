@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Modal, Form, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
 
-class EditMenuModal extends Component {
+class OrderMenuModal extends Component {
     
     constructor(props) {
         super(props)
@@ -10,12 +10,22 @@ class EditMenuModal extends Component {
             isLoading: true,
             restaurantMenu: [],
             avail: [],
+            order: [],
             currentRestaurant: props.restaurant,
             modalOpen: false
         }
     }
 
-    handleOpen = () => this.setState({ modalOpen: true })
+    handleOpen = () => {
+        const order = []
+        this.state.restaurantMenu.forEach(item => {
+            order.push(0)
+        });
+        this.setState({ 
+            modalOpen: true,
+            order: order
+        })
+    }
   
     handleClose = () => {
         const avail = []
@@ -30,17 +40,26 @@ class EditMenuModal extends Component {
 
     handleSave = () => {
         const updates = {}
+        const order = {}
+        const avail = {}
+
         this.state.restaurantMenu.forEach((item, i) => {
+            avail[i] = this.state.avail[i] - this.state.order[i]
             updates[item[0]] = this.state.avail[i]
+            order[item[0]] = this.state.order[i]
         })
+
+        this.setState({
+            order: order,
+            avail: avail
+        })
+
         myAxios.post('edit_availability', {
             restaurant: this.state.currentRestaurant,
             updates: updates
           })
           .then(response => {
-            console.log(response);  
             const menu = []
-            console.log(this.state.restaurantMenu)
             this.state.restaurantMenu.forEach((item, i) => {
                 menu.push([item[0], this.state.avail[i]])
             });
@@ -54,18 +73,41 @@ class EditMenuModal extends Component {
             console.log(error);
           });
 
+          myAxios.post('make_order', {
+            restaurant: this.state.currentRestaurant,
+            order: order
+          })
+          .then(response => {
+              console.log("Received response from make_order")
+            // const menu = []
+            // this.state.restaurantMenu.forEach((item, i) => {
+            //     menu.push([item[0], this.state.avail[i]])
+            // });
+            // this.setState({ 
+                // modalOpen: false,
+                // restaurantMenu: menu
+            // })
+            console.log(this.state.currentRestaurant)
+            this.props.submitOrder(this.state.order)
+          })
+          .catch(error => {
+            console.log(error);
+          });
+
     }
 
     handleChange = (e, { name, value }) => {
         value = value ? parseInt(value) : 0
-        console.log("value after: ", value)
-        if (value <= 999) {
-            const avail = this.state.avail
-            avail[name] = value
-            this.setState({avail: avail})
+        if (value <= this.state.avail[name]) {
+            const order = this.state.order
+            order[name] = value
+            this.setState({order: order})
         }
     }
 
+    anotherChange = (e, {a}) => {
+
+    }
 
     componentDidMount() {
         myAxios.get('/restaurant_items', {
@@ -98,12 +140,14 @@ class EditMenuModal extends Component {
         if (this.state.isLoading) {
             content = null
         } else {
+            console.log(this.state.infoList)
             content = (
                 <Table basic='very' celled>
                     <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>Item</Table.HeaderCell>
                         <Table.HeaderCell>Availability</Table.HeaderCell>
+                        <Table.HeaderCell>Order</Table.HeaderCell>
                     </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -112,14 +156,18 @@ class EditMenuModal extends Component {
                             <Table.Cell>
                                 {item[0]}
                             </Table.Cell>
+                            <Table.Cell>
+                                {this.state.avail[i]}
+                            </Table.Cell>
                                 <Table.Cell>
                                     <Form>
                                         <Form.Field>
                                             <Form.Input
                                                 name = {i}
-                                                placeholder='avail.'
-                                                value={this.state.avail[i]}
-                                                onChange={this.handleChange}/>
+                                                placeholder='0 selected'
+                                                value={this.state.order[i]}
+                                                onChange={this.handleChange}
+                                                />
                                         </ Form.Field>
                                     </Form>
                                 </Table.Cell>
@@ -131,10 +179,10 @@ class EditMenuModal extends Component {
         }
 
         return (
-        <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Edit</Button>}
+        <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Make Order</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
-            <Modal.Header>Edit Menu</Modal.Header>
+            <Modal.Header>Order Menu</Modal.Header>
             <Modal.Content>
                 {content}
             </Modal.Content>
@@ -151,4 +199,4 @@ class EditMenuModal extends Component {
     }
 }
 
-export default EditMenuModal;
+export default OrderMenuModal;

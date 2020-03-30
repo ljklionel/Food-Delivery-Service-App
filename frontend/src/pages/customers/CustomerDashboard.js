@@ -1,9 +1,13 @@
 import React from 'react';
 import { Grid, Image, Header, Loader, Card, List, Button, Menu } from 'semantic-ui-react';
 import RestaurantSelect from '../../components/customers/RestaurantSelect.js'
+import MenuList from '../../components/staffs/MenuList.js'
 import MenuForCustomer from '../../components/customers/MenuForCustomer.js'
 import AppHeader from '../../components/AppHeader.js'
 import myAxios from '../../webServer.js'
+import OrderList from '../../components/staffs/OrderList.js'
+import { Modal, Form, Table } from 'semantic-ui-react';
+
 
 class CustomerDashboard extends React.Component {
   constructor() {
@@ -12,8 +16,18 @@ class CustomerDashboard extends React.Component {
       infoList: null,
       isLoadingInfo: true,
       currentRestaurant: null,
-      restaurantMenu: null
+      restaurantMenu: null,
+      location: null
     }
+  }
+
+  // Not sure if necessary to update a customer's order upon ordering from menu
+  updateOrder = order => {console.log("Order received at customer dashboard: ", order)}
+
+  handleLocationChange = (e, {value }) => {
+    this.setState({ 
+      location: value
+    });  
   }
 
   async componentDidMount() {
@@ -34,14 +48,7 @@ class CustomerDashboard extends React.Component {
       console.log(error);
     });
   } 
-  // render() {
-  //   return (
-  //     <div>
-  //       <AppHeader/>
-  //       <h1>Customer Dashboard</h1>
-  //     </div>
-  //   );
-  // }
+
   restaurantContent() {
     // if (this.state.isLoadingRestaurant) {
     //   return (
@@ -49,11 +56,14 @@ class CustomerDashboard extends React.Component {
     //   );
     // }
     console.log("infoList: ", this.state.infoList)
+    const i = null
+
     if (this.state.infoList) {
       const id = this.state.infoList[0]
       const creditCard = this.state.infoList[1] == null ? 'Select payment method' : this.state.infolist[1]
       const rewardPoint = this.state.infoList[2] == null ? 0 : this.state.infolist[2]
-      const selectedRestaurant = this.state.currentRestaurant = null ? "Not selected" :this.state.currentRestaurant
+      const selectedRestaurant = this.state.currentRestaurant == null ? "Not selected" :this.state.currentRestaurant
+      
       return (
         <div>
           <Grid columns={4}>
@@ -77,17 +87,40 @@ class CustomerDashboard extends React.Component {
             </Grid.Column>
           </Grid>
 
+          <Table basic='very' celled>
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell>
+                           Location
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Form.Field>
+                            <Form.Input
+                              // name = {i}
+                              placeholder='Input your location'
+                              // value= {i}
+                              onChange={this.handleLocationChange}/>
+                          </Form.Field>
+                        </Table.Cell>
+                        <Table.Cell>
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                </Table>
+
+
           <Header style={{fontSize: '16'}}>Selected Restaurant:</Header>
           <Header textAlign='center' style={{fontSize:'16px'}}>{selectedRestaurant}</Header>
 
           <br/><br/>
           <Grid columns={4}>
             <Grid.Column>
-              {/* <MenuList restaurant={this.state.currentRestaurant}/> */}
-              <Menu restaurant={this.state.currentRestaurant}/>
+              <MenuList restaurant={this.state.currentRestaurant}/>
+              <MenuForCustomer submitOrder={this.updateOrder} restaurant={this.state.currentRestaurant}/>
             </Grid.Column>
             <Grid.Column>
-              {/* <OrderList restaurant={this.state.currentRestaurant}/> */}
+              {/* Need to update this orderList */}
+              <OrderList restaurant={this.state.currentRestaurant}/>
             </Grid.Column>
 
             <Grid.Column>

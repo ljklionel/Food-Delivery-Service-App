@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Grid, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
-import EditMenuModal from '../staffs/EditMenuModal.js';
+import OrderMenuModal from '../customers/OrderMenuModal.js';
 
 class MenuForCustomer extends Component {
 
@@ -74,7 +74,7 @@ class MenuForCustomer extends Component {
                 </Table>
               </Card.Content>
               <Card.Content>
-                <EditMenuModal restaurant={this.state.currentRestaurant} submitHandler={this.updateMenu}/>
+                <OrderMenuModal restaurant={this.state.currentRestaurant} submitHandler={this.updateMenu} submitOrder={this.props.submitOrder}/>
               </Card.Content>
             </Card>
           )

@@ -292,6 +292,56 @@ def get_restaurant_sells():
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
+@app.route("/make_order", methods=['POST'])
+@login_required
+def make_order():
+    data = request.json
+    rname, orders = data['restaurant'], data['order']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    print(orders)
+    # Update Orders first
+    # Then update ContainsFood (because it requires orderid)
+    # insert into orders(paymentMethod, rating, location, fee, orderTime, riderUsername, customerUsername, rname) 
+    # values('a', 1, 'loc', 1.1, '2016-06-22 19:10:25-07', 'dr', 'c', 'r');
+    # for fname in orders:
+        # cursor.execute("INSERT into Orders VALUES(%s, %s, %s)")
+        # cursor.execute("UPDATE Sells SET avail = %s WHERE fname = %s AND rname = %s;", (updates[fname], fname, rname))
+    cursor.execute("COMMIT;")
+
+    return ({}, 200)
+
+# CREATE TABLE ContainsFood (
+# 	quantity INTEGER NOT NULL,
+# 	review VARCHAR(500),
+#     fname VARCHAR(64) REFERENCES Food,
+#     orderid INTEGER REFERENCES Orders,
+#     PRIMARY KEY (fname, orderid)
+# ); 
+
+# CREATE TABLE Orders (
+# 	orderid SERIAL PRIMARY KEY,
+# 	paymentMethod VARCHAR(32) NOT NULL,
+
+#     -- Delivers combined
+#     rating INTEGER CHECK (rating in (1,2,3,4,5)),
+# 	location VARCHAR(256) NOT NULL,
+# 	fee FLOAT NOT NULL,
+# 	orderTime TIMESTAMP,
+# 	departTime1 TIMESTAMP,
+# 	arriveTime TIMESTAMP,
+# 	departTime2 TIMESTAMP,
+# 	deliveryTime TIMESTAMP,
+#     riderUsername VARCHAR(64) NOT NULL REFERENCES DeliveryRiders,
+
+#     -- Makes combined
+#     customerUsername VARCHAR(64) NOT NULL REFERENCES Customers,
+
+#     -- From combined
+#     rname VARCHAR(64) NOT NULL REFERENCES Restaurants
+# );
+
 # == Customers End ==
 
 if __name__ == '__main__':
