@@ -3,9 +3,10 @@ import { Grid, Image, Header, Loader, Card, List, Button, Menu } from 'semantic-
 import RestaurantSelect from '../../components/customers/RestaurantSelect.js'
 import MenuList from '../../components/staffs/MenuList.js'
 import MenuForCustomer from '../../components/customers/MenuForCustomer.js'
+import CreditCardSelection from '../../components/customers/CreditCardSelection.js'
 import AppHeader from '../../components/AppHeader.js'
 import myAxios from '../../webServer.js'
-import OrderList from '../../components/staffs/OrderList.js'
+import CompletedOrders from '../../components/customers/CompletedOrders.js'
 import { Modal, Form, Table } from 'semantic-ui-react';
 
 
@@ -17,8 +18,54 @@ class CustomerDashboard extends React.Component {
       isLoadingInfo: true,
       currentRestaurant: null,
       restaurantMenu: null,
-      location: null
+      location: null,
+      creditCardArray: [
+        {
+            id: 0,
+            title: 'New York',
+            selected: false,
+            key: 'location'
+        },
+        {
+          id: 1,
+          title: 'Dublin',
+          selected: false,
+          key: 'location'
+        },
+        {
+          id: 2,
+          title: 'California',
+          selected: false,
+          key: 'location'
+        },
+        {
+          id: 3,
+          title: 'Istanbul',
+          selected: false,
+          key: 'location'
+        },
+        {
+          id: 4,
+          title: 'Izmir',
+          selected: false,
+          key: 'location'
+        },
+        {
+          id: 5,
+          title: 'Oslo',
+          selected: false,
+          key: 'location'
+        }
+      ]
     }
+  }
+
+  toggleSelected(id, key){
+    let temp = this.state[key]
+    temp[id].selected = !temp[id].selected
+    this.setState({
+      [key]: temp
+    })
   }
 
   // Not sure if necessary to update a customer's order upon ordering from menu
@@ -47,12 +94,12 @@ class CustomerDashboard extends React.Component {
     });
   } 
 
-  restaurantContent() {
-    // if (this.state.isLoadingRestaurant) {
-    //   return (
-    //     <Loader size='massive' active/>
-    //   );
-    // }
+  customerContent() {
+    if (this.state.isLoadingInfo) {
+      return (
+        <Loader size='massive' active/>
+      );
+    }
     console.log("infoList: ", this.state.infoList)
     const i = null
 
@@ -77,6 +124,8 @@ class CustomerDashboard extends React.Component {
             <Grid.Column>
               <Header textAlign='left' style={{fontSize: '16px'}}>Credit Card:</Header>
               <Header textAlign='left' style={{fontSize:'12px'}}>{creditCard}</Header>
+              <CreditCardSelection   titleHelper="Location" title="Select credit card" list={this.state.creditCardArray} toggleItem={this.toggleSelected} />
+              {/* <MenuForCustomer submitOrder={this.updateOrder} restaurant={this.state.currentRestaurant}/> */}
             </Grid.Column>
 
             <Grid.Column>
@@ -118,7 +167,7 @@ class CustomerDashboard extends React.Component {
             </Grid.Column>
             <Grid.Column>
               {/* Need to update this orderList */}
-              <OrderList restaurant={this.state.currentRestaurant}/>
+              <CompletedOrders currentCustomer={this.state.infoList[0]}/>
             </Grid.Column>
 
             <Grid.Column>
@@ -189,7 +238,7 @@ class CustomerDashboard extends React.Component {
         <AppHeader/>
         <Grid celled style={{height: '100vh'}}>
           <Grid.Column style={{width: '82%', background: '#edf8ff'}}>
-            {this.restaurantContent()}
+            {this.customerContent()}
           </Grid.Column>
 
           <Grid.Column style={{width: '18%'}}>

@@ -11,8 +11,11 @@ class OrderMenuModal extends Component {
             restaurantMenu: [],
             avail: [],
             order: [],
+            price: [],
             currentRestaurant: props.restaurant,
-            modalOpen: false
+            modalOpen: false,
+            totalPrice: 0,
+            fee: 0
         }
     }
 
@@ -38,10 +41,25 @@ class OrderMenuModal extends Component {
         })
     }
 
+    getOrderTimeStamp() {
+        var currentDate = new Date().toString()
+        var dateString = ""
+        var dateArray = currentDate.split(" ")
+        var i;
+        for (i = 0; i < dateArray.length; i++) { 
+            if (i == 5) {
+                continue
+            }
+            dateString += dateArray[i] + " "
+        }
+        return dateString.trim()
+    }
+
     handleSave = () => {
         const updates = {}
         const order = {}
         const avail = {}
+        const timeStamp = this.getOrderTimeStamp()
 
         this.state.restaurantMenu.forEach((item, i) => {
             this.state.avail[i] -= this.state.order[i]
@@ -70,18 +88,21 @@ class OrderMenuModal extends Component {
 
           myAxios.post('make_order', {
             restaurant: this.state.currentRestaurant,
-            order: order
+            order: order,
+            totalPrice: this.state.totalPrice,
+            fee: this.state.fee,
+            timeStamp: timeStamp
           })
           .then(response => {
               console.log("Received response from make_order")
-            // const menu = []
-            // this.state.restaurantMenu.forEach((item, i) => {
-            //     menu.push([item[0], this.state.avail[i]])
-            // });
-            // this.setState({ 
-                // modalOpen: false,
-                // restaurantMenu: menu
-            // })
+                // const menu = []
+                // this.state.restaurantMenu.forEach((item, i) => {
+                //     menu.push([item[0], this.state.avail[i]])
+                // });
+                // this.setState({ 
+                    // modalOpen: false,
+                    // restaurantMenu: menu
+                // })
             console.log(this.state.currentRestaurant)
             this.props.submitOrder(this.state.order)
           })
@@ -98,14 +119,12 @@ class OrderMenuModal extends Component {
             order[name] = value
             this.setState({order: order})
         }
-    }
-
-    anotherChange = (e, {a}) => {
-
+        this.calculateTotalPrice()
+        this.calculateFee()
     }
 
     componentDidMount() {
-        myAxios.get('/restaurant_items', {
+        myAxios.get('/restaurant_sells', {
             params: {
                 restaurant: this.state.currentRestaurant
             }
@@ -113,12 +132,18 @@ class OrderMenuModal extends Component {
           .then(response => {
             console.log(response);
             const avail = []
+            const price = []
             response.data.result.forEach(item => {
                 avail.push(item[1])
+            });
+            response.data.result.forEach(item => {
+                price.push(item[2])
+                console.log("Price changed", price)
             });
             this.setState({
                 restaurantMenu: response.data.result,
                 avail: avail,
+                price: price,
                 isLoading: false
             })
             console.log(this.state)
@@ -128,7 +153,18 @@ class OrderMenuModal extends Component {
           });
     }
 
+    calculateTotalPrice() {
+        var totalPrice = 0;
+        this.state.restaurantMenu.map((item, i) => (
+            totalPrice += this.state.order[i] * this.state.price[i]))
+        console.log(totalPrice)
+        this.state.totalPrice = totalPrice
+    }
 
+    calculateFee() {
+        this.state.fee = this.state.totalPrice * 0.1
+        this.state.fee = Math.round(this.state.fee * 100) / 100
+    }
 
     render() {
         var content
@@ -142,7 +178,9 @@ class OrderMenuModal extends Component {
                     <Table.Row>
                         <Table.HeaderCell>Item</Table.HeaderCell>
                         <Table.HeaderCell>Availability</Table.HeaderCell>
+                        <Table.HeaderCell>Price</Table.HeaderCell>
                         <Table.HeaderCell>Order</Table.HeaderCell>
+                        {/* <Table.HeaderCell>Total price</Table.HeaderCell> */}
                     </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -154,20 +192,41 @@ class OrderMenuModal extends Component {
                             <Table.Cell>
                                 {this.state.avail[i]}
                             </Table.Cell>
-                                <Table.Cell>
-                                    <Form>
-                                        <Form.Field>
-                                            <Form.Input
-                                                name = {i}
-                                                placeholder='0 selected'
-                                                value={this.state.order[i]}
-                                                onChange={this.handleChange}
-                                                />
-                                        </ Form.Field>
-                                    </Form>
-                                </Table.Cell>
+                            <Table.Cell>
+                                {this.state.price[i]}
+                            </Table.Cell>
+                            <Table.Cell>
+                                <Form>
+                                    <Form.Field>
+                                        <Form.Input
+                                            name = {i}
+                                            placeholder='0 selected'
+                                            value={this.state.order[i]}
+                                            onChange={this.handleChange}
+                                            />
+                                    </ Form.Field>
+                                </Form>
+                            </Table.Cell>
                         </Table.Row>
                     ))}
+                    <br></br>
+                    <Table.Body>
+                        <Table.Row>
+                            <Table.Cell>
+                                Total Price:
+                            </Table.Cell>
+                            <Table.Cell>
+                                {this.state.totalPrice}
+                            </Table.Cell>
+                            <Table.Cell>
+                                Fee:
+                            </Table.Cell>
+                            <Table.Cell>
+                                {this.state.fee}
+                            </Table.Cell>
+                        </Table.Row>
+                    </Table.Body>
+                    
                     </Table.Body>
                 </Table>
             )

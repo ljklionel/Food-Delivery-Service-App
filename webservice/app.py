@@ -288,7 +288,7 @@ def get_restaurant_sells():
     rname = request.args.get('restaurant')
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT fname, price, avail FROM Sells WHERE rname = %s", (rname,))
+    cursor.execute("SELECT fname, avail, price FROM Sells WHERE rname = %s", (rname,))
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
@@ -299,6 +299,7 @@ def make_order():
     rname, orders = data['restaurant'], data['order']
     conn = get_db()
     cursor = conn.cursor()
+    deliveryRider = connectDeliveryRider()
     cursor.execute("BEGIN;")
     print(orders)
     # Update Orders first
@@ -309,8 +310,25 @@ def make_order():
         # cursor.execute("INSERT into Orders VALUES(%s, %s, %s)")
         # cursor.execute("UPDATE Sells SET avail = %s WHERE fname = %s AND rname = %s;", (updates[fname], fname, rname))
     cursor.execute("COMMIT;")
+    if deliveryRider:
+        return ({}, 200)
+    else:
+        return { 'No riders' } #todo
 
-    return ({}, 200)
+def connectDeliveryRider():
+    conn = get_db()
+    # todo
+
+@app.route("/customer_orders")
+@login_required
+def customer_orders():
+    currentCustomer, limit, offset = request.args.get('currentCustomer'), request.args.get('limit'), request.args.get('offset')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT fname, quantity, orderTime FROM Orders NATURAL JOIN ContainsFood " + 
+        "WHERE customerUsername = %s ORDER BY orderTime DESC LIMIT %s OFFSET %s;", (currentCustomer, limit, offset))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
 
 # CREATE TABLE ContainsFood (
 # 	quantity INTEGER NOT NULL,
