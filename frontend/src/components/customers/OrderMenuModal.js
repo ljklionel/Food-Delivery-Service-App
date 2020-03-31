@@ -8,6 +8,8 @@ class OrderMenuModal extends Component {
         super(props)
         this.state = {
             isLoading: true,
+            infoList: props.infoList,
+            location: props.location,
             restaurantMenu: [],
             avail: [],
             order: [],
@@ -91,7 +93,10 @@ class OrderMenuModal extends Component {
             order: order,
             totalPrice: this.state.totalPrice,
             fee: this.state.fee,
-            timeStamp: timeStamp
+            timeStamp: timeStamp,
+            customer: this.state.infoList[0],
+            creditCard: this.state.infoList[1],
+            location: this.state.location
           })
           .then(response => {
               console.log("Received response from make_order")

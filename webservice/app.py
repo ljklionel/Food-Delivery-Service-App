@@ -339,25 +339,25 @@ def customer_orders():
 # ); 
 
 # CREATE TABLE Orders (
-# 	orderid SERIAL PRIMARY KEY,
-# 	paymentMethod VARCHAR(32) NOT NULL,
+# 	orderid SERIAL PRIMARY KEY,ok
+# 	paymentMethod VARCHAR(32) NOT NULL, ok
 
 #     -- Delivers combined
 #     rating INTEGER CHECK (rating in (1,2,3,4,5)),
-# 	location VARCHAR(256) NOT NULL,
-# 	fee FLOAT NOT NULL,
-# 	orderTime TIMESTAMP,
+# 	location VARCHAR(256) NOT NULL, 
+# 	fee FLOAT NOT NULL, ok
+# 	orderTime TIMESTAMP,ok
 # 	departTime1 TIMESTAMP,
 # 	arriveTime TIMESTAMP,
 # 	departTime2 TIMESTAMP,
 # 	deliveryTime TIMESTAMP,
-#     riderUsername VARCHAR(64) NOT NULL REFERENCES DeliveryRiders,
+#     riderUsername VARCHAR(64) NOT NULL REFERENCES DeliveryRiders, <-
 
 #     -- Makes combined
-#     customerUsername VARCHAR(64) NOT NULL REFERENCES Customers,
+#     customerUsername VARCHAR(64) NOT NULL REFERENCES Customers,ok
 
 #     -- From combined
-#     rname VARCHAR(64) NOT NULL REFERENCES Restaurants
+#     rname VARCHAR(64) NOT NULL REFERENCES Restaurantsok
 # );
 
 # == Customers End ==

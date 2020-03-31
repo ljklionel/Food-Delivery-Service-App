@@ -163,7 +163,7 @@ class CustomerDashboard extends React.Component {
           <Grid columns={4}>
             <Grid.Column>
               {/* <MenuList restaurant={this.state.currentRestaurant}/> */}
-              <MenuForCustomer submitOrder={this.updateOrder} restaurant={this.state.currentRestaurant}/>
+              <MenuForCustomer submitOrder={this.updateOrder} restaurant={this.state.currentRestaurant} location={this.state.location} infoList={this.state.infoList}/>
             </Grid.Column>
             <Grid.Column>
               {/* Need to update this orderList */}

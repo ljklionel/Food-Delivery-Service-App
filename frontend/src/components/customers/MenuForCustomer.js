@@ -10,7 +10,9 @@ class MenuForCustomer extends Component {
         this.state = {
             isLoading: true,
             restaurantMenu: [],
-            currentRestaurant: props.restaurant
+            currentRestaurant: props.restaurant,
+            infoList: props.infoList,
+            location: props.location
         }
         this.updateMenu(props.restaurant)
     }
@@ -74,7 +76,8 @@ class MenuForCustomer extends Component {
                 </Table>
               </Card.Content>
               <Card.Content>
-                <OrderMenuModal restaurant={this.state.currentRestaurant} submitHandler={this.updateMenu} submitOrder={this.props.submitOrder}/>
+                <OrderMenuModal restaurant={this.state.currentRestaurant} location={this.state.location} 
+                  infoList={this.state.infoList} submitHandler={this.updateMenu} submitOrder={this.props.submitOrder}/>
               </Card.Content>
             </Card>
           )
