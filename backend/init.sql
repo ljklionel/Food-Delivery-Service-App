@@ -26,7 +26,8 @@ CREATE TABLE Users (
 	hashedPassword VARCHAR(64) NOT NULL,
 	phoneNumber VARCHAR(12) NOT NULL,
 	firstName VARCHAR(64) NOT NULL,
-	lastName VARCHAR(64) NOT NULL
+	lastName VARCHAR(64) NOT NULL,
+    joinDate DATE NOT NULL
 );
 
 -- FDS MANAGERS --
