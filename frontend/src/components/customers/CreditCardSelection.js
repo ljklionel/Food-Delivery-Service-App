@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-import { Dropdown } from 'semantic-ui-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCoffee } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUp, faArrowDown, faCheck } from '@fortawesome/free-solid-svg-icons'
+import onClickOutside from "react-onclickoutside";
 
 class CreditCardSelection extends Component {
     constructor(props){
@@ -9,14 +9,16 @@ class CreditCardSelection extends Component {
         this.state = {
             listOpen: false,
             headerTitle: this.props.title,
+            toggleItem: this.props.toggleItem
         }
     }
 
     handleClickOutside(){
+        console.log("handleClickOutside")
         this.setState({
           listOpen: false
         })
-      }
+    }
 
 
     toggleList(){
@@ -26,31 +28,33 @@ class CreditCardSelection extends Component {
     }
 
     render(){
-    const{list} = this.props
-    console.log("Props", this.props)
-    const{listOpen, headerTitle} = this.state
-    console.log("List", list)
+        const{list} = this.props
+        console.log("Props", this.props)
+        const{listOpen, headerTitle} = this.state
+        console.log("List", list)
 
-    return(
-        <div className="dd-wrapper">
-    <div className="dd-header" onClick={() => this.toggleList()}>
-            <div className="dd-header-title">{headerTitle}</div>
-            {/* {listOpen ? 1 : 1} */}
-            <FontAwesomeIcon icon="coffee" />
-            {listOpen ? 1 : 1}
-            {listOpen
-            ? <FontAwesomeIcon icon="faCoffee" size="2x"/>
-            : <FontAwesomeIcon icon="faCoffee" size="2x"/>
-            }
-        </div>
-    {listOpen && <ul className="dd-list">
-            {list.map((item) => (
-            <li className="dd-list-item" key={item.id} >{item.title}</li>
-            ))}
-        </ul>}
-        </div>
-    )
+        return(
+            <div className="dd-wrapper">
+            <div className="dd-header" onClick={() => this.toggleList()}>
+                <div className="dd-header-title">{headerTitle}</div>
+                {listOpen
+                // ? <FontAwesome icon="faCoffee" size="2x"/>
+                ? <FontAwesomeIcon icon={faArrowUp} />
+                // : <FontAwesome icon="faCoffee" size="2x"/>
+                : <FontAwesomeIcon icon={faArrowDown} />
+                }
+            </div>
+        {listOpen && <ul className="dd-list" style={{textAlign: "left", width: "200px"}}>
+                {list.map((item) => (
+                    <li style={{listStyle: "none", width: "100%"}} className="dd-list-item" key={item.title} onClick={() => this.state.toggleItem(item.id, item.key)}>
+                        {item.title} {item.selected && <FontAwesomeIcon icon={faCheck}/>}
+                    </li>
+                // <li className="dd-list-item" key={item.id} >{item.title}</li>
+                ))}
+            </ul>}
+            </div>
+        )
     }
 }
 
-export default CreditCardSelection
+export default onClickOutside(CreditCardSelection)

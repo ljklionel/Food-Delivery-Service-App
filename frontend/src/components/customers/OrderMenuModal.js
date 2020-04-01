@@ -17,11 +17,25 @@ class OrderMenuModal extends Component {
             currentRestaurant: props.restaurant,
             modalOpen: false,
             totalPrice: 0,
-            fee: 0
+            fee: 0,
         }
+        console.log("Logging location in MenuForCustomer: ", this.state.location)
     }
 
     handleOpen = () => {
+
+        if (this.props.getLocation() == null || 
+                this.props.getLocation() == "") {
+            alert("Please input your location")
+            return
+        } else if (this.props.getCreditCardInfo() == null) {
+            alert("Please select your payment method")
+            return
+        }
+
+            // this.props.getCreditCardInfo() == null
+            // alert("Please input your location")
+            // alert("Please select your payment method")
         const order = []
         this.state.restaurantMenu.forEach(item => {
             order.push(0)
@@ -88,6 +102,9 @@ class OrderMenuModal extends Component {
             console.log(error);
           });
 
+          console.log("Get location returns: ", this.props.getLocation())
+          var creditCard = this.props.getCreditCardInfo()
+          console.log(creditCard)
           myAxios.post('make_order', {
             restaurant: this.state.currentRestaurant,
             order: order,
@@ -95,8 +112,8 @@ class OrderMenuModal extends Component {
             fee: this.state.fee,
             timeStamp: timeStamp,
             customer: this.state.infoList[0],
-            creditCard: this.state.infoList[1],
-            location: this.state.location
+            creditCard: creditCard,
+            location: this.props.getLocation()
           })
           .then(response => {
               console.log("Received response from make_order")

@@ -296,27 +296,52 @@ def get_restaurant_sells():
 @login_required
 def make_order():
     data = request.json
-    rname, orders = data['restaurant'], data['order']
-    conn = get_db()
-    cursor = conn.cursor()
+    print("Make order's data: ", data)
+    rname, order, totalPrice, fee, timeStamp, customer, creditCard, location = data['restaurant'], data['order'], data['totalPrice'], data['fee'], data['timeStamp'], data['customer'], data['creditCard'], data['location']
     deliveryRider = connectDeliveryRider()
-    cursor.execute("BEGIN;")
-    print(orders)
-    # Update Orders first
-    # Then update ContainsFood (because it requires orderid)
-    # insert into orders(paymentMethod, rating, location, fee, orderTime, riderUsername, customerUsername, rname) 
-    # values('a', 1, 'loc', 1.1, '2016-06-22 19:10:25-07', 'dr', 'c', 'r');
-    # for fname in orders:
-        # cursor.execute("INSERT into Orders VALUES(%s, %s, %s)")
-        # cursor.execute("UPDATE Sells SET avail = %s WHERE fname = %s AND rname = %s;", (updates[fname], fname, rname))
-    cursor.execute("COMMIT;")
+
+    print("printing data from make_order: ", rname, order, totalPrice, fee, timeStamp, customer, creditCard, location)
+    # Make order's data: 
+    # {'restaurant': 'Amigos/Kings Classic', 
+    # 'order': {'Hash browns': 0, 'Kaya toast': 0, 'Laksa': 0, 'Kimchi': 1}, 
+    # 'totalPrice': 4.5, 
+    # 'fee': 0.45, 
+    # 'timeStamp': 'Wed Apr 01 2020 22:43:21 (+08)', 
+    # 'customer': 'c', 
+    # 'location': None} 
+
+    print(deliveryRider)
+    print(type(deliveryRider))
+
     if deliveryRider:
-        return ({}, 200)
+        # Response include: orderID, riderUsername
+        orderId = "sampleID"
+
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("BEGIN;")
+        # Update Orders first
+        # insert into orders(paymentMethod, rating, location, fee, orderTime, riderUsername, customerUsername, rname) 
+        # values('a', 1, 'loc', 1.1, '2016-06-22 19:10:25-07', 'dr', 'c', 'r');
+        # insert into orders()
+        # for fname in orders:
+            # cursor.execute("INSERT into Orders VALUES(%s, %s, %s)")
+            # cursor.execute("UPDATE Sells SET avail = %s WHERE fname = %s AND rname = %s;", (updates[fname], fname, rname))
+
+        # Then update ContainsFood (because it requires orderid)
+        cursor.execute("COMMIT;")
+        return ({'orderId': orderId, 'deliveryRider': deliveryRider}, 200) 
     else:
-        return { 'No riders' } #todo
+        return ({}, 200)
 
 def connectDeliveryRider():
     conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("select username from DeliveryRiders")
+    result = cursor.fetchone()
+    print(result)
+    return result
+
     # todo
 
 @app.route("/customer_orders")
@@ -359,6 +384,20 @@ def customer_orders():
 #     -- From combined
 #     rname VARCHAR(64) NOT NULL REFERENCES Restaurantsok
 # );
+
+@app.route("/update_credit_card", methods=['POST'])
+@login_required
+def update_credit_card():
+    data = request.json
+    print("Data from updatecreditcard: ", data)
+    creditCard, customerName = data['creditCard'], data['customerName']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("UPDATE Customers SET creditCard = %s WHERE username = %s;", (creditCard, customerName))
+    cursor.execute("COMMIT;")
+    print("Commited in update")
+    return ({}, 200)
 
 # == Customers End ==
 

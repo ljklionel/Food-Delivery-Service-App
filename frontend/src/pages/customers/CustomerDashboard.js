@@ -18,61 +18,81 @@ class CustomerDashboard extends React.Component {
       isLoadingInfo: true,
       currentRestaurant: null,
       restaurantMenu: null,
-      location: null,
-      creditCardArray: [
+      customerLocation: null,
+      currentCreditCard: null,
+      creditCardOptions: [
         {
             id: 0,
-            title: 'New York',
+            title: 'Cash',
             selected: false,
-            key: 'location'
+            key: 'creditCardOptions'
         },
         {
           id: 1,
-          title: 'Dublin',
+          title: 'Mastercard',
           selected: false,
-          key: 'location'
+          key: 'creditCardOptions'
         },
         {
           id: 2,
-          title: 'California',
+          title: 'Visa',
           selected: false,
-          key: 'location'
-        },
-        {
-          id: 3,
-          title: 'Istanbul',
-          selected: false,
-          key: 'location'
-        },
-        {
-          id: 4,
-          title: 'Izmir',
-          selected: false,
-          key: 'location'
-        },
-        {
-          id: 5,
-          title: 'Oslo',
-          selected: false,
-          key: 'location'
+          key: 'creditCardOptions'
         }
       ]
     }
+    this.getCreditCardInfo = this.getCreditCardInfo.bind(this)
+    this.toggleSelected = this.toggleSelected.bind(this)
+    this.getLocation = this.getLocation.bind(this)
+  }
+
+  changeCurrentCreditCard = (x) => {
+    console.log("Changing CreditCard")
+    myAxios.post('update_credit_card', {
+      customerName: this.state.infoList[0],
+      creditCard: x
+    })
+    .then(response => {
+      console.log("Response from /update_credit_card: ", response);
+      var infoList = this.state.infoList
+      infoList[1] = x
+      console.log("Infolist after getting response: ", infoList)
+      this.setState({
+        infoList: infoList,
+        currentCreditCard: x
+      })
+    })
+    .catch(error => {
+      console.log(error);
+    });
   }
 
   toggleSelected(id, key){
+    this.state.creditCardOptions.map((x) => 
+      x.selected = false
+    )
     let temp = this.state[key]
     temp[id].selected = !temp[id].selected
     this.setState({
       [key]: temp
     })
+    this.changeCurrentCreditCard(this.state.creditCardOptions[id].title)
   }
 
   // Not sure if necessary to update a customer's order upon ordering from menu
   updateOrder = order => {console.log("Order received at customer dashboard: ", order)}
 
   handleLocationChange = (e, {value }) => {
-    this.state.location = value
+    this.state.customerLocation = value
+  }
+
+  getLocation = () => {
+    return this.state.customerLocation
+  }
+
+  getCreditCardInfo = () => {
+    console.log("Getting credit card info")
+    return this.state.infoList[1]
   }
 
   async componentDidMount() {
@@ -105,7 +125,7 @@ class CustomerDashboard extends React.Component {
 
     if (this.state.infoList) {
       const id = this.state.infoList[0]
-      const creditCard = this.state.infoList[1] == null ? 'Select payment method' : this.state.infolist[1]
+
       const rewardPoint = this.state.infoList[2] == null ? 0 : this.state.infolist[2]
       const selectedRestaurant = this.state.currentRestaurant == null ? "Not selected" :this.state.currentRestaurant
       
@@ -122,9 +142,9 @@ class CustomerDashboard extends React.Component {
             </Grid.Column>
 
             <Grid.Column>
-              <Header textAlign='left' style={{fontSize: '16px'}}>Credit Card:</Header>
-              <Header textAlign='left' style={{fontSize:'12px'}}>{creditCard}</Header>
-              <CreditCardSelection   titleHelper="Location" title="Select credit card" list={this.state.creditCardArray} toggleItem={this.toggleSelected} />
+              <Header textAlign='left' style={{fontSize: '16px'}}>Payment method:</Header>
+              <Header textAlign='left' style={{fontSize:'12px'}}>{this.state.currentCreditCard}</Header>
+              <CreditCardSelection title="Select credit card" list={this.state.creditCardOptions} toggleItem={this.toggleSelected} />
               {/* <MenuForCustomer submitOrder={this.updateOrder} restaurant={this.state.currentRestaurant}/> */}
             </Grid.Column>
 
@@ -163,7 +183,7 @@ class CustomerDashboard extends React.Component {
           <Grid columns={4}>
             <Grid.Column>
               {/* <MenuList restaurant={this.state.currentRestaurant}/> */}
-              <MenuForCustomer submitOrder={this.updateOrder} restaurant={this.state.currentRestaurant} location={this.state.location} infoList={this.state.infoList}/>
+              <MenuForCustomer submitOrder={this.updateOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
             </Grid.Column>
             <Grid.Column>
               {/* Need to update this orderList */}

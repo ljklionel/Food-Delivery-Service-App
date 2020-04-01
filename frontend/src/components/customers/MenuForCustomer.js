@@ -15,16 +15,18 @@ class MenuForCustomer extends Component {
             location: props.location
         }
         this.updateMenu(props.restaurant)
+        console.log("Logging location in MenuForCustomer: ", this.state.location)
     }
 
     updateMenu = rname => {
-        myAxios.get('/restaurant_items', {
+      console.log("Updating the menu")
+        myAxios.get('/restaurant_sells', {
           params: {
               restaurant: rname
           }
         })
         .then(response => {
-          console.log(response);
+          console.log("response from restaurant sells: ", response);
           this.setState({
             restaurantMenu: response.data.result,
             isLoading: false
@@ -59,6 +61,7 @@ class MenuForCustomer extends Component {
                     <Table.Row>
                         <Table.HeaderCell>Item</Table.HeaderCell>
                         <Table.HeaderCell>Avail.</Table.HeaderCell>
+                        <Table.HeaderCell>Price</Table.HeaderCell>
                     </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -70,13 +73,16 @@ class MenuForCustomer extends Component {
                             <Table.Cell>
                                 {item[1]}
                             </Table.Cell>
+                            <Table.Cell>
+                                {item[2]}
+                            </Table.Cell>
                         </Table.Row>
                     ))}
                     </Table.Body>
                 </Table>
               </Card.Content>
               <Card.Content>
-                <OrderMenuModal restaurant={this.state.currentRestaurant} location={this.state.location} 
+                <OrderMenuModal restaurant={this.state.currentRestaurant} getCreditCardInfo={this.props.getCreditCardInfo} getLocation={this.props.getLocation} location={this.state.location} 
                   infoList={this.state.infoList} submitHandler={this.updateMenu} submitOrder={this.props.submitOrder}/>
               </Card.Content>
             </Card>
