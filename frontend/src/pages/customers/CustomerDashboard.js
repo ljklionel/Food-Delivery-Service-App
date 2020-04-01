@@ -1,13 +1,12 @@
 import React from 'react';
-import { Grid, Image, Header, Loader, Card, List, Button, Menu } from 'semantic-ui-react';
+import { Grid, Image, Header, Loader, Card } from 'semantic-ui-react';
 import RestaurantSelect from '../../components/customers/RestaurantSelect.js'
-import MenuList from '../../components/staffs/MenuList.js'
 import MenuForCustomer from '../../components/customers/MenuForCustomer.js'
 import CreditCardSelection from '../../components/customers/CreditCardSelection.js'
 import AppHeader from '../../components/AppHeader.js'
 import myAxios from '../../webServer.js'
 import CompletedOrders from '../../components/customers/CompletedOrders.js'
-import { Modal, Form, Table } from 'semantic-ui-react';
+import { Form, Table } from 'semantic-ui-react';
 
 
 class CustomerDashboard extends React.Component {
@@ -20,7 +19,6 @@ class CustomerDashboard extends React.Component {
       restaurantMenu: null,
       customerLocation: null,
       currentCreditCard: null,
-      orderSubmitted: 0,
       creditCardOptions: [
         {
             id: 0,
@@ -77,19 +75,20 @@ class CustomerDashboard extends React.Component {
     this.changeCurrentCreditCard(this.state.creditCardOptions[id].title)
   }
 
-  submitOrder = order => {
-    console.log("this.state.orderSubmitted", this.state.orderSubmitted)
-    var orderSubmitted = this.state.orderSubmitted++
+  submitOrder = totalPrice => {
+    const list = this.state.infoList
+    list[2] = totalPrice * 10
     this.setState({
-      orderSubmitted: orderSubmitted
+      infoList: list
     })
-    console.log("this.state.orderSubmitted", this.state.orderSubmitted)
-    console.log("Order received at customer dashboard: ", order)
+    console.log(this.state.infoList)
     window.location.reload(false);
   }
 
   handleLocationChange = (e, {value }) => {
-    this.state.customerLocation = value
+    this.setState({
+      customerLocation: value
+    })
   }
 
   getLocation = () => {
@@ -126,82 +125,54 @@ class CustomerDashboard extends React.Component {
       );
     }
 
-    if (this.state.infoList) {
-      const id = this.state.infoList[0]
-      this.state.currentCreditCard = this.state.infoList[1]
-      const rewardPoint = this.state.infoList[2] == null ? 0 : this.state.infoList[2]
-      const selectedRestaurant = this.state.currentRestaurant == null ? "Not selected" :this.state.currentRestaurant
-      
-      return (
-        <div>
-          <Grid columns={4}>
-            <Grid.Column>
-              <Image avatar style= {{fontSize: '40px'}} src={'/images/avatar/customer.svg'} />
-            </Grid.Column>
+    const id = this.state.infoList[0]
+    this.state.currentCreditCard = this.state.infoList[1]
+    const rewardPoint = this.state.infoList[2] == null ? 0 : this.state.infoList[2]
+    const selectedRestaurant = this.state.currentRestaurant == null ? "Not selected" :this.state.currentRestaurant
+    
+    return (
+      <div>
+        <Grid columns={4}>
+          <Grid.Column>
+            <Image avatar style= {{fontSize: '80px'}} src={'/images/avatar/customer.svg'} />
+          </Grid.Column>
 
-            <Grid.Column>
-              <Header textAlign='left' style={{fontSize: '16px'}}>Username:</Header>
-              <Header textAlign='left' style={{fontSize:'12px'}}>{id}</Header>
-            </Grid.Column>
+          <Grid.Column>
+            <Header textAlign='left' style={{fontSize: '14px'}}>Username: {id}</Header>
+            <Header textAlign='left' style={{fontSize: '14px'}}>Payment method: {this.state.currentCreditCard}</Header>
+            <Header textAlign='left' style={{fontSize: '14px'}}>Reward Point: {rewardPoint}</Header>
+            <Header textAlign='left' style={{fontSize: '14px'}}>Selected Restaurant: {selectedRestaurant}</Header>
+            <Header textAlign='left' style={{fontSize: '14px'}}>Location: {this.state.customerLocation}</Header>
+            <Form.Field>
+              <Form.Input
+                placeholder='Input your location'
+                onChange={this.handleLocationChange}/>
+            </Form.Field>
+          </Grid.Column>
+          <Grid.Column>
+          <CreditCardSelection title="Select credit card" list={this.state.creditCardOptions} toggleItem={this.toggleSelected} />
+          </Grid.Column>
+        </Grid>
 
-            <Grid.Column>
-              <Header textAlign='left' style={{fontSize: '16px'}}>Payment method:</Header>
-              <Header textAlign='left' style={{fontSize:'12px'}}>{this.state.currentCreditCard}</Header>
-              <CreditCardSelection title="Select credit card" list={this.state.creditCardOptions} toggleItem={this.toggleSelected} />
-              {/* <MenuForCustomer submitOrder={this.updateOrder} restaurant={this.state.currentRestaurant}/> */}
-            </Grid.Column>
-
-            <Grid.Column>
-              <Header textAlign='left' style={{fontSize: '16px'}}>Reward Point:</Header>
-              <Header textAlign='left' style={{fontSize:'12px'}}>{rewardPoint}</Header>
-            </Grid.Column>
-          </Grid>
-
-          <Table basic='very' celled>
-                    <Table.Body>
-                      <Table.Row>
-                        <Table.Cell>
-                           Location
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Form.Field>
-                            <Form.Input
-                              placeholder='Input your location'
-                              onChange={this.handleLocationChange}/>
-                          </Form.Field>
-                        </Table.Cell>
-                        <Table.Cell>
-                        </Table.Cell>
-                      </Table.Row>
-                    </Table.Body>
-                </Table>
-
-
-          <Header style={{fontSize: '16'}}>Selected Restaurant:</Header>
-          <Header textAlign='center' style={{fontSize:'16px'}}>{selectedRestaurant}</Header>
-
-          <br/><br/>
-          <Grid columns={4}>
-            <Grid.Column>
-              <MenuForCustomer submitOrder={this.submitOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
-            </Grid.Column>
-            <Grid.Column>
-              {/* Need to update this orderList */}
-              <CompletedOrders orderSubmitted={this.state.orderSubmitted} currentCustomer={this.state.infoList[0]}/>
-            </Grid.Column>
-          </Grid>
-          
-        </div>
-      );
-    } else {
-      return (
-        <div>
-          <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-          <Image avatar style= {{fontSize: '100px'}} src={'/images/avatar/customer.svg'} />
-          <Header style={{fontSize: '32px'}}>Select a Restaurant</Header>
-        </div>
-      );
-    }
+        <Table basic='very' celled>
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell>
+                      </Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+              </Table>
+        <Grid columns={4}>
+          <Grid.Column>
+            <MenuForCustomer submitOrder={this.submitOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
+          </Grid.Column>
+          <Grid.Column>
+            <CompletedOrders orderSubmitted={this.state.orderSubmitted} currentCustomer={this.state.infoList[0]}/>
+          </Grid.Column>
+        </Grid>
+        
+      </div>
+    );
   }
 
   selectRestaurant() {
@@ -237,7 +208,7 @@ class CustomerDashboard extends React.Component {
           ))} */}
         </Card.Group>
         <br/><br/>
-        <RestaurantSelect whenSelect={onSelectRestaurant}/>
+        <RestaurantSelect whenselect={onSelectRestaurant}/>
       </div>
       
     )

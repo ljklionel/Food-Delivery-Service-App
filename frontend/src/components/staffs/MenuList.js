@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Grid, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
+import { Card, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
 import EditMenuModal from './EditMenuModal.js';
 

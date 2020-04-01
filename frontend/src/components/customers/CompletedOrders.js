@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Grid, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
+import { Card, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
 
 class CompletedOrders extends Component {
@@ -45,37 +45,13 @@ class CompletedOrders extends Component {
         this.updateOrders(nextProps.currentCustomer)
       }
 
-    static getDerivedStateFromProps(nextProps, prevState) {
-      console.log("getDerivedStateFromProps, nextProps: ", nextProps, " prevState: ",  prevState)
-      if(nextProps.orderSubmitted !== prevState.orderSubmitted) {
-        return {
-          currentCustomer: nextProps.currentCustomer,
-          orderSubmitted: nextProps.orderSubmitted,
-          isLoading: true 
-        }
-      }
-      else return null
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-      console.log("componentDidUpdate, prevProps: ", prevProps, " prevState: ",  prevState)
-      // this.updateOrders(prevProps.customer)
-
-      if(prevProps.orderSubmitted !== this.props.orderSubmitted) {
-        console.log("Trying to update orders in if statement")
-        this.setState({orderSubmitted: this.state.orderSubmitted++})
-        this.updateOrders(prevProps.customer)
-      }
-
-    }
-
       render() {
         if (this.state.isLoading) {
           return null//<Loader active/>
         }
         var content
         
-        if (this.state.orders.length == 0) {
+        if (this.state.orders.length === 0) {
           content = <p><i>No orders yet!</i></p>
         } else {
           content = (

@@ -10,7 +10,7 @@ class RestaurantSelect extends Component {
 
   handleResultSelect = (e, { result }) => {
       this.setState({ value: ''}) 
-      this.props.whenSelect(result.title)
+      this.props.whenselect(result.title)
     }
 
   handleSearchChange = (e, { value }) => {

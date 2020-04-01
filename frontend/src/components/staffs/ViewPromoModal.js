@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Modal, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
+import { Modal, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
 
 class ViewPromoModal extends Component {

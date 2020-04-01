@@ -25,7 +25,7 @@ class OrderMenuModal extends Component {
     handleOpen = () => {
 
         if (this.props.getLocation() == null || 
-                this.props.getLocation() == "") {
+                this.props.getLocation() === "") {
             alert("Please input your location")
             return
         } else if (this.props.getCreditCardInfo() == null) {
@@ -63,7 +63,7 @@ class OrderMenuModal extends Component {
         var dateArray = currentDate.split(" ")
         var i;
         for (i = 0; i < dateArray.length; i++) { 
-            if (i == 5) {
+            if (i === 5) {
                 continue
             }
             dateString += dateArray[i] + " "
@@ -74,7 +74,6 @@ class OrderMenuModal extends Component {
     handleSave = () => {
         const updates = {}
         const order = {}
-        const avail = {}
         const timeStamp = this.getOrderTimeStamp()
         var totalQty = 0
 
@@ -89,7 +88,7 @@ class OrderMenuModal extends Component {
             totalQty += order[food]
         }
         console.log("Quantity: ", totalQty)
-        if (totalQty == 0) {
+        if (totalQty === 0) {
             alert("Please do not submit empty orders")
             return
         }
@@ -137,7 +136,7 @@ class OrderMenuModal extends Component {
                     // restaurantMenu: menu
                 // })
             console.log(this.state.currentRestaurant)
-            this.props.submitOrder(this.state.order)
+            this.props.submitOrder(this.state.totalPrice)
           })
           .catch(error => {
             console.log(error);

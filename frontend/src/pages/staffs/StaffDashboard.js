@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Image, Header, Loader, Card, List, Button, Menu } from 'semantic-ui-react';
+import { Grid, Image, Header, Loader, Card } from 'semantic-ui-react';
 import RestaurantSearch from '../../components/staffs/RestaurantSearch.js'
 import MenuList from '../../components/staffs/MenuList.js'
 import OrderList from '../../components/staffs/OrderList.js'
