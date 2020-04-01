@@ -5,7 +5,7 @@ import MenuForCustomer from '../../components/customers/MenuForCustomer.js'
 import CreditCardSelection from '../../components/customers/CreditCardSelection.js'
 import AppHeader from '../../components/AppHeader.js'
 import myAxios from '../../webServer.js'
-import CompletedOrders from '../../components/customers/CompletedOrders.js'
+import CompletedOrders from '../../components/customers/MyOrders.js'
 import { Form, Table } from 'semantic-ui-react';
 
 
@@ -81,7 +81,7 @@ class CustomerDashboard extends React.Component {
     this.setState({
       infoList: list
     })
-    console.log(this.state.infoList)
+    console.log("Reward point: ", this.state.infoList)
     window.location.reload(false);
   }
 
@@ -154,16 +154,8 @@ class CustomerDashboard extends React.Component {
           </Grid.Column>
         </Grid>
 
-        <Table basic='very' celled>
-                  <Table.Body>
-                    <Table.Row>
-                      <Table.Cell>
-                      </Table.Cell>
-                    </Table.Row>
-                  </Table.Body>
-              </Table>
         <Grid columns={4}>
-          <Grid.Column>
+          <Grid.Column span='3'>
             <MenuForCustomer submitOrder={this.submitOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
           </Grid.Column>
           <Grid.Column>
@@ -173,6 +165,12 @@ class CustomerDashboard extends React.Component {
         
       </div>
     );
+  }
+
+  onSelectRestaurant = (rest) => {
+    const update = {}
+    update.currentRestaurant = rest
+    this.setState(update)
   }
 
   selectRestaurant() {
@@ -187,16 +185,9 @@ class CustomerDashboard extends React.Component {
             'blue','violet','purple','pink','brown','grey','black']
     const random_color = () => colors[Math.floor(Math.random() * colors.length)]
 
-    const onSelectRestaurant = (rest) => {
-      const update = {}
-      update.currentRestaurant = rest
-      this.setState(update)
-    }
-
     return (
       <div>
         <Header style={headerStyle}><i>Select Restaurant</i></Header>
-        <br/>
         <Card.Group>
           {/* {this.state.restaurantList.map((rest) => (
             <Card as='a' 
@@ -207,10 +198,8 @@ class CustomerDashboard extends React.Component {
               header={rest} />
           ))} */}
         </Card.Group>
-        <br/><br/>
-        <RestaurantSelect whenselect={onSelectRestaurant}/>
+        <RestaurantSelect whenselect={this.onSelectRestaurant}/>
       </div>
-      
     )
   }
 

@@ -82,8 +82,9 @@ class MenuForCustomer extends Component {
                 </Table>
               </Card.Content>
               <Card.Content>
-                <OrderMenuModal restaurant={this.state.currentRestaurant} getCreditCardInfo={this.props.getCreditCardInfo} getLocation={this.props.getLocation} location={this.state.location} 
-                  infoList={this.state.infoList} submitHandler={this.updateMenu} submitOrder={this.props.submitOrder}/>
+                <OrderMenuModal restaurant={this.state.currentRestaurant} getCreditCardInfo={this.props.getCreditCardInfo} 
+                    getLocation={this.props.getLocation} location={this.state.location} 
+                        infoList={this.state.infoList} submitHandler={this.updateMenu} submitOrder={this.props.submitOrder}/>
               </Card.Content>
             </Card>
           )
