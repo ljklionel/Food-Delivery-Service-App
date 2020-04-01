@@ -31,6 +31,7 @@ class StaffDashboard extends React.Component {
       response.data.result.forEach(element => {
         list.push(element[0])
       });
+      console.log("Restaurant list: ", list)
       this.setState({restaurantList: list,
         currentRestaurant: list ? list[0] : null,
         isLoadingRestaurantList: false,

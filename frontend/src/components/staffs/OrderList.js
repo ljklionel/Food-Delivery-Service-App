@@ -15,6 +15,7 @@ class OrderList extends Component {
     }
 
     updateMenu(rname) {
+      console.log("UpdatingMenu")
         myAxios.get('/restaurant_orders', {
           params: {
               restaurant: rname,
@@ -23,7 +24,7 @@ class OrderList extends Component {
           }
         })
         .then(response => {
-          console.log(response);
+          console.log("restaurant_orders: ", response);
           this.setState({
             orders: response.data.result,
             isLoading: false

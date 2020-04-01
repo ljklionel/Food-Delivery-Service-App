@@ -20,6 +20,7 @@ class CustomerDashboard extends React.Component {
       restaurantMenu: null,
       customerLocation: null,
       currentCreditCard: null,
+      orderSubmitted: 0,
       creditCardOptions: [
         {
             id: 0,
@@ -47,16 +48,13 @@ class CustomerDashboard extends React.Component {
   }
 
   changeCurrentCreditCard = (x) => {
-    console.log("Changing CreditCard")
     myAxios.post('update_credit_card', {
       customerName: this.state.infoList[0],
       creditCard: x
     })
     .then(response => {
-      console.log("Response from /update_credit_card: ", response);
       var infoList = this.state.infoList
       infoList[1] = x
-      console.log("Infolist after getting response: ", infoList)
       this.setState({
         infoList: infoList,
         currentCreditCard: x
@@ -79,8 +77,16 @@ class CustomerDashboard extends React.Component {
     this.changeCurrentCreditCard(this.state.creditCardOptions[id].title)
   }
 
-  // Not sure if necessary to update a customer's order upon ordering from menu
-  updateOrder = order => {console.log("Order received at customer dashboard: ", order)}
+  submitOrder = order => {
+    console.log("this.state.orderSubmitted", this.state.orderSubmitted)
+    var orderSubmitted = this.state.orderSubmitted++
+    this.setState({
+      orderSubmitted: orderSubmitted
+    })
+    console.log("this.state.orderSubmitted", this.state.orderSubmitted)
+    console.log("Order received at customer dashboard: ", order)
+    window.location.reload(false);
+  }
 
   handleLocationChange = (e, {value }) => {
     this.state.customerLocation = value
@@ -91,7 +97,6 @@ class CustomerDashboard extends React.Component {
   }
 
   getCreditCardInfo = () => {
-    console.log("Getting credit card info")
     return this.state.infoList[1]
   }
 
@@ -103,8 +108,8 @@ class CustomerDashboard extends React.Component {
     .then(response => {
       console.log(response);
       const list = []
-      response.data.result.forEach(element => {
-        list.push(element[0])
+      response.data.result[0].forEach(element => {
+        list.push(element)
       });
       this.setState({infoList: list,
         isLoadingInfo: false})
@@ -120,13 +125,11 @@ class CustomerDashboard extends React.Component {
         <Loader size='massive' active/>
       );
     }
-    console.log("infoList: ", this.state.infoList)
-    const i = null
 
     if (this.state.infoList) {
       const id = this.state.infoList[0]
-
-      const rewardPoint = this.state.infoList[2] == null ? 0 : this.state.infolist[2]
+      this.state.currentCreditCard = this.state.infoList[1]
+      const rewardPoint = this.state.infoList[2] == null ? 0 : this.state.infoList[2]
       const selectedRestaurant = this.state.currentRestaurant == null ? "Not selected" :this.state.currentRestaurant
       
       return (
@@ -163,9 +166,7 @@ class CustomerDashboard extends React.Component {
                         <Table.Cell>
                           <Form.Field>
                             <Form.Input
-                              // name = {i}
                               placeholder='Input your location'
-                              // value= {i}
                               onChange={this.handleLocationChange}/>
                           </Form.Field>
                         </Table.Cell>
@@ -182,21 +183,11 @@ class CustomerDashboard extends React.Component {
           <br/><br/>
           <Grid columns={4}>
             <Grid.Column>
-              {/* <MenuList restaurant={this.state.currentRestaurant}/> */}
-              <MenuForCustomer submitOrder={this.updateOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
+              <MenuForCustomer submitOrder={this.submitOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
             </Grid.Column>
             <Grid.Column>
               {/* Need to update this orderList */}
-              <CompletedOrders currentCustomer={this.state.infoList[0]}/>
-            </Grid.Column>
-
-            <Grid.Column>
-              {/* <MonthlySummary restaurant={this.state.currentRestaurant}/> */}
-            </Grid.Column>
-
-
-            <Grid.Column>
-              {/* <PromoList restaurant={this.state.currentRestaurant}/> */}
+              <CompletedOrders orderSubmitted={this.state.orderSubmitted} currentCustomer={this.state.infoList[0]}/>
             </Grid.Column>
           </Grid>
           

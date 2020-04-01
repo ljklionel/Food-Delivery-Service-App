@@ -31,11 +31,11 @@ class OrderMenuModal extends Component {
         } else if (this.props.getCreditCardInfo() == null) {
             alert("Please select your payment method")
             return
+        } else if (this.props.restaurant == null) {
+            alert("Please select a restaurant")
+            return
         }
 
-            // this.props.getCreditCardInfo() == null
-            // alert("Please input your location")
-            // alert("Please select your payment method")
         const order = []
         this.state.restaurantMenu.forEach(item => {
             order.push(0)
@@ -76,12 +76,23 @@ class OrderMenuModal extends Component {
         const order = {}
         const avail = {}
         const timeStamp = this.getOrderTimeStamp()
+        var totalQty = 0
 
         this.state.restaurantMenu.forEach((item, i) => {
             this.state.avail[i] -= this.state.order[i]
             updates[item[0]] = this.state.avail[i]
             order[item[0]] = this.state.order[i]
         })
+        console.log("Order during save: ", order)
+        
+        for (const food in order) {
+            totalQty += order[food]
+        }
+        console.log("Quantity: ", totalQty)
+        if (totalQty == 0) {
+            alert("Please do not submit empty orders")
+            return
+        }
 
         myAxios.post('edit_availability', {
             restaurant: this.state.currentRestaurant,

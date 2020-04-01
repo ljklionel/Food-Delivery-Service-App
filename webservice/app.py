@@ -280,6 +280,7 @@ def get_my_info():
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Customers WHERE username = '%s';" % username)
     result = cursor.fetchall()
+    print("Myinfo result: ", result)
     return ({'result': result}, 200)
 
 @app.route("/restaurant_sells")
@@ -296,11 +297,9 @@ def get_restaurant_sells():
 @login_required
 def make_order():
     data = request.json
-    print("Make order's data: ", data)
     rname, order, totalPrice, fee, timeStamp, customer, creditCard, location = data['restaurant'], data['order'], data['totalPrice'], data['fee'], data['timeStamp'], data['customer'], data['creditCard'], data['location']
     deliveryRider = connectDeliveryRider()
 
-    print("printing data from make_order: ", rname, order, totalPrice, fee, timeStamp, customer, creditCard, location)
     # Make order's data: 
     # {'restaurant': 'Amigos/Kings Classic', 
     # 'order': {'Hash browns': 0, 'Kaya toast': 0, 'Laksa': 0, 'Kimchi': 1}, 
@@ -310,26 +309,28 @@ def make_order():
     # 'customer': 'c', 
     # 'location': None} 
 
-    print(deliveryRider)
-    print(type(deliveryRider))
-
     if deliveryRider:
-        # Response include: orderID, riderUsername
-        orderId = "sampleID"
-
+        # Response have to include: orderID, riderUsername
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute("BEGIN;")
         # Update Orders first
-        # insert into orders(paymentMethod, rating, location, fee, orderTime, riderUsername, customerUsername, rname) 
-        # values('a', 1, 'loc', 1.1, '2016-06-22 19:10:25-07', 'dr', 'c', 'r');
-        # insert into orders()
-        # for fname in orders:
-            # cursor.execute("INSERT into Orders VALUES(%s, %s, %s)")
-            # cursor.execute("UPDATE Sells SET avail = %s WHERE fname = %s AND rname = %s;", (updates[fname], fname, rname))
-
-        # Then update ContainsFood (because it requires orderid)
+        cursor.execute("INSERT INTO Orders(paymentMethod, location, fee, orderTime, riderUsername, customerUsername, rname) VALUES (%s, %s, %s, %s, %s, %s, %s);", (creditCard, location, totalPrice + fee, timeStamp, deliveryRider, customer, rname,))
         cursor.execute("COMMIT;")
+
+        # Retrieve orderId from Orders
+        cursor = conn.cursor()
+        cursor.execute("SELECT orderid from Orders WHERE orderid >= all(SELECT orderid from Orders)")
+        orderId = cursor.fetchall()[0]
+
+        cursor = conn.cursor()
+        cursor.execute("BEGIN;")
+        for fname in order:
+            print(fname)
+            print(order[fname])
+            cursor.execute("INSERT INTO ContainsFood(quantity, fname, orderid) VALUES(%s, %s, %s);", (order[fname], fname, orderId))
+        cursor.execute("COMMIT;")
+
         return ({'orderId': orderId, 'deliveryRider': deliveryRider}, 200) 
     else:
         return ({}, 200)
@@ -340,7 +341,7 @@ def connectDeliveryRider():
     cursor.execute("select username from DeliveryRiders")
     result = cursor.fetchone()
     print(result)
-    return result
+    return result[0]
 
     # todo
 
@@ -350,8 +351,8 @@ def customer_orders():
     currentCustomer, limit, offset = request.args.get('currentCustomer'), request.args.get('limit'), request.args.get('offset')
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT fname, quantity, orderTime FROM Orders NATURAL JOIN ContainsFood " + 
-        "WHERE customerUsername = %s ORDER BY orderTime DESC LIMIT %s OFFSET %s;", (currentCustomer, limit, offset))
+    cursor.execute("SELECT fname, quantity, orderTime, paymentMethod, location, fee, departTime1, arriveTime, departTime2, deliveryTime, riderUsername, rname, orderid FROM Orders NATURAL JOIN ContainsFood " + 
+        "WHERE quantity <> 0 AND customerUsername = %s ORDER BY orderTime DESC LIMIT %s OFFSET %s;", (currentCustomer, limit, offset))
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
