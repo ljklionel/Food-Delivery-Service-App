@@ -38,10 +38,10 @@ CREATE TABLE FDSManagers (
 
 CREATE TABLE FDSPromotions (
     promoId VARCHAR(64) PRIMARY KEY,
+    promoDescription VARCHAR(512),
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
     discount NUMERIC(4,2) NOT NULL,
-	promoDescription VARCHAR(512),
 	createdBy VARCHAR(64) NOT NULL REFERENCES FDSManagers
 );
 
@@ -179,6 +179,8 @@ CREATE TABLE ContainsFood (
 ); 
 
 ----- INSERT DATA -----
+INSERT INTO Users(username, hashedPassword, firstName, lastName, phoneNumber, joinDate) VALUES ('man', 'dummy', 'he','llo','123', now()::date);
+INSERT INTO FDSManagers(username) VALUES ('man');
 
 \COPY FoodCategories(category) FROM './csv/food_categories.csv' CSV HEADER;
 \COPY Food(fname,category) FROM './csv/food.csv' CSV HEADER;
@@ -187,7 +189,7 @@ CREATE TABLE ContainsFood (
 \COPY Sells(fname,rname,avail,maxLimit,price) FROM './csv/sells.csv' CSV HEADER;
 \COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
 \COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
-
+\COPY FDSPromotions(promoId, promoDescription, startDate, endDate, discount, createdBy) FROM './csv/FDSpromotions.csv' CSV HEADER;
 
 ------ TRIGGERS ------
 
