@@ -407,6 +407,16 @@ def get_riders():
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
+@app.route("/locations")
+@login_required
+def get_locations():
+    keyword = request.args.get('keyword')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT location FROM Locations WHERE location ILIKE '%s%%';" % keyword)
+    result = cursor.fetchmany(10)
+    return ({'result': result}, 200)
+
 @app.route("/all_customer_summary")
 @login_required
 def get_all_customer_summary(): #TODO new customer of the month -yuting
@@ -463,8 +473,25 @@ def get_customer_summary():
         result.append(res)
     return ({'result': result}, 200)
 
-#TODO DELIVERY LOCATION for yuting
- 
+@app.route("/current_location_summary")
+def get_location_summary():
+    location = request.args.get('location')
+    now = datetime.now()
+    start_time = datetime(now.year, now.month, now.day, now.hour)
+    end_time = start_time + timedelta(hours=1) - timedelta(seconds=1)
+    conn = get_db()
+    result = []
+    for i in range(0, 25): # show at most the last 1 day of summmary
+        cur_start_time = start_time - relativedelta(hours=i)
+        cur_end_time = end_time - relativedelta(hours=i)
+        # of orders placed
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(*) FROM Orders WHERE location = %s AND orderTime BETWEEN %s AND %s;", (location, cur_start_time, cur_end_time))
+        location_orders = cursor.fetchone()[0]
+        res = {'day': cur_start_time, 'hour': cur_start_time.hour, 'location_orders': location_orders}
+        result.append(res)
+    return ({'result': result}, 200)
+
 @app.route("/current_rider_summary")
 def get_rider_summary():
     username = request.args.get('username')
