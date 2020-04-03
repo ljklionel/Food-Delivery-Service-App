@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Grid, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
+import { Card, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
 import ViewPromoModal from './ViewPromoModal.js';
 
@@ -47,7 +47,7 @@ class PromoList extends Component {
             return null// <Loader active/>
         }
         var content
-        if (this.state.promotions.length == 0) {
+        if (this.state.promotions.length === 0) {
           content = <p><i>No ongoing promotions.</i></p>
         } else {
           content = (
