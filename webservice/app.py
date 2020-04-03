@@ -270,5 +270,74 @@ def edit_availability():
 
     return ({}, 200)
 
+@app.route("/employee_page")
+@login_required
+def get_my_employee_page():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT username FROM DeliveryRiders WHERE username = '%s';" % username)
+    conn.commit()
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+@app.route("/get_full_time")
+@login_required
+def get_full_time():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT username FROM FullTimers WHERE username = '%s';" % username)
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+@app.route("/get_part_time")
+@login_required
+def get_part_time():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT username FROM PartTimers WHERE username = '%s';" % username)
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+@app.route("/get_work_hours")
+@login_required
+def get_work_hours():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT workHours FROM PartTimers WHERE username = '%s';" % username)
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+@app.route("/get_salary")
+@login_required
+def get_salary():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT salary FROM DeliveryRiders WHERE username = '%s';" % username)
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+@app.route("/add_full_time", methods=['POST'])
+@login_required
+def add_full_time():
+    username = current_user.get_id()
+    data = request.json
+    workDay, startHour = data['startDay'], data['shift']
+    startHour = str(int(startHour)+9)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT endHour FROM FullTimeShifts WHERE workDay = %s AND startHour = %s;", (workDay, startHour))
+    endHour = cursor.fetchone()[0]
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("INSERT INTO FullTimers(username) VALUES ('%s');" % (username))
+    cursor.execute("INSERT INTO MonthlyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);", (username, workDay, startHour, endHour))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': '%s now works as Fulltimer!' % (username)}, 200)
+
 if __name__ == '__main__':
     app.run()
