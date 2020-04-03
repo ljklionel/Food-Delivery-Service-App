@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Image, Header, Loader, Card, List, Button, Menu } from 'semantic-ui-react';
+import { Grid, Image, Header, Loader, Card } from 'semantic-ui-react';
 import RestaurantSearch from '../../components/staffs/RestaurantSearch.js'
 import MenuList from '../../components/staffs/MenuList.js'
 import OrderList from '../../components/staffs/OrderList.js'
@@ -31,6 +31,7 @@ class StaffDashboard extends React.Component {
       response.data.result.forEach(element => {
         list.push(element[0])
       });
+      console.log("Restaurant list: ", list)
       this.setState({restaurantList: list,
         currentRestaurant: list ? list[0] : null,
         isLoadingRestaurantList: false,

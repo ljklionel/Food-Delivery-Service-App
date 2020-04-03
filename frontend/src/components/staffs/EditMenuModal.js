@@ -58,6 +58,7 @@ class EditMenuModal extends Component {
 
     handleChange = (e, { name, value }) => {
         value = value ? parseInt(value) : 0
+        console.log("value after: ", value)
         if (value <= 999) {
             const avail = this.state.avail
             avail[name] = value

@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Grid, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
+import { Card, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
 
 class OrderList extends Component {
@@ -15,6 +15,7 @@ class OrderList extends Component {
     }
 
     updateMenu(rname) {
+      console.log("UpdatingMenu")
         myAxios.get('/restaurant_orders', {
           params: {
               restaurant: rname,
@@ -23,7 +24,7 @@ class OrderList extends Component {
           }
         })
         .then(response => {
-          console.log(response);
+          console.log("restaurant_orders: ", response);
           this.setState({
             orders: response.data.result,
             isLoading: false
@@ -48,7 +49,7 @@ class OrderList extends Component {
           return null//<Loader active/>
         }
         var content
-        if (this.state.orders.length == 0) {
+        if (this.state.orders.length === 0) {
           content = <p><i>No orders yet!</i></p>
         } else {
           content = (
