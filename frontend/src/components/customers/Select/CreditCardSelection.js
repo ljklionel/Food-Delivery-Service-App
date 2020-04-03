@@ -38,9 +38,7 @@ class CreditCardSelection extends Component {
             <div className="dd-header" onClick={() => this.toggleList()}>
                 <div className="dd-header-title">{headerTitle}</div>
                 {listOpen
-                // ? <FontAwesome icon="faCoffee" size="2x"/>
                 ? <FontAwesomeIcon icon={faArrowUp} />
-                // : <FontAwesome icon="faCoffee" size="2x"/>
                 : <FontAwesomeIcon icon={faArrowDown} />
                 }
             </div>
@@ -49,7 +47,6 @@ class CreditCardSelection extends Component {
                     <li style={{listStyle: "none", width: "100%"}} className="dd-list-item" key={item.title} onClick={() => this.state.toggleItem(item.id, item.key)}>
                         {item.title} {item.selected && <FontAwesomeIcon icon={faCheck}/>}
                     </li>
-                // <li className="dd-list-item" key={item.id} >{item.title}</li>
                 ))}
             </ul>}
             </div>

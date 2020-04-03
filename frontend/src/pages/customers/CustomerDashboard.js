@@ -1,11 +1,13 @@
 import React from 'react';
 import { Grid, Image, Header, Loader, Card } from 'semantic-ui-react';
-import RestaurantSelect from '../../components/customers/RestaurantSelect.js'
-import MenuForCustomer from '../../components/customers/MenuForCustomer.js'
-import CreditCardSelection from '../../components/customers/CreditCardSelection.js'
+import RestaurantSelect from '../../components/customers/Select/RestaurantSelect.js'
+import LocationSelect from '../../components/customers/Select/LocationSelect.js'
+import MenuForCustomer from '../../components/customers/Menu/MenuForCustomer.js'
+import CreditCardSelection from '../../components/customers/Select/CreditCardSelection.js'
+import RecentLocations from '../../components/customers/Select/RecentLocations.js'
 import AppHeader from '../../components/AppHeader.js'
 import myAxios from '../../webServer.js'
-import CompletedOrders from '../../components/customers/MyOrders.js'
+import CompletedOrders from '../../components/customers/MyOrderHistory/MyOrders.js'
 import { Form, Table } from 'semantic-ui-react';
 
 
@@ -14,11 +16,14 @@ class CustomerDashboard extends React.Component {
     super()
     this.state = {
       infoList: null,
+      username: null,
       isLoadingInfo: true,
       currentRestaurant: null,
       restaurantMenu: null,
       customerLocation: null,
       currentCreditCard: null,
+      rewardPoint: 0,
+      recentLocationOptions: [],
       creditCardOptions: [
         {
             id: 0,
@@ -38,10 +43,11 @@ class CustomerDashboard extends React.Component {
           selected: false,
           key: 'creditCardOptions'
         }
-      ]
+      ],
     }
     this.getCreditCardInfo = this.getCreditCardInfo.bind(this)
     this.toggleSelected = this.toggleSelected.bind(this)
+    this.toggleSelectedLocation = this.toggleSelectedLocation.bind(this)
     this.getLocation = this.getLocation.bind(this)
   }
 
@@ -63,9 +69,18 @@ class CustomerDashboard extends React.Component {
     });
   }
 
-  toggleSelected(id, key){
+  changeCustomerLocation = (x) => {
+    console.log("Customer Location: ", x)
+    this.setState({
+        customerLocation: x[0]
+      })
+    }
+
+  toggleSelected = (id, key) => {
+    console.log("OKAY Toggle Selected: ID", id)
+    console.log("OKAY Toggle Selected: KEY", key)
     this.state.creditCardOptions.map((x) => 
-      x.selected = false
+        x.selected = false
     )
     let temp = this.state[key]
     temp[id].selected = !temp[id].selected
@@ -75,14 +90,31 @@ class CustomerDashboard extends React.Component {
     this.changeCurrentCreditCard(this.state.creditCardOptions[id].title)
   }
 
-  submitOrder = totalPrice => {
-    const list = this.state.infoList
-    list[2] = totalPrice * 10
+  toggleSelectedLocation = (id, key) => {
+    console.log("ID: ", id)
+    console.log("KEY: ", key)
+    this.state.recentLocationOptions.map((x) => 
+        x.selected = false
+    )
+    // if (this.state["recentLocationOptions"].length === 0) {
+    //   return
+    // }
+    let temp = this.state[key]
+    temp[id].selected = !temp[id].selected
     this.setState({
-      infoList: list
+      [key]: temp
     })
-    console.log("Reward point: ", this.state.infoList)
-    window.location.reload(false);
+    this.changeCustomerLocation(this.state.recentLocationOptions[id].title)
+}
+
+  submitOrder = totalPrice => {
+    var rewardPoint = parseInt(totalPrice)
+    // console.log(list[2])
+    this.setState({
+      rewardPoint: rewardPoint
+    })
+    console.log("Reward point: ", this.state.rewardPoint)
+    // window.location.reload(false);
   }
 
   handleLocationChange = (e, {value }) => {
@@ -103,6 +135,7 @@ class CustomerDashboard extends React.Component {
     // Load async data.
     // Update state with new data.
     // Re-render our component.
+
     myAxios.get('/my_info')
     .then(response => {
       console.log(response);
@@ -111,7 +144,35 @@ class CustomerDashboard extends React.Component {
         list.push(element)
       });
       this.setState({infoList: list,
+        username: list[0],
         isLoadingInfo: false})
+    })
+    .catch(error => {
+      console.log(error);
+    });
+
+    myAxios.get('/recent_locations')
+    .then(response => {
+      console.log("Recent location response: ", response);
+      const list = []
+      var i = 0;
+      response.data.result.forEach(element => {
+        var block = {
+          id: i,
+          title: element,
+          selected: false,
+          key: 'recentLocationOptions'
+        }
+        console.log("Block is: ", block)
+        list.push(block)
+        i++
+      });
+      var customerLocation = list.length === 0 ? null : list[0]["title"]
+      console.log("Customer Location: ", customerLocation)
+      this.setState({recentLocationOptions: list,
+        customerLocation: customerLocation,
+        isLoadingInfo: false})
+        console.log("Recentlocationoptions update: ", this.state.recentLocationOptions)
     })
     .catch(error => {
       console.log(error);
@@ -127,7 +188,6 @@ class CustomerDashboard extends React.Component {
 
     const id = this.state.infoList[0]
     this.state.currentCreditCard = this.state.infoList[1]
-    const rewardPoint = this.state.infoList[2] == null ? 0 : this.state.infoList[2]
     const selectedRestaurant = this.state.currentRestaurant == null ? "Not selected" :this.state.currentRestaurant
     
     return (
@@ -140,22 +200,27 @@ class CustomerDashboard extends React.Component {
           <Grid.Column>
             <Header textAlign='left' style={{fontSize: '14px'}}>Username: {id}</Header>
             <Header textAlign='left' style={{fontSize: '14px'}}>Payment method: {this.state.currentCreditCard}</Header>
-            <Header textAlign='left' style={{fontSize: '14px'}}>Reward Point: {rewardPoint}</Header>
+            <Header textAlign='left' style={{fontSize: '14px'}}>Reward Point: {this.state.rewardPoint}</Header>
             <Header textAlign='left' style={{fontSize: '14px'}}>Selected Restaurant: {selectedRestaurant}</Header>
             <Header textAlign='left' style={{fontSize: '14px'}}>Location: {this.state.customerLocation}</Header>
-            <Form.Field>
+            {/* <Form.Field>
               <Form.Input
                 placeholder='Input your location'
                 onChange={this.handleLocationChange}/>
-            </Form.Field>
+            </Form.Field> */}
           </Grid.Column>
           <Grid.Column>
-          <CreditCardSelection title="Select credit card" list={this.state.creditCardOptions} toggleItem={this.toggleSelected} />
+            <CreditCardSelection title="Select credit card" list={this.state.creditCardOptions} toggleItem={this.toggleSelected} />
+            <RecentLocations title="Select from recent locations" list={this.state.recentLocationOptions} toggleSelectedLocation={this.toggleSelectedLocation} />
+          </Grid.Column>
+          <Grid.Column>
+            {/* <LocationSelect whenselect={this.onSelectLocation}/> */}
+            {/* <RecentLocations title="Select from recent locations" list={this.state.recentLocationOptions} toggleSelectedLocation={this.toggleSelectedLocation} /> */}
           </Grid.Column>
         </Grid>
 
         <Grid columns={4}>
-          <Grid.Column span='3'>
+          <Grid.Column>
             <MenuForCustomer submitOrder={this.submitOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
           </Grid.Column>
           <Grid.Column>
@@ -170,6 +235,12 @@ class CustomerDashboard extends React.Component {
   onSelectRestaurant = (rest) => {
     const update = {}
     update.currentRestaurant = rest
+    this.setState(update)
+  }
+
+  onSelectLocation = (loc) => {
+    const update = {}
+    update.customerLocation = loc
     this.setState(update)
   }
 
@@ -199,6 +270,8 @@ class CustomerDashboard extends React.Component {
           ))} */}
         </Card.Group>
         <RestaurantSelect whenselect={this.onSelectRestaurant}/>
+        <Header style={headerStyle}><i>Select Location</i></Header>
+        <LocationSelect whenselect={this.onSelectLocation}/>
       </div>
     )
   }

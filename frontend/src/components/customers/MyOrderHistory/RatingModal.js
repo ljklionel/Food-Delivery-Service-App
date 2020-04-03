@@ -1,0 +1,129 @@
+import React, { Component } from 'react'
+import { Modal, Form, Button, Table } from 'semantic-ui-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowUp, faArrowDown, faCheck } from '@fortawesome/free-solid-svg-icons'
+import myAxios from '../../../webServer.js'
+
+class RatingModal extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            restaurant: null,
+            modalOpen: false,
+            rating: null,
+            ratingList: [
+                {
+                    id: 0,
+                    selected: false,
+                },
+                {
+                    id: 1,
+                    selected: false,
+                },
+                {
+                    id: 2,
+                    selected: false,
+                },                
+                {
+                    id: 3,
+                    selected: false,
+                },
+                {
+                    id: 4,
+                    selected: false,
+                },
+                {
+                    id: 5,
+                    selected: false,
+                }
+            ]
+        }
+    }
+
+    toggleItem = (id) => {
+        this.state.rating = id
+        this.state.ratingList.map((x) => 
+        x.selected = false
+        )
+        let temp = this.state["ratingList"]
+        temp[id].selected = !temp[id].selected
+        this.setState({
+          ["ratingList"]: temp
+        })
+        // this.state.ratingList[id].selected = true
+    }
+
+    handleOpen = () => {
+        this.setState({ 
+            modalOpen: true,
+        })
+    }
+
+    handleRatingChange = (e, {value}) => {
+        this.state.rating = value
+    }
+
+    handleSave = () => {
+        myAxios.post('edit_rating', {
+            orderid: this.props.orderid,
+            rating: this.state.rating,
+          })
+          .then(response => {
+            this.setState({ 
+                modalOpen: false,
+            })
+          })
+          .catch(error => {
+            console.log(error);
+          });
+    }
+
+    handleClose = () => {
+        this.setState({
+            modalOpen: false
+        })
+    }
+
+    render() {
+        var content
+        const list = this.state.ratingList
+        console.log(this.state.ratingList)
+        console.log(this.state.modalOpen)
+        if (this.state.isLoading) {
+            content = null
+        } else {
+            content = (<div>Choose a rating below</div>)
+        }
+
+        return (
+        <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Rate this delivery</Button>}
+                open={this.state.modalOpen}
+                onClose={this.handleClose}>
+            <Modal.Header>Restaurant: {this.props.restaurant}</Modal.Header>
+            <Modal.Content>
+                Order ID: {this.props.orderid} 
+                <br></br>
+                Delivery Rider: {this.props.riderUsername} 
+                <br></br>             
+                <br></br>
+                {content}
+                {list.map((item) => (
+                    <li style={{width: "100%"}} className="dd-list-item" key={item.title} onClick={() => this.toggleItem(item.id)}>
+                    {item.id} {item.selected && <FontAwesomeIcon icon={faCheck}/>}
+                </li>
+                    ))}
+            </Modal.Content>
+            
+            <Modal.Actions>
+                <Button color='red' onClick={this.handleClose}>
+                    Cancel
+                </Button>
+                <Button primary onClick={this.handleSave}>
+                    Give ratings
+                </Button>
+            </Modal.Actions>
+        </Modal>)
+    }
+}
+
+export default RatingModal;

@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { Modal, Form, Button, Table } from 'semantic-ui-react';
-import myAxios from '../../webServer.js'
+import myAxios from '../../../webServer.js'
+import MenuForCustomer from './MenuForCustomer.js'
+import CheckOutModal from './CheckOutModal.js';
 
 class OrderMenuModal extends Component {
     
@@ -278,8 +280,9 @@ class OrderMenuModal extends Component {
                     Cancel
                 </Button>
                 <Button primary onClick={this.handleSave}>
-                    Save
+                    Checkout
                 </Button>
+                <CheckOutModal/>
             </Modal.Actions>
         </Modal>)
     }

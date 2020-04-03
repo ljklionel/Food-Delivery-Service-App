@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Card, Table } from 'semantic-ui-react';
-import myAxios from '../../webServer.js'
-import OrderMenuModal from '../customers/OrderMenuModal.js';
+import myAxios from '../../../webServer.js'
+import OrderMenuModal from './OrderMenuModal.js';
 
 class MenuForCustomer extends Component {
 

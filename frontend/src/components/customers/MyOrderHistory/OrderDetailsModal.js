@@ -1,6 +1,11 @@
 import React, { Component } from 'react'
 import { Modal, Form, Button, Table, Tab } from 'semantic-ui-react';
-import myAxios from '../../webServer.js'
+import myAxios from '../../../webServer.js'
+import OrderMenuModal from '../Menu/OrderMenuModal.js';
+import ReviewModal from './ReviewModal.js';
+import RatingModal from './RatingModal.js';
+import CheckOutModal from '../Menu/CheckOutModal.js';
+
 
 class OrderDetailsModal extends Component {
     constructor(props) {
@@ -11,6 +16,10 @@ class OrderDetailsModal extends Component {
             orderid: this.props.orderid,
             modalOpen: false
         }
+
+    }
+
+    handleRatingChange = () => {
 
     }
 
@@ -95,6 +104,8 @@ class OrderDetailsModal extends Component {
                             <Table.Cell>
                                 {item[1]}
                             </Table.Cell>
+                                <ReviewModal fname={item[0]} orderid={this.state.orderid} 
+                                        restaurant={item[11]}/>
                         </Table.Row>
                     ))}
                 </Table.Body>
@@ -108,13 +119,19 @@ class OrderDetailsModal extends Component {
                 <Modal.Content>
                     {content}
                 </Modal.Content>
-                
+                <Table.Cell>
+                    <RatingModal orderid={this.state.orderid} riderUsername={this.state.orderDetails[0][10]} restaurant={this.state.orderDetails[0][11]}/>
+                </Table.Cell>
+                <Table.Cell>
+                    {/* <OrderMenuModal/> */}
+                </Table.Cell>
                 <Modal.Actions>
                     <Button onClick={this.handleClose}>
                         Return
                     </Button>
                 </Modal.Actions>
             </Modal>)
+
     }
 }
 

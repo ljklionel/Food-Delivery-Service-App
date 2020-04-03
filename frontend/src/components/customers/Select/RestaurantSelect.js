@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import React, { Component } from 'react'
 import { Search, Grid } from 'semantic-ui-react'
-import myAxios from '../../webServer.js'
+import myAxios from '../../../webServer.js'
 
 const initialState = { isLoading: false, results: [], value: '' }
 

@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { Card, Table } from 'semantic-ui-react';
-import myAxios from '../../webServer.js'
+import myAxios from '../../../webServer.js'
 import OrderDetailsModal from './OrderDetailsModal.js';
 
 
@@ -80,7 +80,7 @@ class CompletedOrders extends Component {
             <Table basic='very' celled>
                   <Table.Header>
                   <Table.Row>
-                      <Table.HeaderCell>OrderID</Table.HeaderCell>
+                      <Table.HeaderCell>View Orders</Table.HeaderCell>
                       <Table.HeaderCell>Restaurant</Table.HeaderCell>
                       <Table.HeaderCell>Done</Table.HeaderCell>
                   </Table.Row>
@@ -89,7 +89,7 @@ class CompletedOrders extends Component {
                     {this.state.ordersGroupedByID.map((item) => (
                       <Table.Row key={item[0][12]}>
                         <Table.Cell>
-                        <OrderDetailsModal orderid={item[0][12]} orderDetails={item}></OrderDetailsModal>
+                          <OrderDetailsModal orderid={item[0][12]} orderDetails={item}></OrderDetailsModal>
                         </Table.Cell>
                           <Table.Cell>
                            {item[0][11]}
