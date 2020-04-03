@@ -356,36 +356,6 @@ def customer_orders():
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
-# CREATE TABLE ContainsFood (
-# 	quantity INTEGER NOT NULL,
-# 	review VARCHAR(500),
-#     fname VARCHAR(64) REFERENCES Food,
-#     orderid INTEGER REFERENCES Orders,
-#     PRIMARY KEY (fname, orderid)
-# ); 
-
-# CREATE TABLE Orders (
-# 	orderid SERIAL PRIMARY KEY,ok
-# 	paymentMethod VARCHAR(32) NOT NULL, ok
-
-#     -- Delivers combined
-#     rating INTEGER CHECK (rating in (1,2,3,4,5)),
-# 	location VARCHAR(256) NOT NULL, 
-# 	fee FLOAT NOT NULL, ok
-# 	orderTime TIMESTAMP,ok
-# 	departTime1 TIMESTAMP,
-# 	arriveTime TIMESTAMP,
-# 	departTime2 TIMESTAMP,
-# 	deliveryTime TIMESTAMP,
-#     riderUsername VARCHAR(64) NOT NULL REFERENCES DeliveryRiders, <-
-
-#     -- Makes combined
-#     customerUsername VARCHAR(64) NOT NULL REFERENCES Customers,ok
-
-#     -- From combined
-#     rname VARCHAR(64) NOT NULL REFERENCES Restaurantsok
-# );
-
 @app.route("/update_credit_card", methods=['POST'])
 @login_required
 def update_credit_card():
