@@ -22,7 +22,8 @@ class ManagerDashboard extends React.Component {
       isLoadingRiderList: true,
       isLoadingRider: true,
       riderList: null,
-      currentRider: null
+      currentRider: null,
+      currentLocation: null
     }
   }
 
@@ -73,6 +74,16 @@ class ManagerDashboard extends React.Component {
       )
     }
 
+    if (this.state.currentLocation) {
+      return (
+        <div>
+          <Header textAlign='left' style={{fontSize:'60px', paddingLeft:'5%'}}>{this.state.currentLocation}</Header>
+          <br/>
+            <LocationSummary location={this.state.currentLocation}/>
+        </div>
+      )
+    }
+
     return (
       <div>
         <Header textAlign='center' style={{fontSize:'60px'}}>Monthly Summary</Header>
@@ -90,7 +101,7 @@ class ManagerDashboard extends React.Component {
   }
 
   showAll = () => {
-    this.setState({currentCustomer: null, currentRider: null});
+    this.setState({currentCustomer: null, currentRider: null, currentLocation: null});
   }
 
   sideBar() {
@@ -102,11 +113,15 @@ class ManagerDashboard extends React.Component {
     }
 
     const onSelectCustomer = (cus) => {
-      this.setState({currentRider: null, currentCustomer: cus});
+      this.setState({currentRider: null, currentCustomer: cus, currentLocation: null});
     }
 
     const onSelectRider = (rider) => {
-      this.setState({currentRider: rider, currentCustomer: null});
+      this.setState({currentRider: rider, currentCustomer: null, currentLocation: null});
+    }
+
+    const onSelectLocation = (location) => {
+      this.setState({currentRider: null, currentCustomer: null, currentLocation: location});
     }
 
     return (
@@ -121,6 +136,8 @@ class ManagerDashboard extends React.Component {
         <CustomerSearch onSelectCus={onSelectCustomer}/>
         <br/>
         <RiderSearch onSelectRider={onSelectRider}/>
+        <br/>
+        <LocationSearch onSelectLocation={onSelectLocation}/>
       </div>
       
     )

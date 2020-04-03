@@ -40,7 +40,7 @@ class LocationSearch extends Component {
 
   handleResultSelect = (e, { result }) => {
 	this.setState({ value: ''}) 
-	this.props.onSelectCus(result.title)
+	this.props.onSelectLocation(result.title)
   }
 
   render() {
