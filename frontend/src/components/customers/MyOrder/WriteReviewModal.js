@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Modal, Form, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../../webServer.js'
 
-class ReviewModel extends Component {
+class WriteReviewModal extends Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -34,6 +34,7 @@ class ReviewModel extends Component {
             this.setState({ 
                 modalOpen: false,
             })
+            this.props.submitReview()
           })
           .catch(error => {
             console.log(error);
@@ -85,4 +86,4 @@ class ReviewModel extends Component {
     }
 }
 
-export default ReviewModel;
+export default WriteReviewModal;

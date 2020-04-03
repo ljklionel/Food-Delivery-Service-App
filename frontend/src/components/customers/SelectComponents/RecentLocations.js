@@ -14,7 +14,6 @@ class RecentLocations extends Component {
     }
 
     handleClickOutside(){
-        console.log("handleClickOutside")
         this.setState({
           listOpen: false
         })
@@ -28,9 +27,7 @@ class RecentLocations extends Component {
 
     render(){
         const{list} = this.props
-        console.log("Props", this.props)
         const{listOpen, headerTitle} = this.state
-        console.log("List of RecentLocation", list)
         return(
             <div className="dd-wrapper">
             <div className="dd-header" onClick={() => this.toggleList()}>

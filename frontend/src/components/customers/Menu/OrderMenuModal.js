@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Modal, Form, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../../webServer.js'
-import MenuForCustomer from './MenuForCustomer.js'
+import Menu from './Menu.js'
 import CheckOutModal from './CheckOutModal.js';
 
 class OrderMenuModal extends Component {
@@ -21,7 +21,6 @@ class OrderMenuModal extends Component {
             totalPrice: 0,
             fee: 0,
         }
-        console.log("Logging location in MenuForCustomer: ", this.state.location)
     }
 
     handleOpen = () => {
@@ -84,12 +83,10 @@ class OrderMenuModal extends Component {
             updates[item[0]] = this.state.avail[i]
             order[item[0]] = this.state.order[i]
         })
-        console.log("Order during save: ", order)
         
         for (const food in order) {
             totalQty += order[food]
         }
-        console.log("Quantity: ", totalQty)
         if (totalQty === 0) {
             alert("Please do not submit empty orders")
             return
@@ -114,9 +111,8 @@ class OrderMenuModal extends Component {
             console.log(error);
           });
 
-          console.log("Get location returns: ", this.props.getLocation())
           var creditCard = this.props.getCreditCardInfo()
-          console.log(creditCard)
+
           myAxios.post('make_order', {
             restaurant: this.state.currentRestaurant,
             order: order,
@@ -128,20 +124,10 @@ class OrderMenuModal extends Component {
             location: this.props.getLocation()
           })
           .then(response => {
-              console.log("Received response from make_order")
-                // const menu = []
-                // this.state.restaurantMenu.forEach((item, i) => {
-                //     menu.push([item[0], this.state.avail[i]])
-                // });
-                // this.setState({ 
-                    // modalOpen: false,
-                    // restaurantMenu: menu
-                // })
-            console.log(this.state.currentRestaurant)
-            this.props.submitOrder(this.state.totalPrice)
+              this.props.submitOrder(this.state.totalPrice)
           })
           .catch(error => {
-            console.log(error);
+              console.log(error);
           });
 
     }
@@ -164,7 +150,6 @@ class OrderMenuModal extends Component {
             }
           })
           .then(response => {
-            console.log(response);
             const avail = []
             const price = []
             response.data.result.forEach(item => {
@@ -172,7 +157,6 @@ class OrderMenuModal extends Component {
             });
             response.data.result.forEach(item => {
                 price.push(item[2])
-                console.log("Price changed", price)
             });
             this.setState({
                 restaurantMenu: response.data.result,
@@ -180,7 +164,6 @@ class OrderMenuModal extends Component {
                 price: price,
                 isLoading: false
             })
-            console.log(this.state)
           })
           .catch(error => {
             console.log(error);
@@ -191,7 +174,6 @@ class OrderMenuModal extends Component {
         var totalPrice = 0;
         this.state.restaurantMenu.map((item, i) => (
             totalPrice += this.state.order[i] * this.state.price[i]))
-        console.log(totalPrice)
         this.state.totalPrice = totalPrice
     }
 
@@ -205,7 +187,6 @@ class OrderMenuModal extends Component {
         if (this.state.isLoading) {
             content = null
         } else {
-            console.log(this.state.infoList)
             content = (
                 <Table basic='very' celled>
                     <Table.Header>

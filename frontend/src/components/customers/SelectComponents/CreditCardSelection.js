@@ -14,7 +14,6 @@ class CreditCardSelection extends Component {
     }
 
     handleClickOutside(){
-        console.log("handleClickOutside")
         this.setState({
           listOpen: false
         })
@@ -29,9 +28,7 @@ class CreditCardSelection extends Component {
 
     render(){
         const{list} = this.props
-        console.log("Props", this.props)
         const{listOpen, headerTitle} = this.state
-        console.log("List", list)
 
         return(
             <div className="dd-wrapper">

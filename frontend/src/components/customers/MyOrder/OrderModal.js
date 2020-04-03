@@ -1,13 +1,10 @@
 import React, { Component } from 'react'
 import { Modal, Form, Button, Table, Tab } from 'semantic-ui-react';
 import myAxios from '../../../webServer.js'
-import OrderMenuModal from '../Menu/OrderMenuModal.js';
-import ReviewModal from './ReviewModal.js';
+import WriteReviewModal from './WriteReviewModal.js';
 import RatingModal from './RatingModal.js';
-import CheckOutModal from '../Menu/CheckOutModal.js';
 
-
-class OrderDetailsModal extends Component {
+class OrderModal extends Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -16,10 +13,6 @@ class OrderDetailsModal extends Component {
             orderid: this.props.orderid,
             modalOpen: false
         }
-
-    }
-
-    handleRatingChange = () => {
 
     }
 
@@ -59,7 +52,8 @@ class OrderDetailsModal extends Component {
                                 {this.state.orderDetails[0][11]}
                             </Table.Cell>
                             <Table.Cell>
-                                {this.state.orderDetails[0][2].substring(17,22)}
+                                {this.state.orderDetails[0][2].substring(0, 22)}
+                                {/* {this.state.orderDetails[0][2]} */}
                             </Table.Cell>
                             <Table.Cell>
                                 {this.state.orderDetails[0][3]}
@@ -104,7 +98,7 @@ class OrderDetailsModal extends Component {
                             <Table.Cell>
                                 {item[1]}
                             </Table.Cell>
-                                <ReviewModal fname={item[0]} orderid={this.state.orderid} 
+                                <WriteReviewModal submitReview={this.props.submitReview} fname={item[0]} orderid={this.state.orderid} 
                                         restaurant={item[11]}/>
                         </Table.Row>
                     ))}
@@ -135,4 +129,4 @@ class OrderDetailsModal extends Component {
     }
 }
 
-export default OrderDetailsModal;
+export default OrderModal;

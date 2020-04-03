@@ -1,13 +1,14 @@
 import React from 'react';
 import { Grid, Image, Header, Loader, Card } from 'semantic-ui-react';
-import RestaurantSelect from '../../components/customers/Select/RestaurantSelect.js'
-import LocationSelect from '../../components/customers/Select/LocationSelect.js'
-import MenuForCustomer from '../../components/customers/Menu/MenuForCustomer.js'
-import CreditCardSelection from '../../components/customers/Select/CreditCardSelection.js'
-import RecentLocations from '../../components/customers/Select/RecentLocations.js'
+import RestaurantSelect from '../../components/customers/SelectComponents/RestaurantSelect.js'
+import LocationSelect from '../../components/customers/SelectComponents/LocationSelect.js'
+import Menu from '../../components/customers/Menu/Menu.js'
+import CreditCardSelection from '../../components/customers/SelectComponents/CreditCardSelection.js'
+import RecentLocations from '../../components/customers/SelectComponents/RecentLocations.js'
 import AppHeader from '../../components/AppHeader.js'
 import myAxios from '../../webServer.js'
-import CompletedOrders from '../../components/customers/MyOrderHistory/MyOrders.js'
+import MyOrders from '../../components/customers/MyOrder/MyOrders.js'
+import RestaurantReviews from '../../components/customers/RestaurantReviews/RestaurantReviews.js'
 import { Form, Table } from 'semantic-ui-react';
 
 
@@ -24,6 +25,7 @@ class CustomerDashboard extends React.Component {
       currentCreditCard: null,
       rewardPoint: 0,
       recentLocationOptions: [],
+      refreshReview: 0,
       creditCardOptions: [
         {
             id: 0,
@@ -49,6 +51,7 @@ class CustomerDashboard extends React.Component {
     this.toggleSelected = this.toggleSelected.bind(this)
     this.toggleSelectedLocation = this.toggleSelectedLocation.bind(this)
     this.getLocation = this.getLocation.bind(this)
+    this.submitReview = this.submitReview.bind(this)
   }
 
   changeCurrentCreditCard = (x) => {
@@ -70,15 +73,12 @@ class CustomerDashboard extends React.Component {
   }
 
   changeCustomerLocation = (x) => {
-    console.log("Customer Location: ", x)
     this.setState({
         customerLocation: x[0]
       })
     }
 
   toggleSelected = (id, key) => {
-    console.log("OKAY Toggle Selected: ID", id)
-    console.log("OKAY Toggle Selected: KEY", key)
     this.state.creditCardOptions.map((x) => 
         x.selected = false
     )
@@ -91,14 +91,9 @@ class CustomerDashboard extends React.Component {
   }
 
   toggleSelectedLocation = (id, key) => {
-    console.log("ID: ", id)
-    console.log("KEY: ", key)
     this.state.recentLocationOptions.map((x) => 
         x.selected = false
     )
-    // if (this.state["recentLocationOptions"].length === 0) {
-    //   return
-    // }
     let temp = this.state[key]
     temp[id].selected = !temp[id].selected
     this.setState({
@@ -108,13 +103,32 @@ class CustomerDashboard extends React.Component {
 }
 
   submitOrder = totalPrice => {
-    var rewardPoint = parseInt(totalPrice)
-    // console.log(list[2])
+    var rewardPoint = parseInt(totalPrice) + this.state.rewardPoint
     this.setState({
       rewardPoint: rewardPoint
     })
-    console.log("Reward point: ", this.state.rewardPoint)
+    this.updateRewardPoint(rewardPoint)
+    this.updateRecentLocations()
     // window.location.reload(false);
+  }
+
+  submitReview = () => {
+    console.log("SubmitReview")
+    this.setState({
+      refreshReview: this.state.refreshReview++
+    })
+  }
+
+  updateRewardPoint = (x) => {
+    myAxios.post('update_reward_point', {
+      customerName: this.state.infoList[0],
+      rewardPoint: x
+    })
+    .then(response => {
+    })
+    .catch(error => {
+      console.log(error);
+    });
   }
 
   handleLocationChange = (e, {value }) => {
@@ -145,15 +159,19 @@ class CustomerDashboard extends React.Component {
       });
       this.setState({infoList: list,
         username: list[0],
+        rewardPoint: list[2],
         isLoadingInfo: false})
     })
     .catch(error => {
       console.log(error);
     });
 
+    this.updateRecentLocations()
+  } 
+
+  updateRecentLocations = () => {
     myAxios.get('/recent_locations')
     .then(response => {
-      console.log("Recent location response: ", response);
       const list = []
       var i = 0;
       response.data.result.forEach(element => {
@@ -163,21 +181,18 @@ class CustomerDashboard extends React.Component {
           selected: false,
           key: 'recentLocationOptions'
         }
-        console.log("Block is: ", block)
         list.push(block)
         i++
       });
-      var customerLocation = list.length === 0 ? null : list[0]["title"]
-      console.log("Customer Location: ", customerLocation)
+      var customerLocation = list.length === 0 ? null : list[0]["title"][0]
       this.setState({recentLocationOptions: list,
         customerLocation: customerLocation,
         isLoadingInfo: false})
-        console.log("Recentlocationoptions update: ", this.state.recentLocationOptions)
     })
     .catch(error => {
       console.log(error);
     });
-  } 
+  }
 
   customerContent() {
     if (this.state.isLoadingInfo) {
@@ -189,7 +204,6 @@ class CustomerDashboard extends React.Component {
     const id = this.state.infoList[0]
     this.state.currentCreditCard = this.state.infoList[1]
     const selectedRestaurant = this.state.currentRestaurant == null ? "Not selected" :this.state.currentRestaurant
-    
     return (
       <div>
         <Grid columns={4}>
@@ -221,10 +235,13 @@ class CustomerDashboard extends React.Component {
 
         <Grid columns={4}>
           <Grid.Column>
-            <MenuForCustomer submitOrder={this.submitOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
+            <Menu submitOrder={this.submitOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
           </Grid.Column>
           <Grid.Column>
-            <CompletedOrders orderSubmitted={this.state.orderSubmitted} currentCustomer={this.state.infoList[0]}/>
+            <RestaurantReviews refreshReview={this.state.refreshReview} restaurant={this.state.currentRestaurant}/>
+          </Grid.Column>
+          <Grid.Column>
+            <MyOrders submitReview={this.submitReview} orderSubmitted={this.state.orderSubmitted} currentCustomer={this.state.infoList[0]}/>
           </Grid.Column>
         </Grid>
         
@@ -280,7 +297,7 @@ class CustomerDashboard extends React.Component {
     return (
       <div>
         <AppHeader/>
-        <Grid celled style={{height: '100vh'}}>
+        <Grid celled style={{height: '120vh'}}>
           <Grid.Column style={{width: '82%', background: '#edf8ff'}}>
             {this.customerContent()}
           </Grid.Column>

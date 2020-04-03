@@ -363,7 +363,6 @@ def customer_orders():
 @login_required
 def update_credit_card():
     data = request.json
-    print("Data from updatecreditcard: ", data)
     creditCard, customerName = data['creditCard'], data['customerName']
     conn = get_db()
     cursor = conn.cursor()
@@ -421,6 +420,29 @@ def edit_rating():
     cursor.execute("UPDATE Orders SET rating = %s WHERE orderid = %s;", (rating, orderid))
     cursor.execute("COMMIT;")
 
+    return ({}, 200)
+
+@app.route("/get_restaurant_reviews")
+@login_required
+def get_restaurant_reviews():
+    rname = request.args.get('restaurant')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT C.fname, review, O.customerUsername, O.orderTime FROM (ContainsFood C join Orders O on C.orderid = O.orderid) natural join Restaurants R where rname = %s AND C.review <> '' ORDER BY O.orderTime DESC LIMIT 8;", (rname,))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+@app.route("/update_reward_point", methods=['POST'])
+@login_required
+def update_reward_point():
+    data = request.json
+    rewardPoint, customerName = data['rewardPoint'], data['customerName']
+    conn = get_db()
+    cursor = conn.cursor()
+    print("Updating rewardPoint: ", rewardPoint)
+    cursor.execute("BEGIN;")
+    cursor.execute("UPDATE Customers SET rewardPoint = %s WHERE username = %s;", (rewardPoint, customerName))
+    cursor.execute("COMMIT;")
     return ({}, 200)
 
 # == Customers End ==

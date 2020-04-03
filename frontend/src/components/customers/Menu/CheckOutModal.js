@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Modal, Form, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../../webServer.js'
-import MenuForCustomer from './MenuForCustomer.js'
+import Menu from './Menu.js'
 
 class CheckOutModal extends Component {
     constructor(props) {
