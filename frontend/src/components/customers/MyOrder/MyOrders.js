@@ -1,10 +1,10 @@
 import React, { Component } from 'react'
 import { Card, Table } from 'semantic-ui-react';
-import myAxios from '../../webServer.js'
-import OrderDetailsModal from './OrderDetailsModal.js';
+import myAxios from '../../../webServer.js'
+import OrderModal from './OrderModal.js';
 
 
-class CompletedOrders extends Component {
+class MyOrders extends Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -18,7 +18,6 @@ class CompletedOrders extends Component {
     }
 
     updateOrders(currentCustomer) {
-      console.log("UPDATE ORDERS")
         myAxios.get('/customer_orders', {
           params: {
               currentCustomer: currentCustomer,
@@ -27,7 +26,6 @@ class CompletedOrders extends Component {
           }
         })
         .then(response => {
-          console.log(response);
           var ordersGroupedByID = []
           var i;
           var prevOid = -1
@@ -43,9 +41,6 @@ class CompletedOrders extends Component {
             }
             prevOid = orders[i][12]
           }
-
-          console.log("Orders: ", orders)
-          console.log("Orders grouped by ID: ", ordersGroupedByID)
           this.setState({
             orders: orders,
             ordersGroupedByID: ordersGroupedByID,
@@ -58,7 +53,6 @@ class CompletedOrders extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log("ComponentwillreceivePRops nextProps: ", nextProps)
         this.setState({ 
             currentCustomer: nextProps.currentCustomer,
             orderSubmitted: nextProps.orderSubmitted,
@@ -80,7 +74,7 @@ class CompletedOrders extends Component {
             <Table basic='very' celled>
                   <Table.Header>
                   <Table.Row>
-                      <Table.HeaderCell>OrderID</Table.HeaderCell>
+                      <Table.HeaderCell>View Orders</Table.HeaderCell>
                       <Table.HeaderCell>Restaurant</Table.HeaderCell>
                       <Table.HeaderCell>Done</Table.HeaderCell>
                   </Table.Row>
@@ -89,7 +83,7 @@ class CompletedOrders extends Component {
                     {this.state.ordersGroupedByID.map((item) => (
                       <Table.Row key={item[0][12]}>
                         <Table.Cell>
-                        <OrderDetailsModal orderid={item[0][12]} orderDetails={item}></OrderDetailsModal>
+                          <OrderModal submitReview={this.props.submitReview} orderid={item[0][12]} orderDetails={item}></OrderModal>
                         </Table.Cell>
                           <Table.Cell>
                            {item[0][11]}
@@ -119,4 +113,4 @@ class CompletedOrders extends Component {
 
 }
 
-export default CompletedOrders;
+export default MyOrders;

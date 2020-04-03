@@ -1,8 +1,10 @@
 import React, { Component } from 'react'
 import { Modal, Form, Button, Table, Tab } from 'semantic-ui-react';
-import myAxios from '../../webServer.js'
+import myAxios from '../../../webServer.js'
+import WriteReviewModal from './WriteReviewModal.js';
+import RatingModal from './RatingModal.js';
 
-class OrderDetailsModal extends Component {
+class OrderModal extends Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -50,7 +52,8 @@ class OrderDetailsModal extends Component {
                                 {this.state.orderDetails[0][11]}
                             </Table.Cell>
                             <Table.Cell>
-                                {this.state.orderDetails[0][2].substring(17,22)}
+                                {this.state.orderDetails[0][2].substring(0, 22)}
+                                {/* {this.state.orderDetails[0][2]} */}
                             </Table.Cell>
                             <Table.Cell>
                                 {this.state.orderDetails[0][3]}
@@ -95,6 +98,8 @@ class OrderDetailsModal extends Component {
                             <Table.Cell>
                                 {item[1]}
                             </Table.Cell>
+                                <WriteReviewModal submitReview={this.props.submitReview} fname={item[0]} orderid={this.state.orderid} 
+                                        restaurant={item[11]}/>
                         </Table.Row>
                     ))}
                 </Table.Body>
@@ -108,14 +113,20 @@ class OrderDetailsModal extends Component {
                 <Modal.Content>
                     {content}
                 </Modal.Content>
-                
+                <Table.Cell>
+                    <RatingModal orderid={this.state.orderid} riderUsername={this.state.orderDetails[0][10]} restaurant={this.state.orderDetails[0][11]}/>
+                </Table.Cell>
+                <Table.Cell>
+                    {/* <OrderMenuModal/> */}
+                </Table.Cell>
                 <Modal.Actions>
                     <Button onClick={this.handleClose}>
                         Return
                     </Button>
                 </Modal.Actions>
             </Modal>)
+
     }
 }
 
-export default OrderDetailsModal;
+export default OrderModal;

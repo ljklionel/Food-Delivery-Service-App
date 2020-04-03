@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
 import { Card, Table } from 'semantic-ui-react';
-import myAxios from '../../webServer.js'
-import OrderMenuModal from '../customers/OrderMenuModal.js';
+import myAxios from '../../../webServer.js'
+import OrderMenuModal from './OrderMenuModal.js';
 
-class MenuForCustomer extends Component {
+class Menu extends Component {
 
     constructor(props) {
         super(props)
@@ -26,7 +26,6 @@ class MenuForCustomer extends Component {
           }
         })
         .then(response => {
-          console.log("response from restaurant sells: ", response);
           this.setState({
             restaurantMenu: response.data.result,
             isLoading: false
@@ -47,14 +46,26 @@ class MenuForCustomer extends Component {
     
 
     render() {
+      var header
+      if (this.state.currentRestaurant === null) {
+          header = (              
+              <Card.Content>
+                  <Card.Header>Menu</Card.Header>
+                  <Card>Choose a restaurant</Card>
+              </Card.Content>)
+      } else {
+          header = (            
+              <Card.Content>
+                  <Card.Header>Menu</Card.Header>
+                  <Card>{this.props.restaurant}</Card>
+              </Card.Content>)
+      }
         if (this.state.isLoading) {
             return null// <Loader active/>
           }
           return (
             <Card color='red' style={{maxWidth: 250}}>
-              <Card.Content>
-                <Card.Header>Menu</Card.Header>
-              </Card.Content>
+              {header}
               <Card.Content>
                 <Table basic='very' celled>
                     <Table.Header>
@@ -91,4 +102,4 @@ class MenuForCustomer extends Component {
     }
 }   
 
-export default MenuForCustomer;
+export default Menu;
