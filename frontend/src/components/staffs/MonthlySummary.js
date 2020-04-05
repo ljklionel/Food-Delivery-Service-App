@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Statistic, Card, Header, Button, Table } from 'semantic-ui-react';
+import { Statistic, Card, Header, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
 import ViewStatsModal from './ViewStatsModal.js';
 
@@ -46,7 +46,7 @@ class MonthlySummary extends Component {
             <Statistic.Group horizontal>
                 <Statistic>
                 <Statistic.Value>{this.state.monthlySummary['completed_orders']}</Statistic.Value>
-                <Statistic.Label>Completed Order{this.state.monthlySummary['completed_orders'] != 1 ? 's':''}</Statistic.Label>
+                <Statistic.Label>Completed Order{this.state.monthlySummary['completed_orders'] !== 1 ? 's':''}</Statistic.Label>
                 </Statistic>
                 <Statistic>
                 <Statistic.Value>${this.state.monthlySummary['total_cost'] == null ?
