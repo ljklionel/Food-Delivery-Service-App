@@ -339,5 +339,31 @@ def add_full_time():
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': '%s now works as Fulltimer!' % (username)}, 200)
 
+@app.route("/add_part_time_sched", methods=['POST'])
+@login_required
+def add_part_time_sched():
+    username = current_user.get_id()
+    data = request.json
+    workDay, startHour, endHour = data['workDay'], data['startHour'], data['endHour']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("INSERT INTO WeeklyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);", (username, workDay, startHour, endHour))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': '%s now works as Parttimer!' % (username)}, 200)
+
+@app.route("/add_part_time", methods=['POST'])
+@login_required
+def add_part_time():
+    username = current_user.get_id()
+    data = request.json
+    totalHours = data['totalHours']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("INSERT INTO PartTimers(username, workHours) VALUES (%s, %s);", (username, totalHours))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': '%s now works as Parttimer!' % (username)}, 200)
+
 if __name__ == '__main__':
     app.run()

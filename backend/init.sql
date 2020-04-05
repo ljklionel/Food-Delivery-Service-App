@@ -186,7 +186,12 @@ CREATE TABLE ContainsFood (
 \COPY Sells(fname,rname,avail,maxLimit,price) FROM './csv/sells.csv' CSV HEADER;
 \COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
 \COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
-
+\COPY Users(username, hashedPassword, phoneNumber, firstName, lastName) FROM './csv/delivery_users.csv' CSV HEADER;
+\COPY DeliveryRiders(username, salary) FROM './csv/deliver_riders.csv' CSV HEADER;
+\COPY PartTimers(username, workHours) FROM './csv/part_time.csv' CSV HEADER;
+\COPY FullTimers(username) FROM './csv/part_time.csv' CSV HEADER;
+\COPY WeeklyWorkSched(username, startHour, endHour) FROM './csv/part_time_sched.csv' CSV HEADER;
+\COPY MonthlyWorkSched(username, startHour, endHour) FROM './csv/full_time_sched.csv' CSV HEADER;
 
 ------ TRIGGERS ------
 
@@ -220,6 +225,47 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger to enforce total work hours constraint
+CREATE OR REPLACE FUNCTION 
+check_total_hours_trigger() 
+    RETURNS TRIGGER AS $$
+DECLARE
+    totalHours INTEGER;
+BEGIN
+    SELECT PT.workHours INTO totalHours
+        FROM PartTimers PT
+        WHERE PT.username = NEW.username;
+    IF totalHours > 48 THEN
+        RAISE EXCEPTION '% cannot work for more than 48 hours', NEW.username;
+    END IF;
+    IF totalHours < 10 THEN
+        RAISE EXCEPTION '% cannot work less than 10 hours per week', NEW.username;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to enforce break between to work interval
+CREATE OR REPLACE FUNCTION 
+part_time_break_check() 
+    RETURNS TRIGGER AS $$
+DECLARE
+    endHour INTEGER;
+BEGIN
+    SELECT WWS.endHour INTO endHour
+        FROM WeeklyWorkSched WWS, WeeklyWorkSched WWS1
+        WHERE WWS.username = NEW.username
+        AND WWS.workDay = NEW.workDay
+        AND WWS1.username = NEW.username
+        AND WWS1.workDay = NEW.workDay
+        AND WWS.endHour > WWS1.endHour;
+    IF endHour = NEW.startHour THEN 
+        RAISE EXCEPTION '% does not have an hour break between 2 consecutive interval', NEW.username;
+    END IF;
+    RETURN NULL;
+END;
+$$LANGUAGE plpgsql;
+
 /* Trigger for insert/update on Orders */
 DROP TRIGGER IF EXISTS 
 total_participation_orders_containsfood_trigger_on_orders on Orders CASCADE;
@@ -239,3 +285,23 @@ AFTER DELETE OR UPDATE of orderid ON ContainsFood deferrable initially deferred
 FOR EACH ROW
 EXECUTE FUNCTION
 total_participation_orders_wrt_containsfood();
+
+/* Trigger for insert/update on WeeklyWorkSched*/
+DROP TRIGGER IF EXISTS 
+part_time_break_check ON WeeklyWorkSched CASCADE;
+CREATE CONSTRAINT TRIGGER 
+part_time_break_check
+AFTER UPDATE OF username, workDay,startHour, endHour OR INSERT ON WeeklyWorkSched
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW
+EXECUTE FUNCTION 
+part_time_break_check();
+
+/* Trigger for insert/update on PartTimers*/
+DROP TRIGGER IF EXISTS 
+check_total_hours_trigger ON PartTimers CASCADE;
+CREATE CONSTRAINT TRIGGER check_total_hours_trigger
+AFTER UPDATE OF workHours OR INSERT ON PartTimers
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW
+EXECUTE FUNCTION check_total_hours_trigger();

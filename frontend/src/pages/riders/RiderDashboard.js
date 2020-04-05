@@ -99,7 +99,7 @@ class RiderDashboard extends React.Component {
 
     loadAlt = () => {
         return (
-            <GridRow style={{ marginTop: '100px' }}>
+            <GridRow style={{ marginTop: '100px', background: '#edf8ff' }}>
                 <GridColumn style={{ width: '70%' }}>
                     <ViewStats
                         isPartTime={this.state.isPartTime}
