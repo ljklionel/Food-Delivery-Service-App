@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Modal, Image, Header, Loader, Card, List, Button, Table } from 'semantic-ui-react';
+import { Modal, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../webServer.js'
 
 class ViewStatsModal extends Component {
@@ -46,7 +46,7 @@ class ViewStatsModal extends Component {
             const promos = this.state.promotions
             const first_month = []
             for (let i = 0; i < promos.length; i++) {
-                if (i != 0 && promos[i].year === promos[i-1].year) {
+                if (i !== 0 && promos[i].year === promos[i-1].year) {
                     first_month.push(false)
                 } else {
                     first_month.push(true)

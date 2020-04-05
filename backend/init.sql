@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS WorksAt CASCADE;
 DROP TABLE IF EXISTS RestaurantStaffs CASCADE;
 DROP TABLE IF EXISTS Promotions CASCADE;
 DROP TABLE IF EXISTS Sells CASCADE;
+DROP TABLE IF EXISTS Locations CASCADE;
 DROP TABLE IF EXISTS Orders CASCADE;
 DROP TABLE IF EXISTS Restaurants CASCADE;
 DROP TABLE IF EXISTS Food CASCADE;
@@ -147,13 +148,17 @@ CREATE TABLE Customers (
 	rewardPoint INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE Locations (
+    location VARCHAR(256) PRIMARY KEY
+);
+
 CREATE TABLE Orders (
 	orderid SERIAL PRIMARY KEY,
 	paymentMethod VARCHAR(32) NOT NULL,
 
     -- Delivers combined
     rating INTEGER CHECK (rating in (1,2,3,4,5)),
-	location VARCHAR(256) NOT NULL,
+	location VARCHAR(32) NOT NULL REFERENCES Locations,
 	fee FLOAT NOT NULL,
 	orderTime TIMESTAMP,
 	departTime1 TIMESTAMP,
@@ -179,6 +184,7 @@ CREATE TABLE ContainsFood (
 
 ----- INSERT DATA -----
 
+\COPY Locations(location) FROM './csv/locations.csv' CSV HEADER;
 \COPY FoodCategories(category) FROM './csv/food_categories.csv' CSV HEADER;
 \COPY Food(fname,category) FROM './csv/food.csv' CSV HEADER;
 \COPY Restaurants(rname, minSpending) FROM './csv/restaurants.csv' CSV HEADER;

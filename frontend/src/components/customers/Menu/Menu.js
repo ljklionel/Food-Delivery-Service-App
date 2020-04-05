@@ -1,28 +1,31 @@
 import React, { Component } from 'react'
 import { Card, Table } from 'semantic-ui-react';
-import myAxios from '../../webServer.js'
-import EditMenuModal from './EditMenuModal.js';
+import myAxios from '../../../webServer.js'
+import OrderMenuModal from './OrderMenuModal.js';
 
-class MenuList extends Component {
+class Menu extends Component {
 
     constructor(props) {
         super(props)
         this.state = {
             isLoading: true,
             restaurantMenu: [],
-            currentRestaurant: props.restaurant
+            currentRestaurant: props.restaurant,
+            infoList: props.infoList,
+            location: props.location
         }
         this.updateMenu(props.restaurant)
+        console.log("Logging location in MenuForCustomer: ", this.state.location)
     }
 
     updateMenu = rname => {
-        myAxios.get('/restaurant_items', {
+      console.log("Updating the menu")
+        myAxios.get('/restaurant_sells', {
           params: {
               restaurant: rname
           }
         })
         .then(response => {
-          console.log(response);
           this.setState({
             restaurantMenu: response.data.result,
             isLoading: false
@@ -43,20 +46,33 @@ class MenuList extends Component {
     
 
     render() {
+      var header
+      if (this.state.currentRestaurant === null) {
+          header = (              
+              <Card.Content>
+                  <Card.Header>Menu</Card.Header>
+                  <Card>Choose a restaurant</Card>
+              </Card.Content>)
+      } else {
+          header = (            
+              <Card.Content>
+                  <Card.Header>Menu</Card.Header>
+                  <Card>{this.props.restaurant}</Card>
+              </Card.Content>)
+      }
         if (this.state.isLoading) {
             return null// <Loader active/>
           }
           return (
             <Card color='red' style={{maxWidth: 250}}>
-              <Card.Content>
-                <Card.Header>Menu</Card.Header>
-              </Card.Content>
+              {header}
               <Card.Content>
                 <Table basic='very' celled>
                     <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>Item</Table.HeaderCell>
                         <Table.HeaderCell>Avail.</Table.HeaderCell>
+                        <Table.HeaderCell>Price</Table.HeaderCell>
                     </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -68,17 +84,22 @@ class MenuList extends Component {
                             <Table.Cell>
                                 {item[1]}
                             </Table.Cell>
+                            <Table.Cell>
+                                {item[2]}
+                            </Table.Cell>
                         </Table.Row>
                     ))}
                     </Table.Body>
                 </Table>
               </Card.Content>
               <Card.Content>
-                <EditMenuModal restaurant={this.state.currentRestaurant} submitHandler={this.updateMenu}/>
+                <OrderMenuModal restaurant={this.state.currentRestaurant} getCreditCardInfo={this.props.getCreditCardInfo} 
+                    getLocation={this.props.getLocation} location={this.state.location} 
+                        infoList={this.state.infoList} submitHandler={this.updateMenu} submitOrder={this.props.submitOrder}/>
               </Card.Content>
             </Card>
           )
     }
 }   
 
-export default MenuList;
+export default Menu;
