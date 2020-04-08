@@ -334,7 +334,7 @@ def add_full_time():
     endHour = cursor.fetchone()[0]
     cursor = conn.cursor()
     cursor.execute("BEGIN;")
-    cursor.execute("INSERT INTO FullTimers(username) VALUES ('%s');" % (username))
+    cursor.execute("INSERT INTO FullTimers(username) VALUES ('%s') ON CONFLICT DO NOTHING;" % (username))
     cursor.execute("INSERT INTO MonthlyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);", (username, workDay, startHour, endHour))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': '%s now works as Fulltimer!' % (username)}, 200)
@@ -361,9 +361,124 @@ def add_part_time():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("BEGIN;")
-    cursor.execute("INSERT INTO PartTimers(username, workHours) VALUES (%s, %s);", (username, totalHours))
+    cursor.execute("INSERT INTO PartTimers(username, workHours) VALUES (%s, %s) ON CONFLICT (username) DO UPDATE SET workHours = %s;", (username, totalHours, totalHours))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': '%s now works as Parttimer!' % (username)}, 200)
+
+@app.route("/get_part_time_sched")
+@login_required
+def get_part_time_sched():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT workDay, startHour, endHour FROM WeeklyWorkSched WHERE username = '%s' ORDER BY (workDay, startHour);" % (username))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+@app.route("/get_full_time_sched")
+@login_required
+def get_full_time_sched():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT workDay, startHour FROM MonthlyWorkSched WHERE username = '%s';" % (username))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+@app.route("/delete_full_time", methods=['DELETE'])
+@login_required
+def delete_full_time():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    result = cursor.execute("DELETE FROM MonthlyWorkSched WHERE EXISTS (SELECT 1 FROM MonthlyWorkSched MWS WHERE MWS.username = '%s');" % (username))
+    cursor.execute("COMMIT;")
+    return ({'result': result}, 200)
+
+@app.route("/delete_part_time", methods=['DELETE'])
+@login_required
+def delete_part_time():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    result = cursor.execute("DELETE FROM WeeklyWorkSched WHERE EXISTS (SELECT 1 FROM WeeklyWorkSched WWS WHERE WWS.username = '%s');" % (username))
+    cursor.execute("COMMIT;")
+    return ({'result': result}, 200)
+
+@app.route("/get_delivery_count")
+@login_required
+def get_delivery_count():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM Orders WHERE riderUsername = '%s' AND deliveryTime <> NULL;" % (username))
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+@app.route("/get_delivery")
+@login_required
+def get_delivery():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT orderid, location, orderTime, departTime1, arriveTime, departTime2, fee, rname FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NULL;" % (username))
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+@app.route("/set_depart_time_1", methods=['POST'])
+@login_required
+def set_depart_time_1():
+    username = current_user.get_id()
+    data = request.json
+    departTime1, orderId = data['departTime1'], data['orderId']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("UPDATE Orders SET departTime1 = %s WHERE orderid = %s;", (departTime1, orderId))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': 'Dispatch time %s has been recorded' % (departTime1)}, 200)
+
+@app.route("/set_arrive_time", methods=['POST'])
+@login_required
+def set_arrive_time():
+    username = current_user.get_id()
+    data = request.json
+    arriveTime, orderId = data['arriveTime'], data['orderId']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("UPDATE Orders SET arriveTime = %s WHERE orderid = %s;", (arriveTime, orderId))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': 'Arrival time %s has been recorded' % (arriveTime)}, 200)
+
+@app.route("/set_otw_time", methods=['POST'])
+@login_required
+def set_otw_time():
+    username = current_user.get_id()
+    data = request.json
+    departTime2, orderId = data['departTime2'], data['orderId']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("UPDATE Orders SET departTime2 = %s WHERE orderid = %s;", (departTime2, orderId))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': 'Arrival time %s has been recorded' % (departTime2)}, 200)
+
+@app.route("/set_delivery_time", methods=['POST'])
+@login_required
+def set_delivery_time():
+    username = current_user.get_id()
+    data = request.json
+    deliveryTime, orderId, fee = data['deliveryTime'], data['orderId'], data['fee']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("UPDATE Orders SET deliveryTime = %s WHERE orderid = %s;", (deliveryTime, orderId))
+    cursor.execute("UPDATE DeliveryRiders SET salary = salary +  %s WHERE username = %s;", (fee, username))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': 'Arrival time %s has been recorded' % (deliveryTime)}, 200)
 
 @app.route("/my_info")
 @login_required
