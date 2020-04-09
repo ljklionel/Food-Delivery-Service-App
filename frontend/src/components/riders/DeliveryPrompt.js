@@ -244,7 +244,7 @@ class DeliveryPrompt extends Component {
                 <br />
                 <br />
                 <h3 style={{ textAlign: 'center', opacity: '0.5' }}>
-                    Your assigned delivery will be show here
+                    Your assigned delivery will be shown here
                 </h3>
             </div>
         );
