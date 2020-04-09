@@ -326,7 +326,9 @@ def get_salary():
 def add_full_time():
     username = current_user.get_id()
     data = request.json
-    workDay, startHour = data['startDay'], data['shift']
+    workDay, startHour, salary = data['startDay'], data['shift'], data['salary']
+    if salary == '0':
+        salary = '1000'
     startHour = str(int(startHour)+9)
     conn = get_db()
     cursor = conn.cursor()
@@ -334,8 +336,8 @@ def add_full_time():
     endHour = cursor.fetchone()[0]
     cursor = conn.cursor()
     cursor.execute("BEGIN;")
+    cursor.execute("UPDATE DeliveryRiders SET salary = %s WHERE username = %s;", (salary, username))
     cursor.execute("INSERT INTO FullTimers(username) VALUES ('%s') ON CONFLICT DO NOTHING;" % (username))
-    cursor.execute("UPDATE DeliveryRiders SET salary = '1000' WHERE username = '%s';" % (username))
     cursor.execute("INSERT INTO MonthlyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);", (username, workDay, startHour, endHour))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': '%s now works as Fulltimer!' % (username)}, 200)
@@ -358,11 +360,13 @@ def add_part_time_sched():
 def add_part_time():
     username = current_user.get_id()
     data = request.json
-    totalHours = data['totalHours']
+    totalHours, salary = data['totalHours'], data['salary']
+    if salary == '0':
+        salary = '500'
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("BEGIN;")
-    cursor.execute("UPDATE DeliveryRiders SET salary = '500' WHERE username = '%s';" % (username))
+    cursor.execute("UPDATE DeliveryRiders SET salary = %s WHERE username = %s;", (salary, username))
     cursor.execute("INSERT INTO PartTimers(username, workHours) VALUES (%s, %s) ON CONFLICT (username) DO UPDATE SET workHours = %s;", (username, totalHours, totalHours))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': '%s now works as Parttimer!' % (username)}, 200)

@@ -1,21 +1,13 @@
 import React, { Component } from 'react';
 import {
-    Grid,
-    Image,
-    Header,
-    Loader,
-    Card,
-    List,
     Button,
-    Menu,
+    Grid,
     Modal,
     GridColumn,
-    GridRow,
-    Statistic
+    GridRow
 } from 'semantic-ui-react';
 import Select from 'react-select';
 import myAxios from '../../webServer.js';
-import RiderDashboard from '../../pages/riders/RiderDashboard';
 
 const daysOptions = [
     { value: '1', label: 'Option 1' },
@@ -35,7 +27,7 @@ const shiftsOptions = [
 ];
 
 class FullTimeInfo extends Component {
-    state = { showModal: true, redirect: false, day: '', shift: '' };
+    state = { showModal: true, redirect: false, day: '', shift: '', salary: this.props.salary };
 
     handleConfirm = () => {
         console.log(this.state);
@@ -52,7 +44,8 @@ class FullTimeInfo extends Component {
                 myAxios
                     .post('add_full_time', {
                         startDay: this.state.day,
-                        shift: this.state.shift
+                        shift: this.state.shift,
+                        salary: this.state.salary
                     })
                     .then(response => {
                         console.log(response);

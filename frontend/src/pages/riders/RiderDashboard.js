@@ -148,7 +148,7 @@ class RiderDashboard extends React.Component {
                 </GridRow>
             );
         } else {
-            return <JoinNow />;
+            return <JoinNow salary = '0' />;
         }
     };
 

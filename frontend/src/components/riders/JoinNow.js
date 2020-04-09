@@ -33,8 +33,8 @@ class JoinNow extends Component {
     render() {
         return (
             <GridRow style={{ height: '82%' }}>
-                {this.state.showPartTimeInfo && <PartTimeInfo />}
-                {this.state.showFullTimeInfo && <FullTimeInfo />}
+                {this.state.showPartTimeInfo && <PartTimeInfo salary = {this.props.salary} />}
+                {this.state.showFullTimeInfo && <FullTimeInfo salary = {this.props.salary} />}
                 <h2
                     style={{
                         textAlign: 'center',

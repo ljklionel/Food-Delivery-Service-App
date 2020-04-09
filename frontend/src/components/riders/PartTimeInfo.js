@@ -52,7 +52,8 @@ class PartTimeInfo extends Component {
         dayString: '',
         noteList: [],
         daysRecorded: [],
-        totalHours: 0
+        totalHours: 0,
+        salary: this.props.salary
     };
 
     handleConfirm = () => {
@@ -73,7 +74,8 @@ class PartTimeInfo extends Component {
                 .then(() => {
                     myAxios
                         .post('add_part_time', {
-                            totalHours: this.state.totalHours
+                            totalHours: this.state.totalHours,
+                            salary: this.state.salary
                         })
                         .then(response => {
                             console.log(response);
