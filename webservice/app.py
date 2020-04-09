@@ -413,7 +413,17 @@ def get_delivery_count():
     username = current_user.get_id()
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM Orders WHERE riderUsername = '%s' AND deliveryTime <> NULL;" % (username))
+    cursor.execute("SELECT COUNT(*) FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NOT NULL;" % (username))
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+@app.route("/get_avg_rating")
+@login_required
+def get_avg_rating():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT AVG(CAST(rating as Float)) FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NOT NULL;" % (username))
     result = cursor.fetchone()
     return ({'result': result}, 200)
 

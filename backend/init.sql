@@ -247,7 +247,7 @@ BEGIN
     IF totalHours < 10 THEN
         RAISE EXCEPTION '% cannot work less than 10 hours per week', NEW.username;
     END IF;
-    RETURN NULL;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -268,6 +268,63 @@ BEGIN
     IF endHour = NEW.startHour THEN 
         RAISE EXCEPTION '% does not have an hour break between 2 consecutive interval', NEW.username;
     END IF;
+    RETURN NEW;
+END;
+$$LANGUAGE plpgsql;
+
+-- Trigger to enforce at least 5 per hour interval
+CREATE OR REPLACE FUNCTION
+at_least_five_check()
+    RETURNS TRIGGER AS $$
+DECLARE
+    total INTEGER;
+    workerNum INTEGER;
+    isFullTime BOOLEAN;
+BEGIN
+    SELECT 
+        (SELECT COUNT(*)
+        FROM WeeklyWorkSched)
+        +
+        (SELECT COUNT(*)
+        FROM MonthlyWorkSched)
+    INTO total;
+    
+    IF NEW.endHour - NEW.startHour = 9 THEN isFullTime := true;
+    ELSE isFullTime := false;
+    END IF;
+
+    IF isFullTime = true THEN 
+        CREATE TEMP TABLE IF NOT EXISTS FullTimeCountAtHour AS 
+            SELECT COUNT(*) AS ftNum
+                FROM MonthlyWorkSched MWS
+                WHERE MWS.startHour = NEW.startHour
+                AND MWS.endHour = NEW.endHour
+                and MWS.workDay = NEW.workDay;
+    ELSE
+        CREATE TEMP TABLE IF NOT EXISTS FullTimeCountAtHour AS 
+            SELECT COUNT(*) AS ftNum
+                FROM MonthlyWorkSched MWS natural join FullTimeShifts FS
+                WHERE MWS.workDay = NEW.workDay
+                AND MWS.startHour <= NEW.startHour
+                AND MWS.endHour >= NEW.endHour 
+                AND FS.breakStart NOT BETWEEN NEW.startHour AND NEW.endHour;
+    END IF;
+
+    CREATE TEMP TABLE IF NOT EXISTS PartTimeCountAtHour AS 
+        SELECT COUNT(*) AS ptNum
+            FROM WeeklyWorkSched WWS
+            WHERE WWS.workDay = NEW.workDay
+            AND (WWS.startHour <= NEW.startHour
+                AND WWS.endHour >= NEW.endHour);
+
+    SELECT ftNum + ptNum INTO workerNum
+        FROM FullTimeCountAtHour, PartTimeCountAtHour;
+    
+    IF total > 420 AND workerNum < 5 THEN
+        RAISE EXCEPTION 'There is less than 5 workers at time % with workerNum %', NEW.startHour, workerNum;
+    END IF;
+    DROP TABLE FullTimeCountAtHour;
+    DROP TABLE PartTimeCountAtHour;
     RETURN NULL;
 END;
 $$LANGUAGE plpgsql;
@@ -295,10 +352,9 @@ total_participation_orders_wrt_containsfood();
 /* Trigger for insert/update on WeeklyWorkSched*/
 DROP TRIGGER IF EXISTS 
 part_time_break_check ON WeeklyWorkSched CASCADE;
-CREATE CONSTRAINT TRIGGER 
+CREATE TRIGGER 
 part_time_break_check
-AFTER UPDATE OF username, workDay,startHour, endHour OR INSERT ON WeeklyWorkSched
-DEFERRABLE INITIALLY DEFERRED
+BEFORE INSERT ON WeeklyWorkSched
 FOR EACH ROW
 EXECUTE FUNCTION 
 part_time_break_check();
@@ -306,8 +362,29 @@ part_time_break_check();
 /* Trigger for insert/update on PartTimers*/
 DROP TRIGGER IF EXISTS 
 check_total_hours_trigger ON PartTimers CASCADE;
-CREATE CONSTRAINT TRIGGER check_total_hours_trigger
-AFTER UPDATE OF workHours OR INSERT ON PartTimers
+CREATE TRIGGER 
+check_total_hours_trigger
+BEFORE UPDATE OR INSERT ON PartTimers
+FOR EACH ROW
+EXECUTE FUNCTION
+check_total_hours_trigger();
+
+/* Trigger for insert on WWS */
+DROP TRIGGER IF EXISTS 
+check_total_hours_trigger ON WeeklyWorkSched CASCADE;
+CREATE CONSTRAINT TRIGGER at_least_five_check
+AFTER INSERT ON WeeklyWorkSched
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
-EXECUTE FUNCTION check_total_hours_trigger();
+EXECUTE FUNCTION
+at_least_five_check();
+
+/* Trigger for insert on MWS */
+DROP TRIGGER IF EXISTS 
+check_total_hours_trigger ON MonthlyWorkSched CASCADE;
+CREATE CONSTRAINT TRIGGER at_least_five_check
+AFTER INSERT ON MonthlyWorkSched
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW
+EXECUTE FUNCTION
+at_least_five_check();
