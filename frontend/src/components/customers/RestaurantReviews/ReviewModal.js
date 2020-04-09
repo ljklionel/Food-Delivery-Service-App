@@ -14,11 +14,11 @@ class ReviewModal extends Component {
     }
 
     handleOpen = () => {
-        this.setState({ 
+        this.setState({
             modalOpen: true,
         })
     }
- 
+
     handleClose = () => {
         this.setState({
             modalOpen: false
@@ -28,17 +28,17 @@ class ReviewModal extends Component {
     render() {
         return (
             <Modal trigger={<Button onClick={this.handleOpen} fluid basic>{this.state.reviewer}</Button>}
-                    open={this.state.modalOpen}
-                    onClose={this.handleClose}>
+                open={this.state.modalOpen}
+                onClose={this.handleClose}>
                 <Modal.Header>Reviewer: {this.state.reviewer} </Modal.Header>
                 <Modal.Content>
-                    Item: {this.props.reviewDetails[0]} 
+                    Item: {this.props.reviewDetails[0]}
                     <br></br>
-                    Restaurant: {this.props.restaurant}                 
+                    Restaurant: {this.props.restaurant}
                     <br></br>
                     {/* OrderTime: {this.props.orderTime.substring(0, 22)}   */}
-                    
-                    OrderTime: {this.props.orderTime}                  
+
+                    OrderTime: {this.props.orderTime}
                     <br></br><br></br>
                     Review: {this.props.reviewDetails[1]}
                 </Modal.Content>

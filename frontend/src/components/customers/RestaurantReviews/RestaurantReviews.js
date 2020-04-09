@@ -16,42 +16,42 @@ class RestaurantReviews extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        this.setState({ 
+        this.setState({
             refreshReview: nextProps.refreshReview,
             currentRestaurant: nextProps.restaurant,
-            isLoading: true 
-        });  
+            isLoading: true
+        });
         this.updateReviews(nextProps.restaurant)
     }
 
     updateReviews = rname => {
-          myAxios.get('/get_restaurant_reviews', {
+        myAxios.get('/get_restaurant_reviews', {
             params: {
                 restaurant: rname
             }
-          })
-          .then(response => {
-            console.log("Response within updateReviews: ", response);
-            this.setState({
-                restaurantReviews: response.data.result,
-                isLoading: false
+        })
+            .then(response => {
+                console.log("Response within updateReviews: ", response);
+                this.setState({
+                    restaurantReviews: response.data.result,
+                    isLoading: false
+                })
             })
-          })
-          .catch(error => {
-            console.log(error);
-          });
-      }
+            .catch(error => {
+                console.log(error);
+            });
+    }
 
     render() {
         var header
         if (this.state.currentRestaurant === null) {
-            header = (              
+            header = (
                 <Card.Content>
                     <Card.Header>Reviews</Card.Header>
                     <Card>Choose a restaurant</Card>
                 </Card.Content>)
         } else {
-            header = (            
+            header = (
                 <Card.Content>
                     <Card.Header>Reviews</Card.Header>
                     <Card>{this.props.restaurant}</Card>
@@ -59,43 +59,43 @@ class RestaurantReviews extends Component {
         }
         if (this.state.isLoading) {
             return null// <Loader active/>
-          }
-          return (
-            <Card color='red' style={{maxWidth: 250}}>
-              {header}
-              <Card.Content>
-                <Table basic='very' celled>
-                    <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell>Reviewer</Table.HeaderCell>
-                        <Table.HeaderCell>Item</Table.HeaderCell>
-                        <Table.HeaderCell>Order Date</Table.HeaderCell>
-                    </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                    {this.state.restaurantReviews.map((item, i) => (
-                        <Table.Row key={item[0]}>
-                            <Table.Cell>
-                                <ReviewModal orderTime={item[3]} restaurant={this.state.currentRestaurant} reviewDetails={this.state.restaurantReviews[i]} reviewer={item[2]}/>
-                            </Table.Cell>
-                            <Table.Cell>
-                                {item[0]}
-                            </Table.Cell>
-                            <Table.Cell>
-                                {item[3].substring(5, 16)}
-                            </Table.Cell>
-                        </Table.Row>
-                    ))}
-                    </Table.Body>
-                </Table>
-              </Card.Content>
-              <Card.Content>
-                {/* <OrderMenuModal restaurant={this.state.currentRestaurant} getCreditCardInfo={this.props.getCreditCardInfo} 
+        }
+        return (
+            <Card color='red' style={{ maxWidth: 250 }}>
+                {header}
+                <Card.Content>
+                    <Table basic='very' celled>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell>Reviewer</Table.HeaderCell>
+                                <Table.HeaderCell>Item</Table.HeaderCell>
+                                <Table.HeaderCell>Order Date</Table.HeaderCell>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {this.state.restaurantReviews.map((item, i) => (
+                                <Table.Row key={item[0]}>
+                                    <Table.Cell>
+                                        <ReviewModal orderTime={item[3]} restaurant={this.state.currentRestaurant} reviewDetails={this.state.restaurantReviews[i]} reviewer={item[2]} />
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        {item[0]}
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        {item[3].substring(5, 16)}
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+                        </Table.Body>
+                    </Table>
+                </Card.Content>
+                <Card.Content>
+                    {/* <OrderMenuModal restaurant={this.state.currentRestaurant} getCreditCardInfo={this.props.getCreditCardInfo} 
                     getLocation={this.props.getLocation} location={this.state.location} 
                         infoList={this.state.infoList} submitHandler={this.updateMenu} submitOrder={this.props.submitOrder}/> */}
-              </Card.Content>
+                </Card.Content>
             </Card>
-          )
+        )
     }
 }
 

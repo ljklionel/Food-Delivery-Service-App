@@ -28,10 +28,10 @@ class CheckOutModal extends Component {
             content = (
                 <Table basic='very' celled>
                     <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell>Item</Table.HeaderCell>
-                        <Table.HeaderCell>Availability</Table.HeaderCell>
-                    </Table.Row>
+                        <Table.Row>
+                            <Table.HeaderCell>Item</Table.HeaderCell>
+                            <Table.HeaderCell>Availability</Table.HeaderCell>
+                        </Table.Row>
                     </Table.Header>
                     <Table.Body>
                     </Table.Body>
@@ -40,23 +40,23 @@ class CheckOutModal extends Component {
         }
 
         return (
-        <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Edit</Button>}
+            <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Edit</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
-            <Modal.Header>Edit Menu</Modal.Header>
-            <Modal.Content>
-                {content}
-            </Modal.Content>
-            
-            <Modal.Actions>
-                <Button color='red' onClick={this.handleClose}>
-                    Cancel
+                <Modal.Header>Edit Menu</Modal.Header>
+                <Modal.Content>
+                    {content}
+                </Modal.Content>
+
+                <Modal.Actions>
+                    <Button color='red' onClick={this.handleClose}>
+                        Cancel
                 </Button>
-                {/* <Button primary onClick={this.handleSave}>
+                    {/* <Button primary onClick={this.handleSave}>
                     Save
                 </Button> */}
-            </Modal.Actions>
-        </Modal>)
+                </Modal.Actions>
+            </Modal>)
     }
 }
 

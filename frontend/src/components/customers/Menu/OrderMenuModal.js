@@ -5,7 +5,7 @@ import Menu from './Menu.js'
 import CheckOutModal from './CheckOutModal.js';
 
 class OrderMenuModal extends Component {
-    
+
     constructor(props) {
         super(props)
         this.state = {
@@ -25,8 +25,8 @@ class OrderMenuModal extends Component {
 
     handleOpen = () => {
 
-        if (this.props.getLocation() == null || 
-                this.props.getLocation() === "") {
+        if (this.props.getLocation() == null ||
+            this.props.getLocation() === "") {
             alert("Please input your location")
             return
         } else if (this.props.getCreditCardInfo() == null) {
@@ -41,12 +41,12 @@ class OrderMenuModal extends Component {
         this.state.restaurantMenu.forEach(item => {
             order.push(0)
         });
-        this.setState({ 
+        this.setState({
             modalOpen: true,
             order: order
         })
     }
-  
+
     handleClose = () => {
         const avail = []
         this.state.restaurantMenu.forEach(item => {
@@ -63,7 +63,7 @@ class OrderMenuModal extends Component {
         var dateString = ""
         var dateArray = currentDate.split(" ")
         var i;
-        for (i = 0; i < dateArray.length; i++) { 
+        for (i = 0; i < dateArray.length; i++) {
             if (i === 5) {
                 continue
             }
@@ -83,7 +83,7 @@ class OrderMenuModal extends Component {
             updates[item[0]] = this.state.avail[i]
             order[item[0]] = this.state.order[i]
         })
-        
+
         for (const food in order) {
             totalQty += order[food]
         }
@@ -95,25 +95,25 @@ class OrderMenuModal extends Component {
         myAxios.post('edit_availability', {
             restaurant: this.state.currentRestaurant,
             updates: updates
-          })
-          .then(response => {
-            const menu = []
-            this.state.restaurantMenu.forEach((item, i) => {
-                menu.push([item[0], this.state.avail[i]])
-            });
-            this.setState({ 
-                modalOpen: false,
-                restaurantMenu: menu
+        })
+            .then(response => {
+                const menu = []
+                this.state.restaurantMenu.forEach((item, i) => {
+                    menu.push([item[0], this.state.avail[i]])
+                });
+                this.setState({
+                    modalOpen: false,
+                    restaurantMenu: menu
+                })
+                this.props.submitHandler(this.state.currentRestaurant)
             })
-            this.props.submitHandler(this.state.currentRestaurant)
-          })
-          .catch(error => {
-            console.log(error);
-          });
+            .catch(error => {
+                console.log(error);
+            });
 
-          var creditCard = this.props.getCreditCardInfo()
+        var creditCard = this.props.getCreditCardInfo()
 
-          myAxios.post('make_order', {
+        myAxios.post('make_order', {
             restaurant: this.state.currentRestaurant,
             order: order,
             totalPrice: this.state.totalPrice,
@@ -122,13 +122,13 @@ class OrderMenuModal extends Component {
             customer: this.state.infoList[0],
             creditCard: creditCard,
             location: this.props.getLocation()
-          })
-          .then(response => {
-              this.props.submitOrder(this.state.totalPrice)
-          })
-          .catch(error => {
-              console.log(error);
-          });
+        })
+            .then(response => {
+                this.props.submitOrder(this.state.totalPrice)
+            })
+            .catch(error => {
+                console.log(error);
+            });
 
     }
 
@@ -137,7 +137,7 @@ class OrderMenuModal extends Component {
         if (value <= this.state.avail[name]) {
             const order = this.state.order
             order[name] = value
-            this.setState({order: order})
+            this.setState({ order: order })
         }
         this.calculateTotalPrice()
         this.calculateFee()
@@ -148,26 +148,26 @@ class OrderMenuModal extends Component {
             params: {
                 restaurant: this.state.currentRestaurant
             }
-          })
-          .then(response => {
-            const avail = []
-            const price = []
-            response.data.result.forEach(item => {
-                avail.push(item[1])
-            });
-            response.data.result.forEach(item => {
-                price.push(item[2])
-            });
-            this.setState({
-                restaurantMenu: response.data.result,
-                avail: avail,
-                price: price,
-                isLoading: false
+        })
+            .then(response => {
+                const avail = []
+                const price = []
+                response.data.result.forEach(item => {
+                    avail.push(item[1])
+                });
+                response.data.result.forEach(item => {
+                    price.push(item[2])
+                });
+                this.setState({
+                    restaurantMenu: response.data.result,
+                    avail: avail,
+                    price: price,
+                    isLoading: false
+                })
             })
-          })
-          .catch(error => {
-            console.log(error);
-          });
+            .catch(error => {
+                console.log(error);
+            });
     }
 
     calculateTotalPrice() {
@@ -190,82 +190,82 @@ class OrderMenuModal extends Component {
             content = (
                 <Table basic='very' celled>
                     <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell>Item</Table.HeaderCell>
-                        <Table.HeaderCell>Availability</Table.HeaderCell>
-                        <Table.HeaderCell>Price</Table.HeaderCell>
-                        <Table.HeaderCell>Order</Table.HeaderCell>
-                        {/* <Table.HeaderCell>Total price</Table.HeaderCell> */}
-                    </Table.Row>
+                        <Table.Row>
+                            <Table.HeaderCell>Item</Table.HeaderCell>
+                            <Table.HeaderCell>Availability</Table.HeaderCell>
+                            <Table.HeaderCell>Price</Table.HeaderCell>
+                            <Table.HeaderCell>Order</Table.HeaderCell>
+                            {/* <Table.HeaderCell>Total price</Table.HeaderCell> */}
+                        </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                    {this.state.restaurantMenu.map((item, i) => (
-                        <Table.Row key={i}>
-                            <Table.Cell>
-                                {item[0]}
-                            </Table.Cell>
-                            <Table.Cell>
-                                {this.state.avail[i]}
-                            </Table.Cell>
-                            <Table.Cell>
-                                {this.state.price[i]}
-                            </Table.Cell>
-                            <Table.Cell>
-                                <Form>
-                                    <Form.Field>
-                                        <Form.Input
-                                            name = {i}
-                                            placeholder='0 selected'
-                                            value={this.state.order[i]}
-                                            onChange={this.handleChange}
+                        {this.state.restaurantMenu.map((item, i) => (
+                            <Table.Row key={i}>
+                                <Table.Cell>
+                                    {item[0]}
+                                </Table.Cell>
+                                <Table.Cell>
+                                    {this.state.avail[i]}
+                                </Table.Cell>
+                                <Table.Cell>
+                                    {this.state.price[i]}
+                                </Table.Cell>
+                                <Table.Cell>
+                                    <Form>
+                                        <Form.Field>
+                                            <Form.Input
+                                                name={i}
+                                                placeholder='0 selected'
+                                                value={this.state.order[i]}
+                                                onChange={this.handleChange}
                                             />
-                                    </ Form.Field>
-                                </Form>
+                                        </ Form.Field>
+                                    </Form>
+                                </Table.Cell>
+                            </Table.Row>
+                        ))}
+                        <br></br>
+                        <Table.Body>
+                            <Table.Row>
+                                <Table.Cell>
+                                    Total Price:
                             </Table.Cell>
-                        </Table.Row>
-                    ))}
-                    <br></br>
-                    <Table.Body>
-                        <Table.Row>
-                            <Table.Cell>
-                                Total Price:
+                                <Table.Cell>
+                                    {this.state.totalPrice}
+                                </Table.Cell>
+                                <Table.Cell>
+                                    Fee:
                             </Table.Cell>
-                            <Table.Cell>
-                                {this.state.totalPrice}
-                            </Table.Cell>
-                            <Table.Cell>
-                                Fee:
-                            </Table.Cell>
-                            <Table.Cell>
-                                {this.state.fee}
-                            </Table.Cell>
-                        </Table.Row>
-                    </Table.Body>
-                    
+                                <Table.Cell>
+                                    {this.state.fee}
+                                </Table.Cell>
+                            </Table.Row>
+                        </Table.Body>
+
                     </Table.Body>
                 </Table>
             )
         }
 
         return (
-        <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Make Order</Button>}
+            <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Make Order</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
-            <Modal.Header>Order Menu</Modal.Header>
-            <Modal.Content>
-                {content}
-            </Modal.Content>
-            
-            <Modal.Actions>
-                <Button color='red' onClick={this.handleClose}>
-                    Cancel
+                <Modal.Header>Order Menu</Modal.Header>
+                <Modal.Content>
+                    {content}
+                </Modal.Content>
+
+                <Modal.Actions>
+                    <Button color='red' onClick={this.handleClose}>
+                        Cancel
                 </Button>
-                <Button primary onClick={this.handleSave}>
-                    Checkout
+                    <Button primary onClick={this.handleSave}>
+                        Checkout
                 </Button>
-                <CheckOutModal/>
-            </Modal.Actions>
-        </Modal>)
+                    <CheckOutModal />
+                </Modal.Actions>
+            </Modal>)
     }
 }
 

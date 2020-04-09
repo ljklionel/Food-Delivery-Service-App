@@ -23,7 +23,7 @@ class RatingModal extends Component {
                 {
                     id: 2,
                     selected: false,
-                },                
+                },
                 {
                     id: 3,
                     selected: false,
@@ -42,24 +42,24 @@ class RatingModal extends Component {
 
     toggleItem = (id) => {
         this.state.rating = id
-        this.state.ratingList.map((x) => 
-        x.selected = false
+        this.state.ratingList.map((x) =>
+            x.selected = false
         )
         let temp = this.state["ratingList"]
         temp[id].selected = !temp[id].selected
         this.setState({
-          ["ratingList"]: temp
+            ["ratingList"]: temp
         })
         // this.state.ratingList[id].selected = true
     }
 
     handleOpen = () => {
-        this.setState({ 
+        this.setState({
             modalOpen: true,
         })
     }
 
-    handleRatingChange = (e, {value}) => {
+    handleRatingChange = (e, { value }) => {
         this.state.rating = value
     }
 
@@ -67,15 +67,15 @@ class RatingModal extends Component {
         myAxios.post('edit_rating', {
             orderid: this.props.orderid,
             rating: this.state.rating,
-          })
-          .then(response => {
-            this.setState({ 
-                modalOpen: false,
+        })
+            .then(response => {
+                this.setState({
+                    modalOpen: false,
+                })
             })
-          })
-          .catch(error => {
-            console.log(error);
-          });
+            .catch(error => {
+                console.log(error);
+            });
     }
 
     handleClose = () => {
@@ -96,33 +96,33 @@ class RatingModal extends Component {
         }
 
         return (
-        <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Rate this delivery</Button>}
+            <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Rate this delivery</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
-            <Modal.Header>Restaurant: {this.props.restaurant}</Modal.Header>
-            <Modal.Content>
-                Order ID: {this.props.orderid} 
-                <br></br>
-                Delivery Rider: {this.props.riderUsername} 
-                <br></br>             
-                <br></br>
-                {content}
-                {list.map((item) => (
-                    <li style={{width: "100%"}} className="dd-list-item" key={item.title} onClick={() => this.toggleItem(item.id)}>
-                    {item.id} {item.selected && <FontAwesomeIcon icon={faCheck}/>}
-                </li>
+                <Modal.Header>Restaurant: {this.props.restaurant}</Modal.Header>
+                <Modal.Content>
+                    Order ID: {this.props.orderid}
+                    <br></br>
+                Delivery Rider: {this.props.riderUsername}
+                    <br></br>
+                    <br></br>
+                    {content}
+                    {list.map((item) => (
+                        <li style={{ width: "100%" }} className="dd-list-item" key={item.title} onClick={() => this.toggleItem(item.id)}>
+                            {item.id} {item.selected && <FontAwesomeIcon icon={faCheck} />}
+                        </li>
                     ))}
-            </Modal.Content>
-            
-            <Modal.Actions>
-                <Button color='red' onClick={this.handleClose}>
-                    Cancel
+                </Modal.Content>
+
+                <Modal.Actions>
+                    <Button color='red' onClick={this.handleClose}>
+                        Cancel
                 </Button>
-                <Button primary onClick={this.handleSave}>
-                    Give ratings
+                    <Button primary onClick={this.handleSave}>
+                        Give ratings
                 </Button>
-            </Modal.Actions>
-        </Modal>)
+                </Modal.Actions>
+            </Modal>)
     }
 }
 
