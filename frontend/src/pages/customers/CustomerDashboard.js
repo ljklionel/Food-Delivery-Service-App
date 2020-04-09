@@ -1,11 +1,14 @@
 import React from 'react';
 import { Grid, Image, Header, Loader, Card } from 'semantic-ui-react';
-import RestaurantSelect from '../../components/customers/RestaurantSelect.js'
-import MenuForCustomer from '../../components/customers/MenuForCustomer.js'
-import CreditCardSelection from '../../components/customers/CreditCardSelection.js'
+import RestaurantSelect from '../../components/customers/SelectComponents/RestaurantSelect.js'
+import LocationSelect from '../../components/customers/SelectComponents/LocationSelect.js'
+import Menu from '../../components/customers/Menu/Menu.js'
+import CreditCardSelection from '../../components/customers/SelectComponents/CreditCardSelection.js'
+import RecentLocations from '../../components/customers/SelectComponents/RecentLocations.js'
 import AppHeader from '../../components/AppHeader.js'
 import myAxios from '../../webServer.js'
-import CompletedOrders from '../../components/customers/MyOrders.js'
+import MyOrders from '../../components/customers/MyOrder/MyOrders.js'
+import RestaurantReviews from '../../components/customers/RestaurantReviews/RestaurantReviews.js'
 import { Form, Table } from 'semantic-ui-react';
 
 
@@ -14,11 +17,15 @@ class CustomerDashboard extends React.Component {
     super()
     this.state = {
       infoList: null,
+      username: null,
       isLoadingInfo: true,
       currentRestaurant: null,
       restaurantMenu: null,
       customerLocation: null,
       currentCreditCard: null,
+      rewardPoint: 0,
+      recentLocationOptions: [],
+      refreshReview: 0,
       creditCardOptions: [
         {
             id: 0,
@@ -38,11 +45,13 @@ class CustomerDashboard extends React.Component {
           selected: false,
           key: 'creditCardOptions'
         }
-      ]
+      ],
     }
     this.getCreditCardInfo = this.getCreditCardInfo.bind(this)
     this.toggleSelected = this.toggleSelected.bind(this)
+    this.toggleSelectedLocation = this.toggleSelectedLocation.bind(this)
     this.getLocation = this.getLocation.bind(this)
+    this.submitReview = this.submitReview.bind(this)
   }
 
   changeCurrentCreditCard = (x) => {
@@ -63,9 +72,15 @@ class CustomerDashboard extends React.Component {
     });
   }
 
-  toggleSelected(id, key){
+  changeCustomerLocation = (x) => {
+    this.setState({
+        customerLocation: x[0]
+      })
+    }
+
+  toggleSelected = (id, key) => {
     this.state.creditCardOptions.map((x) => 
-      x.selected = false
+        x.selected = false
     )
     let temp = this.state[key]
     temp[id].selected = !temp[id].selected
@@ -75,14 +90,45 @@ class CustomerDashboard extends React.Component {
     this.changeCurrentCreditCard(this.state.creditCardOptions[id].title)
   }
 
-  submitOrder = totalPrice => {
-    const list = this.state.infoList
-    list[2] = totalPrice * 10
+  toggleSelectedLocation = (id, key) => {
+    this.state.recentLocationOptions.map((x) => 
+        x.selected = false
+    )
+    let temp = this.state[key]
+    temp[id].selected = !temp[id].selected
     this.setState({
-      infoList: list
+      [key]: temp
     })
-    console.log("Reward point: ", this.state.infoList)
-    window.location.reload(false);
+    this.changeCustomerLocation(this.state.recentLocationOptions[id].title)
+}
+
+  submitOrder = totalPrice => {
+    var rewardPoint = parseInt(totalPrice) + this.state.rewardPoint
+    this.setState({
+      rewardPoint: rewardPoint
+    })
+    this.updateRewardPoint(rewardPoint)
+    this.updateRecentLocations()
+    // window.location.reload(false);
+  }
+
+  submitReview = () => {
+    console.log("SubmitReview")
+    this.setState({
+      refreshReview: this.state.refreshReview++
+    })
+  }
+
+  updateRewardPoint = (x) => {
+    myAxios.post('update_reward_point', {
+      customerName: this.state.infoList[0],
+      rewardPoint: x
+    })
+    .then(response => {
+    })
+    .catch(error => {
+      console.log(error);
+    });
   }
 
   handleLocationChange = (e, {value }) => {
@@ -103,6 +149,7 @@ class CustomerDashboard extends React.Component {
     // Load async data.
     // Update state with new data.
     // Re-render our component.
+
     myAxios.get('/my_info')
     .then(response => {
       console.log(response);
@@ -111,12 +158,41 @@ class CustomerDashboard extends React.Component {
         list.push(element)
       });
       this.setState({infoList: list,
+        username: list[0],
+        rewardPoint: list[2],
         isLoadingInfo: false})
     })
     .catch(error => {
       console.log(error);
     });
+
+    this.updateRecentLocations()
   } 
+
+  updateRecentLocations = () => {
+    myAxios.get('/recent_locations')
+    .then(response => {
+      const list = []
+      var i = 0;
+      response.data.result.forEach(element => {
+        var block = {
+          id: i,
+          title: element,
+          selected: false,
+          key: 'recentLocationOptions'
+        }
+        list.push(block)
+        i++
+      });
+      var customerLocation = list.length === 0 ? null : list[0]["title"][0]
+      this.setState({recentLocationOptions: list,
+        customerLocation: customerLocation,
+        isLoadingInfo: false})
+    })
+    .catch(error => {
+      console.log(error);
+    });
+  }
 
   customerContent() {
     if (this.state.isLoadingInfo) {
@@ -127,9 +203,7 @@ class CustomerDashboard extends React.Component {
 
     const id = this.state.infoList[0]
     this.state.currentCreditCard = this.state.infoList[1]
-    const rewardPoint = this.state.infoList[2] == null ? 0 : this.state.infoList[2]
     const selectedRestaurant = this.state.currentRestaurant == null ? "Not selected" :this.state.currentRestaurant
-    
     return (
       <div>
         <Grid columns={4}>
@@ -140,26 +214,34 @@ class CustomerDashboard extends React.Component {
           <Grid.Column>
             <Header textAlign='left' style={{fontSize: '14px'}}>Username: {id}</Header>
             <Header textAlign='left' style={{fontSize: '14px'}}>Payment method: {this.state.currentCreditCard}</Header>
-            <Header textAlign='left' style={{fontSize: '14px'}}>Reward Point: {rewardPoint}</Header>
+            <Header textAlign='left' style={{fontSize: '14px'}}>Reward Point: {this.state.rewardPoint}</Header>
             <Header textAlign='left' style={{fontSize: '14px'}}>Selected Restaurant: {selectedRestaurant}</Header>
             <Header textAlign='left' style={{fontSize: '14px'}}>Location: {this.state.customerLocation}</Header>
-            <Form.Field>
+            {/* <Form.Field>
               <Form.Input
                 placeholder='Input your location'
                 onChange={this.handleLocationChange}/>
-            </Form.Field>
+            </Form.Field> */}
           </Grid.Column>
           <Grid.Column>
-          <CreditCardSelection title="Select credit card" list={this.state.creditCardOptions} toggleItem={this.toggleSelected} />
+            <CreditCardSelection title="Select credit card" list={this.state.creditCardOptions} toggleItem={this.toggleSelected} />
+            <RecentLocations title="Select from recent locations" list={this.state.recentLocationOptions} toggleSelectedLocation={this.toggleSelectedLocation} />
+          </Grid.Column>
+          <Grid.Column>
+            {/* <LocationSelect whenselect={this.onSelectLocation}/> */}
+            {/* <RecentLocations title="Select from recent locations" list={this.state.recentLocationOptions} toggleSelectedLocation={this.toggleSelectedLocation} /> */}
           </Grid.Column>
         </Grid>
 
         <Grid columns={4}>
-          <Grid.Column span='3'>
-            <MenuForCustomer submitOrder={this.submitOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
+          <Grid.Column>
+            <Menu submitOrder={this.submitOrder} getCreditCardInfo={this.getCreditCardInfo} restaurant={this.state.currentRestaurant} getLocation={this.getLocation} location={this.state.customerLocation} infoList={this.state.infoList}/>
           </Grid.Column>
           <Grid.Column>
-            <CompletedOrders orderSubmitted={this.state.orderSubmitted} currentCustomer={this.state.infoList[0]}/>
+            <RestaurantReviews refreshReview={this.state.refreshReview} restaurant={this.state.currentRestaurant}/>
+          </Grid.Column>
+          <Grid.Column>
+            <MyOrders submitReview={this.submitReview} orderSubmitted={this.state.orderSubmitted} currentCustomer={this.state.infoList[0]}/>
           </Grid.Column>
         </Grid>
         
@@ -170,6 +252,12 @@ class CustomerDashboard extends React.Component {
   onSelectRestaurant = (rest) => {
     const update = {}
     update.currentRestaurant = rest
+    this.setState(update)
+  }
+
+  onSelectLocation = (loc) => {
+    const update = {}
+    update.customerLocation = loc
     this.setState(update)
   }
 
@@ -199,6 +287,8 @@ class CustomerDashboard extends React.Component {
           ))} */}
         </Card.Group>
         <RestaurantSelect whenselect={this.onSelectRestaurant}/>
+        <Header style={headerStyle}><i>Select Location</i></Header>
+        <LocationSelect whenselect={this.onSelectLocation}/>
       </div>
     )
   }
@@ -207,7 +297,7 @@ class CustomerDashboard extends React.Component {
     return (
       <div>
         <AppHeader/>
-        <Grid celled style={{height: '100vh'}}>
+        <Grid celled style={{height: '120vh'}}>
           <Grid.Column style={{width: '82%', background: '#edf8ff'}}>
             {this.customerContent()}
           </Grid.Column>

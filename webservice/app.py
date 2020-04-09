@@ -297,6 +297,7 @@ def get_restaurant_sells():
 @login_required
 def make_order():
     data = request.json
+    print(data)
     rname, order, totalPrice, fee, timeStamp, customer, creditCard, location = data['restaurant'], data['order'], data['totalPrice'], data['fee'], data['timeStamp'], data['customer'], data['creditCard'], data['location']
     deliveryRider = connectDeliveryRider()
 
@@ -326,6 +327,8 @@ def make_order():
         cursor = conn.cursor()
         cursor.execute("BEGIN;")
         for fname in order:
+            if order[fname] == 0: # Quantity is 0
+                continue
             print(fname)
             print(order[fname])
             cursor.execute("INSERT INTO ContainsFood(quantity, fname, orderid) VALUES(%s, %s, %s);", (order[fname], fname, orderId))
@@ -360,7 +363,6 @@ def customer_orders():
 @login_required
 def update_credit_card():
     data = request.json
-    print("Data from updatecreditcard: ", data)
     creditCard, customerName = data['creditCard'], data['customerName']
     conn = get_db()
     cursor = conn.cursor()
@@ -368,6 +370,79 @@ def update_credit_card():
     cursor.execute("UPDATE Customers SET creditCard = %s WHERE username = %s;", (creditCard, customerName))
     cursor.execute("COMMIT;")
     print("Commited in update")
+    return ({}, 200)
+
+@app.route("/locations")
+@login_required
+def get_locations():
+    keyword = request.args.get('keyword')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT location FROM Locations WHERE location ILIKE '%s%%';" % keyword)
+    result = cursor.fetchmany(10)
+    return ({'result': result}, 200)
+
+@app.route("/recent_locations")
+@login_required
+def get_recent_locations():
+    username = current_user.get_id()
+    conn = get_db()
+    print("Getting recent location")
+    cursor = conn.cursor()
+    cursor.execute("SELECT location FROM Customers C, Orders O WHERE C.username = '%s' AND C.username = O.customerUsername GROUP BY location ORDER BY MAX(orderTime) DESC LIMIT 5;" % username)
+    result = cursor.fetchall()
+    print("recent_locations result: ", result)
+    return ({'result': result}, 200)
+
+@app.route("/edit_review", methods=['POST'])
+@login_required
+def edit_review():
+    data = request.json
+    orderid, review, fname, rname = data['orderid'], data['review'], data['fname'], data['restaurant']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("UPDATE ContainsFood SET review = %s WHERE orderid = %s AND fname = %s;", (review, orderid, fname))
+    cursor.execute("COMMIT;")
+
+    return ({}, 200)
+
+@app.route("/edit_rating", methods=['POST'])
+@login_required
+def edit_rating():
+    data = request.json
+    orderid, rating = data['orderid'], data['rating']
+    conn = get_db()
+    print(orderid)
+    print(rating)
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("UPDATE Orders SET rating = %s WHERE orderid = %s;", (rating, orderid))
+    cursor.execute("COMMIT;")
+
+    return ({}, 200)
+
+@app.route("/get_restaurant_reviews")
+@login_required
+def get_restaurant_reviews():
+    rname = request.args.get('restaurant')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT C.fname, review, O.customerUsername, O.orderTime FROM (ContainsFood C join Orders O on C.orderid = O.orderid) natural join Restaurants R where rname = %s AND C.review <> '' ORDER BY O.orderTime DESC LIMIT 8;", (rname,))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+@app.route("/update_reward_point", methods=['POST'])
+@login_required
+def update_reward_point():
+    data = request.json
+    rewardPoint, customerName = data['rewardPoint'], data['customerName']
+    conn = get_db()
+    cursor = conn.cursor()
+    print("Updating rewardPoint: ", rewardPoint)
+    cursor.execute("BEGIN;")
+    cursor.execute("UPDATE Customers SET rewardPoint = %s WHERE username = %s;", (rewardPoint, customerName))
+    cursor.execute("COMMIT;")
     return ({}, 200)
 
 # == Customers End ==
