@@ -37,8 +37,7 @@ class ReviewModal extends Component {
                     Restaurant: {this.props.restaurant}
                     <br></br>
                     {/* OrderTime: {this.props.orderTime.substring(0, 22)}   */}
-
-                    OrderTime: {this.props.orderTime}
+                    OrderTime: {this.props.orderTime.substring(0, this.props.orderTime.length - 3)}
                     <br></br><br></br>
                     Review: {this.props.reviewDetails[1]}
                 </Modal.Content>

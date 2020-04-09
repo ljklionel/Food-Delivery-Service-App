@@ -24,7 +24,7 @@ class LocationSelect extends Component {
                 console.log(response);
                 if (this.state.value.length < 1) {
                     this.setState(initialState)
-                } else {
+                } else {    
                     const res = []
                     response.data.result.forEach(element => {
                         res.push({

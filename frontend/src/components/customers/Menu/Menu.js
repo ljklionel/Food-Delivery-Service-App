@@ -64,7 +64,7 @@ class Menu extends Component {
             return null// <Loader active/>
         }
         return (
-            <Card color='red' style={{ maxWidth: 250 }}>
+            <Card background-color='blue' color='red' style={{ maxWidth: 250 }}>
                 {header}
                 <Card.Content>
                     <Table basic='very' celled>
@@ -93,7 +93,7 @@ class Menu extends Component {
                     </Table>
                 </Card.Content>
                 <Card.Content>
-                    <OrderMenuModal restaurant={this.state.currentRestaurant} getCreditCardInfo={this.props.getCreditCardInfo}
+                    <OrderMenuModal rewardPoint={this.props.rewardPoint} restaurant={this.state.currentRestaurant} getCreditCardInfo={this.props.getCreditCardInfo}
                         getLocation={this.props.getLocation} location={this.state.location}
                         infoList={this.state.infoList} submitHandler={this.updateMenu} submitOrder={this.props.submitOrder} />
                 </Card.Content>

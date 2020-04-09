@@ -1,8 +1,6 @@
 import React, { Component } from 'react'
-import { Modal, Form, Button, Table } from 'semantic-ui-react';
+import { Grid, Modal, Form, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../../webServer.js'
-import Menu from './Menu.js'
-import CheckOutModal from './CheckOutModal.js';
 
 class OrderMenuModal extends Component {
 
@@ -16,15 +14,19 @@ class OrderMenuModal extends Component {
             avail: [],
             order: [],
             price: [],
+            minSpend: 0,
+            useRewardPoint: 0,
+            discount: 0,
+            amtPayable: 0,
             currentRestaurant: props.restaurant,
             modalOpen: false,
             totalPrice: 0,
             fee: 0,
+            checkout: false
         }
     }
 
     handleOpen = () => {
-
         if (this.props.getLocation() == null ||
             this.props.getLocation() === "") {
             alert("Please input your location")
@@ -58,17 +60,49 @@ class OrderMenuModal extends Component {
         })
     }
 
+    proceedToCheckout = () => {
+        const updates = {}
+        const order = {}
+        const timeStamp = this.getOrderTimeStamp()
+        var totalQty = 0
+
+        this.state.restaurantMenu.forEach((item, i) => {
+            this.state.avail[i] -= this.state.order[i]
+            updates[item[0]] = this.state.avail[i]
+            order[item[0]] = this.state.order[i]
+        })
+
+        for (const food in order) {
+            totalQty += order[food]
+        }
+        if (totalQty === 0) {
+            alert("Please do not submit empty orders")
+            return
+        }
+
+        if (this.state.totalPrice + this.state.fee < this.state.minSpend) {
+            alert("You have to spend a minimum amount of " + this.state.minSpend + " to order.")
+            return
+        }
+        this.state.amtPayable = this.state.totalPrice + this.state.fee
+        this.setState({ checkout: true })
+    }
+
     getOrderTimeStamp() {
         var currentDate = new Date().toString()
+        console.log("Curr date: ", currentDate)
         var dateString = ""
         var dateArray = currentDate.split(" ")
+        console.log("dateArray: ", dateArray)
         var i;
         for (i = 0; i < dateArray.length; i++) {
-            if (i === 5) {
-                continue
+            if (i >= 5) {
+                break;
             }
             dateString += dateArray[i] + " "
         }
+        console.log("dateString: ", dateString)
+        console.log("dateString.trim(): ", dateString.trim())
         return dateString.trim()
     }
 
@@ -89,6 +123,11 @@ class OrderMenuModal extends Component {
         }
         if (totalQty === 0) {
             alert("Please do not submit empty orders")
+            return
+        }
+
+        if (this.state.totalPrice + this.state.fee < this.state.minSpend) {
+            alert("You have to spend a minimum amount of " + this.state.minSpend + " to order.")
             return
         }
 
@@ -124,7 +163,8 @@ class OrderMenuModal extends Component {
             location: this.props.getLocation()
         })
             .then(response => {
-                this.props.submitOrder(this.state.totalPrice)
+                this.props.submitOrder(this.state.totalPrice, this.state.useRewardPoint)
+                alert("You earned " + (this.state.totalPrice + " reward points!"))
             })
             .catch(error => {
                 console.log(error);
@@ -143,8 +183,29 @@ class OrderMenuModal extends Component {
         this.calculateFee()
     }
 
+    handleRewardPointChange = (e, { value }) => {
+        value = value ? parseInt(value) : 0
+        if ((value <= this.props.rewardPoint) &&
+            (value / 10 <= (this.state.totalPrice + this.state.fee)) * 0.2  ) {
+            var discount = value / 10;
+            discount = Math.round(discount * 100) / 100
+            var amtPayable = Math.round((this.state.totalPrice + this.state.fee - discount) * 100) / 100
+            this.setState({
+                useRewardPoint: value,
+                discount: discount,
+                amtPayable: amtPayable
+            })
+            console.log(this.state.discount)
+            console.log(this.state.amtPayable)
+            console.log(typeof (this.state.amtPayable))
+
+        }
+        // Some function
+    }
+
     componentDidMount() {
-        myAxios.get('/restaurant_sells', {
+        console.log("Trying to get restaurant menu")
+        myAxios.get('/restaurant_menu', {
             params: {
                 restaurant: this.state.currentRestaurant
             }
@@ -155,6 +216,7 @@ class OrderMenuModal extends Component {
                 response.data.result.forEach(item => {
                     avail.push(item[1])
                 });
+                console.log(response.data.result[0][3])
                 response.data.result.forEach(item => {
                     price.push(item[2])
                 });
@@ -162,6 +224,7 @@ class OrderMenuModal extends Component {
                     restaurantMenu: response.data.result,
                     avail: avail,
                     price: price,
+                    minSpend: response.data.result[0][3],
                     isLoading: false
                 })
             })
@@ -178,93 +241,131 @@ class OrderMenuModal extends Component {
     }
 
     calculateFee() {
-        this.state.fee = this.state.totalPrice * 0.1
+        this.state.fee = this.state.totalPrice * 0.20
         this.state.fee = Math.round(this.state.fee * 100) / 100
     }
 
     render() {
+        var header
         var content
+        var actions
         if (this.state.isLoading) {
             content = null
-        } else {
+        } else if (!this.state.checkout) {
+            header = (<Modal.Header>Order Menu</Modal.Header>)
             content = (
-                <Table basic='very' celled>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell>Item</Table.HeaderCell>
-                            <Table.HeaderCell>Availability</Table.HeaderCell>
-                            <Table.HeaderCell>Price</Table.HeaderCell>
-                            <Table.HeaderCell>Order</Table.HeaderCell>
-                            {/* <Table.HeaderCell>Total price</Table.HeaderCell> */}
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {this.state.restaurantMenu.map((item, i) => (
-                            <Table.Row key={i}>
-                                <Table.Cell>
-                                    {item[0]}
-                                </Table.Cell>
-                                <Table.Cell>
-                                    {this.state.avail[i]}
-                                </Table.Cell>
-                                <Table.Cell>
-                                    {this.state.price[i]}
-                                </Table.Cell>
-                                <Table.Cell>
-                                    <Form>
-                                        <Form.Field>
-                                            <Form.Input
-                                                name={i}
-                                                placeholder='0 selected'
-                                                value={this.state.order[i]}
-                                                onChange={this.handleChange}
-                                            />
-                                        </ Form.Field>
-                                    </Form>
-                                </Table.Cell>
-                            </Table.Row>
-                        ))}
-                        <br></br>
-                        <Table.Body>
+                <Modal.Content>
+                    <Table basic='very' celled>
+                        <Table.Header>
                             <Table.Row>
-                                <Table.Cell>
-                                    Total Price:
-                            </Table.Cell>
-                                <Table.Cell>
-                                    {this.state.totalPrice}
-                                </Table.Cell>
-                                <Table.Cell>
-                                    Fee:
-                            </Table.Cell>
-                                <Table.Cell>
-                                    {this.state.fee}
-                                </Table.Cell>
+                                <Table.HeaderCell>Item</Table.HeaderCell>
+                                <Table.HeaderCell>Availability</Table.HeaderCell>
+                                <Table.HeaderCell>Price</Table.HeaderCell>
+                                <Table.HeaderCell>Order</Table.HeaderCell>
                             </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {this.state.restaurantMenu.map((item, i) => (
+                                <Table.Row key={i}>
+                                    <Table.Cell>
+                                        {item[0]}
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        {this.state.avail[i]}
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        {this.state.price[i]}
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <Form>
+                                            <Form.Field>
+                                                <Form.Input
+                                                    name={i}
+                                                    placeholder='0 selected'
+                                                    value={this.state.order[i]}
+                                                    onChange={this.handleChange}
+                                                />
+                                            </ Form.Field>
+                                        </Form>
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
                         </Table.Body>
-
-                    </Table.Body>
-                </Table>
+                    </Table>
+                    <h5 align="right">Min spend: {this.state.minSpend}</h5>
+                    <h5 align="right">Total price: {this.state.totalPrice} </h5>
+                </Modal.Content>
             )
+            actions =
+                (<Modal.Actions>
+                    <Button color='red' onClick={this.handleClose}>
+                        Cancel
+                    </Button>
+                    <Button color='blue' onClick={this.proceedToCheckout}>
+                        Next
+                    </Button>
+                </Modal.Actions>
+                )
+        } else {
+            header = (<Modal.Header>Checkout</Modal.Header>)
+            content = (
+                <Modal.Content>
+                    <Grid columns={2}>
+                        <Grid.Column>
+                            Price: {this.state.totalPrice}
+                            <br></br><br></br>
+                            Fee: {this.state.fee}
+                            <br></br><br></br>
+                            {/* Total price without discount: {(this.state.totalPrice + this.state.fee)}
+                            <br></br><br></br> */}
+                            Discount: {this.state.discount}
+                            <br></br><br></br>
+                            <h4>Amount Payable: {(this.state.amtPayable).toFixed(1)}</h4>
+                        </Grid.Column>
+                        <Grid.Column>
+                            <div align='right'>You have {this.props.rewardPoint} reward point <br></br> Use them to get up to 20% discount</div>
+                            <Form.Field align="right">
+                                <Form.Input
+                                    placeholder='0'
+                                    value={this.state.useRewardPoint}
+                                    onChange={this.handleRewardPointChange}
+                                />
+                            </ Form.Field>
+                            <br></br>
+
+                        </Grid.Column>
+                    </Grid>
+                </Modal.Content >
+            )
+            actions =
+                (<Modal.Actions>
+                    <Button color='red' onClick={this.handleClose}>
+                        Cancel
+                    </Button>
+                    <Button color='blue'
+                        onClick={() => {
+                            this.setState(
+                                {
+                                    checkout: false
+                                })
+                        }}>
+                        Previous
+                    </Button>
+                    <Button color='green'
+                        onClick={this.handleSave}>
+                        Submit
+                    </Button>
+                </Modal.Actions>
+                )
         }
 
         return (
             <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Make Order</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
-                <Modal.Header>Order Menu</Modal.Header>
-                <Modal.Content>
-                    {content}
-                </Modal.Content>
-
-                <Modal.Actions>
-                    <Button color='red' onClick={this.handleClose}>
-                        Cancel
-                </Button>
-                    <Button primary onClick={this.handleSave}>
-                        Checkout
-                </Button>
-                    <CheckOutModal />
-                </Modal.Actions>
+                {header}
+                {content}
+                {actions}
             </Modal>)
     }
 }

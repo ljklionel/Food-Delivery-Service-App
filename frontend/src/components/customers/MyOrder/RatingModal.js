@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Modal, Form, Button, Table } from 'semantic-ui-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowUp, faArrowDown, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import myAxios from '../../../webServer.js'
 
 class RatingModal extends Component {
@@ -64,6 +64,10 @@ class RatingModal extends Component {
     }
 
     handleSave = () => {
+        if (this.state.rating === null) {
+            alert("Please select one of the ratings")
+            return
+        }
         myAxios.post('edit_rating', {
             orderid: this.props.orderid,
             rating: this.state.rating,
@@ -72,6 +76,7 @@ class RatingModal extends Component {
                 this.setState({
                     modalOpen: false,
                 })
+                alert("You gave " + this.props.riderUsername + " a rating of " + this.state.rating)
             })
             .catch(error => {
                 console.log(error);
@@ -103,7 +108,7 @@ class RatingModal extends Component {
                 <Modal.Content>
                     Order ID: {this.props.orderid}
                     <br></br>
-                Delivery Rider: {this.props.riderUsername}
+                    Delivery Rider: {this.props.riderUsername}
                     <br></br>
                     <br></br>
                     {content}

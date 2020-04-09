@@ -23,6 +23,9 @@ class WriteReviewModal extends Component {
     }
 
     handleSave = () => {
+        if (this.state.review === null) {
+            alert("Please do not submit an empty review")
+        }
         myAxios.post('edit_review', {
             orderid: this.props.orderid,
             review: this.state.review,
@@ -35,6 +38,7 @@ class WriteReviewModal extends Component {
                     modalOpen: false,
                 })
                 this.props.submitReview()
+                alert("You submitted a review for " + this.props.fname + " sold by " + this.props.restaurant)
             })
             .catch(error => {
                 console.log(error);
