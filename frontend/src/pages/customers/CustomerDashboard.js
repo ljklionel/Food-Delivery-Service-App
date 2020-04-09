@@ -9,7 +9,9 @@ import AppHeader from '../../components/AppHeader.js'
 import myAxios from '../../webServer.js'
 import MyOrders from '../../components/customers/MyOrder/MyOrders.js'
 import RestaurantReviews from '../../components/customers/RestaurantReviews/RestaurantReviews.js'
+import PromoList from "../../components/customers/Promotions/PromoList"
 import { Form, Table } from 'semantic-ui-react';
+import RadioButton from '../../components/customers/Menu/RadioButton.js'
 
 
 class CustomerDashboard extends React.Component {
@@ -18,7 +20,7 @@ class CustomerDashboard extends React.Component {
         this.state = {
             infoList: null,
             username: null,
-            isLoadingInfo: true,
+            isLoadingInfo: 2,
             currentRestaurant: null,
             restaurantMenu: null,
             customerLocation: null,
@@ -26,6 +28,7 @@ class CustomerDashboard extends React.Component {
             rewardPoint: 0,
             recentLocationOptions: [],
             refreshReview: 0,
+            promotions: [],
             creditCardOptions: [
                 {
                     id: 0,
@@ -161,18 +164,14 @@ class CustomerDashboard extends React.Component {
                 response.data.result[0].forEach(element => {
                     list.push(element)
                 });
+                var isLoadingInfo = this.state.isLoadingInfo - 1
                 this.state.infoList = list // Prevent synchronisation issue
                 this.setState({
                     infoList: list,
                     username: list[0],
                     rewardPoint: list[2],
-                    // isLoadingInfo: false
+                    isLoadingInfo: isLoadingInfo
                 })
-                    .then(() => {
-                        this.setState({
-                            isLoadingInfo: false
-                        })
-                    })
             })
             .catch(error => {
                 console.log(error);
@@ -197,10 +196,11 @@ class CustomerDashboard extends React.Component {
                     i++
                 });
                 var customerLocation = list.length === 0 ? null : list[0]["title"][0]
+                var isLoadingInfo = this.state.isLoadingInfo - 1
                 this.setState({
                     recentLocationOptions: list,
                     customerLocation: customerLocation,
-                    isLoadingInfo: false
+                    isLoadingInfo: isLoadingInfo
                 })
             })
             .catch(error => {
@@ -208,13 +208,16 @@ class CustomerDashboard extends React.Component {
             });
     }
 
+    setGender(event) {
+        console.log(event.target.value);
+    }
+    
     customerContent() {
         if (this.state.isLoadingInfo) {
             return (
                 <Loader size='massive' active />
             );
         }
-
         const id = this.state.infoList[0]
         this.state.currentCreditCard = this.state.infoList[1]
         const selectedRestaurant = this.state.currentRestaurant == null ? "Not selected" : this.state.currentRestaurant
@@ -231,19 +234,18 @@ class CustomerDashboard extends React.Component {
                         <Header textAlign='left' style={{ fontSize: '14px' }}>Reward Point: {this.state.rewardPoint}</Header>
                         <Header textAlign='left' style={{ fontSize: '14px' }}>Selected Restaurant: {selectedRestaurant}</Header>
                         <Header textAlign='left' style={{ fontSize: '14px' }}>Location: {this.state.customerLocation}</Header>
-                        {/* <Form.Field>
-              <Form.Input
-                placeholder='Input your location'
-                onChange={this.handleLocationChange}/>
-            </Form.Field> */}
                     </Grid.Column>
+
                     <Grid.Column>
                         <CreditCardSelection title="Select payment method" list={this.state.creditCardOptions} toggleItem={this.toggleSelected} />
                         <RecentLocations title="Select from recent locations" list={this.state.recentLocationOptions} toggleSelectedLocation={this.toggleSelectedLocation} />
                     </Grid.Column>
                     <Grid.Column>
-                        {/* <LocationSelect whenselect={this.onSelectLocation}/> */}
-                        {/* <RecentLocations title="Select from recent locations" list={this.state.recentLocationOptions} toggleSelectedLocation={this.toggleSelectedLocation} /> */}
+                        <div onChange={this.setGender.bind(this)}>
+                            <input type="radio" value="MALE" name="gender" /> Male
+                            <input type="radio" value="FEMALE" name="gender" /> Female
+                        </div>
+                        <RadioButton></RadioButton>
                     </Grid.Column>
                 </Grid>
 
@@ -253,6 +255,9 @@ class CustomerDashboard extends React.Component {
                     </Grid.Column>
                     <Grid.Column>
                         <RestaurantReviews refreshReview={this.state.refreshReview} restaurant={this.state.currentRestaurant} />
+                    </Grid.Column>
+                    <Grid.Column>
+                        <PromoList restaurant={this.state.currentRestaurant} />
                     </Grid.Column>
                     <Grid.Column>
                         <MyOrders submitReview={this.submitReview} orderSubmitted={this.state.orderSubmitted} currentCustomer={this.state.infoList[0]} />

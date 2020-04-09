@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Grid, Modal, Form, Button, Table } from 'semantic-ui-react';
 import myAxios from '../../../webServer.js'
+import RadioButton from './RadioButton.js'
 
 class OrderMenuModal extends Component {
 
@@ -22,7 +23,8 @@ class OrderMenuModal extends Component {
             modalOpen: false,
             totalPrice: 0,
             fee: 0,
-            checkout: false
+            checkout: false,
+            promotions: []
         }
     }
 
@@ -186,7 +188,7 @@ class OrderMenuModal extends Component {
     handleRewardPointChange = (e, { value }) => {
         value = value ? parseInt(value) : 0
         if ((value <= this.props.rewardPoint) &&
-            (value / 10 <= (this.state.totalPrice + this.state.fee)) * 0.2  ) {
+            (value / 10 <= (this.state.totalPrice + this.state.fee)) * 0.2) {
             var discount = value / 10;
             discount = Math.round(discount * 100) / 100
             var amtPayable = Math.round((this.state.totalPrice + this.state.fee - discount) * 100) / 100
@@ -231,6 +233,24 @@ class OrderMenuModal extends Component {
             .catch(error => {
                 console.log(error);
             });
+
+
+        myAxios.get('/restaurant_promo_for_customers', {
+            params: {
+                restaurant: this.state.currentRestaurant
+            }
+        })
+            .then(response => {
+                console.log("Promo info: ", response);
+                this.setState({
+                    promotions: response.data.result,
+                    isLoading: false
+                })
+            })
+            .catch(error => {
+                console.log("Error from update Promo: ", error);
+            });
+
     }
 
     calculateTotalPrice() {
@@ -249,8 +269,12 @@ class OrderMenuModal extends Component {
         var header
         var content
         var actions
+        var promotions
         if (this.state.isLoading) {
+            header = null
             content = null
+            actions = null
+            promotions = null
         } else if (!this.state.checkout) {
             header = (<Modal.Header>Order Menu</Modal.Header>)
             content = (
@@ -265,6 +289,7 @@ class OrderMenuModal extends Component {
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
+                            <RadioButton></RadioButton>
                             {this.state.restaurantMenu.map((item, i) => (
                                 <Table.Row key={i}>
                                     <Table.Cell>
@@ -308,6 +333,29 @@ class OrderMenuModal extends Component {
                 )
         } else {
             header = (<Modal.Header>Checkout</Modal.Header>)
+            promotions = (
+                <Table basic='very' celled>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell>ID</Table.HeaderCell>
+                            <Table.HeaderCell>Discount</Table.HeaderCell>
+                            <Table.HeaderCell>End</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {this.state.promotions.map((item) => (
+                            <Table.Row key={item[0]}>
+                                <Table.Cell>
+                                    {item[0]}
+                                </Table.Cell>
+                                <Table.Cell>
+                                    {item[2]}%
+                                </Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table>
+            )
             content = (
                 <Modal.Content>
                     <Grid columns={2}>
@@ -316,13 +364,12 @@ class OrderMenuModal extends Component {
                             <br></br><br></br>
                             Fee: {this.state.fee}
                             <br></br><br></br>
-                            {/* Total price without discount: {(this.state.totalPrice + this.state.fee)}
-                            <br></br><br></br> */}
                             Discount: {this.state.discount}
                             <br></br><br></br>
                             <h4>Amount Payable: {(this.state.amtPayable).toFixed(1)}</h4>
                         </Grid.Column>
                         <Grid.Column>
+                            {promotions}
                             <div align='right'>You have {this.props.rewardPoint} reward point <br></br> Use them to get up to 20% discount</div>
                             <Form.Field align="right">
                                 <Form.Input

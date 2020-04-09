@@ -260,12 +260,14 @@ def get_all_restaurant_summary():
 @login_required
 def get_ongoing_restaurant_promo():
     rname = request.args.get('restaurant')
+    print("Rname for ongoing rest:", rname)
     now = datetime.now()
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT promoId, endDate, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname WHERE P.rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' " +
                    "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) GROUP BY promoId, endDate ORDER BY endDate;", (rname, now))
     result = cursor.fetchall()
+    print("Result for ongoing rest:", result)
     return ({'result': result}, 200)
 
 
@@ -510,6 +512,25 @@ def get_restaurant_menu():
     cursor.execute(
         "SELECT fname, avail, price, minSpending FROM Sells natural join Restaurants WHERE rname = %s", (rname,))
     result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+@app.route("/restaurant_promo_for_customers")
+@login_required
+def get_restaurant_promo_for_customers():
+    print("Getting restaurant promotions for customers")
+    rname = request.args.get('restaurant')
+    now = datetime.now()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT promoId, endDate, discount FROM Promotions WHERE rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' ORDER BY endDate;", (rname, now))
+
+    result = cursor.fetchall()
+    print("Result: ", result)
+    
+    for i, r in enumerate(result):  # fix decimal is not serializable
+        l = list(result[i])
+        l[2] = float(l[2])
+        result[i] = tuple(l)
     return ({'result': result}, 200)
 
 # == Customers End ==
