@@ -11,8 +11,6 @@ import myAxios from '../../webServer.js'
 import MyOrders from '../../components/customers/MyOrder/MyOrders.js'
 import RestaurantReviews from '../../components/customers/RestaurantReviews/RestaurantReviews.js'
 import PromoList from "../../components/customers/Promotions/PromoList"
-import { Form, Table } from 'semantic-ui-react';
-import RadioButton from '../../components/customers/Menu/RadioButton.js'
 
 
 class CustomerDashboard extends React.Component {
@@ -111,11 +109,7 @@ class CustomerDashboard extends React.Component {
     }
 
     submitOrder = (rewardEarned, rewardUsed) => {
-        console.log("Subbmited order")
         var rewardPoint = parseInt(rewardEarned) + this.state.rewardPoint - parseInt(rewardUsed)
-        console.log(rewardEarned)
-        console.log(rewardUsed)
-        console.log(rewardPoint)
         this.setState({
             rewardPoint: rewardPoint
         })
@@ -262,11 +256,6 @@ class CustomerDashboard extends React.Component {
                         <RecentLocations title="Select from recent locations" list={this.state.recentLocationOptions} toggleSelectedLocation={this.toggleSelectedLocation} />
                     </Grid.Column>
                     <Grid.Column>
-                        <div onChange={this.setGender.bind(this)}>
-                            <input type="radio" value="MALE" name="gender" /> Male
-                            <input type="radio" value="FEMALE" name="gender" /> Female
-                        </div>
-                        <RadioButton></RadioButton>
                     </Grid.Column>
                 </Grid>
 

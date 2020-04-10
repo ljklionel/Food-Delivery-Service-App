@@ -41,6 +41,14 @@ class PromoList extends Component {
         this.updatePromo(nextProps.restaurant)
     }
 
+    calculateTotalDiscount = () => {
+        var discount = 1
+        this.state.promotions.map((item) => (
+            discount *= (1 - item[2] / 100)
+        ))
+        console.log("Discount:", discount)
+        return (100 - discount * 100).toFixed(2)
+    }
 
     render() {
         var header
@@ -65,38 +73,43 @@ class PromoList extends Component {
             content = <p><i>No ongoing promotions.</i></p>
         } else {
             content = (
-                <Table basic='very' celled>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell>ID</Table.HeaderCell>
-                            <Table.HeaderCell>Discount</Table.HeaderCell>
-                            <Table.HeaderCell>End</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {this.state.promotions.map((item) => (
-                            <Table.Row key={item[0]}>
-                                <Table.Cell>
-                                    {item[0]}
-                                </Table.Cell>
-                                <Table.Cell>
-                                    {item[2]}%
-                          </Table.Cell>
-                                <Table.Cell>
-                                    {item[1].substring(0, 11)}
-                                </Table.Cell>
+                <Card.Content>
+                    <h3>Total Discount: {this.calculateTotalDiscount() + "%"}</h3>
+                    <hr></hr>
+                    <Table basic='very' celled>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell>ID</Table.HeaderCell>
+                                <Table.HeaderCell>Discount</Table.HeaderCell>
+                                <Table.HeaderCell>End</Table.HeaderCell>
                             </Table.Row>
-                        ))}
-                    </Table.Body>
-                </Table>
+                        </Table.Header>
+                        <Table.Body>
+                            {this.state.promotions.map((item) => (
+                                <Table.Row key={item[0]}>
+                                    <Table.Cell>
+                                        {item[0]}
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        {item[2]}%
+                          </Table.Cell>
+                                    <Table.Cell>
+                                        {item[1].substring(0, 11)}
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+
+                        </Table.Body>
+                    </Table>
+
+                </Card.Content>
+
             )
         }
         return (
             <Card color='blue' style={{ maxWidth: 250 }}>
                 {header}
-                <Card.Content>
-                    {content}
-                </Card.Content>
+                {content}
                 <Card.Content>
                     <ViewPromoModal restaurant={this.state.currentRestaurant} />
                 </Card.Content>
