@@ -211,7 +211,7 @@ class CustomerDashboard extends React.Component {
     setGender(event) {
         console.log(event.target.value);
     }
-    
+
     customerContent() {
         if (this.state.isLoadingInfo) {
             return (
@@ -294,20 +294,22 @@ class CustomerDashboard extends React.Component {
 
         return (
             <div>
-                <Header style={headerStyle}><i>Select Restaurant</i></Header>
-                <Card.Group>
-                    {/* {this.state.restaurantList.map((rest) => (
-            <Card as='a' 
-              key={rest}
-              onClick={() => {this.setState({currentRestaurant: rest})}} 
-              fluid 
-              color={random_color()} 
-              header={rest} />
-          ))} */}
-                </Card.Group>
-                <RestaurantSelect whenselect={this.onSelectRestaurant} />
-                <Header style={headerStyle}><i>Select Location</i></Header>
-                <LocationSelect whenselect={this.onSelectLocation} />
+                {/* <Header style={headerStyle}><i>Select Restaurant</i></Header> */}
+                <br></br>
+                <Card.Header>
+                    <Header style={headerStyle}><i>Select Restaurant</i></Header>
+                </Card.Header>
+                <Card.Content>
+                    <RestaurantSelect whenselect={this.onSelectRestaurant} />
+                </Card.Content>
+                <br></br>
+                <br></br>
+                <Card.Header>
+                    <Header style={headerStyle}><i>Select Location</i></Header>
+                    </Card.Header>
+                <Card.Content>
+                    <LocationSelect whenselect={this.onSelectLocation} />
+                </Card.Content>
             </div>
         )
     }

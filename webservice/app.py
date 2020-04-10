@@ -502,6 +502,7 @@ def update_reward_point():
     cursor.execute("COMMIT;")
     return ({}, 200)
 
+
 @app.route("/restaurant_menu")
 @login_required
 def get_restaurant_menu():
@@ -513,6 +514,7 @@ def get_restaurant_menu():
         "SELECT fname, avail, price, minSpending FROM Sells natural join Restaurants WHERE rname = %s", (rname,))
     result = cursor.fetchall()
     return ({'result': result}, 200)
+
 
 @app.route("/restaurant_promo_for_customers")
 @login_required
@@ -526,11 +528,31 @@ def get_restaurant_promo_for_customers():
 
     result = cursor.fetchall()
     print("Result: ", result)
-    
+
     for i, r in enumerate(result):  # fix decimal is not serializable
         l = list(result[i])
         l[2] = float(l[2])
         result[i] = tuple(l)
+    return ({'result': result}, 200)
+
+
+@app.route("/food_and_restaurants")
+@login_required
+def get_food_and_restaurants():
+    keyword = request.args.get('keyword')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT rname FROM Restaurants WHERE rname ILIKE '%s%%'" % keyword)
+    result1 = cursor.fetchmany(5)
+    cursor.execute(
+        "SELECT fname, rname FROM Food natural join Sells WHERE fname ILIKE '%s%%';" % keyword)
+    result2 = cursor.fetchmany(5)
+
+    for i, r in enumerate(result2):
+        result2[i] = (str(result2[i][0] + " [" + result2[i][1] + "]"),)
+
+    result = result1 + result2
     return ({'result': result}, 200)
 
 # == Customers End ==
