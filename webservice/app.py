@@ -536,24 +536,46 @@ def get_restaurant_promo_for_customers():
     return ({'result': result}, 200)
 
 
-@app.route("/food_and_restaurants")
+@app.route("/food_and_restaurants_filtered", methods=['POST'])
 @login_required
-def get_food_and_restaurants():
-    keyword = request.args.get('keyword')
+def get_food_and_restaurants_filtered():
+    # data = request.args
+    data = request.json
+    keyword, foodCategories = data['keyword'], data['foodCategories']
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "SELECT rname FROM Restaurants WHERE rname ILIKE '%s%%'" % keyword)
     result1 = cursor.fetchmany(5)
     cursor.execute(
-        "SELECT fname, rname FROM Food natural join Sells WHERE fname ILIKE '%s%%';" % keyword)
-    result2 = cursor.fetchmany(5)
+        "SELECT fname, rname, category FROM Food natural join Sells WHERE fname ILIKE '%s%%';" % keyword)
+    result2 = cursor.fetchall()
+
+    filteredResult2 = filterCategories(result2, foodCategories)
+    result2 = filteredResult2
 
     for i, r in enumerate(result2):
-        result2[i] = (str(result2[i][0] + " [" + result2[i][1] + "]"),)
+        result2[i] = (str(result2[i][0] + " [" + result2[i][1] + "] (" + result2[i][2] + ")"),)
 
     result = result1 + result2
     return ({'result': result}, 200)
+
+
+def filterCategories(allFood, foodCategories):
+    # print("allFood: ", allFood)
+    # print("FoodCategories: ", foodCategories)
+    filteredResult = []
+    for food in allFood:
+        if (len(filteredResult) >= 10): 
+            break
+        else :
+            if (food[2] in foodCategories):
+            # print("food[2]: ", food[2])
+                filteredResult.append(food)
+    
+    # print("Filtered Result: ", filteredResult)
+    return filteredResult
+
 
 # == Customers End ==
 

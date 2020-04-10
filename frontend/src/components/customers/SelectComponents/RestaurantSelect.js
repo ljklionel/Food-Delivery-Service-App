@@ -10,7 +10,7 @@ class RestaurantSelect extends Component {
 
     handleResultSelect = (e, { result }) => {
         this.setState({ value: '' })
-        console.log(typeof(result.title))
+        console.log(typeof (result.title))
         if (result.title.includes("[")) {
             result.title = result.title.split("[")[1].split("]")[0]
         }
@@ -19,11 +19,11 @@ class RestaurantSelect extends Component {
 
     handleSearchChange = (e, { value }) => {
         this.setState({ isLoading: true, value })
+        console.log("Props.foodcategories: ", this.props.foodCategories)
 
-        myAxios.get('/food_and_restaurants', {
-            params: {
-                keyword: value
-            }
+        myAxios.post('food_and_restaurants_filtered', {
+            keyword: value,
+            foodCategories: this.props.foodCategories
         })
             .then(response => {
                 console.log(response);
@@ -58,7 +58,8 @@ class RestaurantSelect extends Component {
                         loading={isLoading}
                         onResultSelect={this.handleResultSelect}
                         onSearchChange={_.debounce(this.handleSearchChange, 500, {
-                            leading: true,}
+                            leading: true,
+                        }
                         )}
                         onSelectionChange={this.handleSelectionChange}
                         results={results}

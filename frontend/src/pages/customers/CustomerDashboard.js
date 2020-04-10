@@ -4,6 +4,7 @@ import RestaurantSelect from '../../components/customers/SelectComponents/Restau
 import LocationSelect from '../../components/customers/SelectComponents/LocationSelect.js'
 import Menu from '../../components/customers/Menu/Menu.js'
 import CreditCardSelection from '../../components/customers/SelectComponents/CreditCardSelection.js'
+import FoodCategories from '../../components/customers/SelectComponents/FoodCategories.js'
 import RecentLocations from '../../components/customers/SelectComponents/RecentLocations.js'
 import AppHeader from '../../components/AppHeader.js'
 import myAxios from '../../webServer.js'
@@ -29,6 +30,9 @@ class CustomerDashboard extends React.Component {
             recentLocationOptions: [],
             refreshReview: 0,
             promotions: [],
+            foodCategories: [
+                'Singaporean'
+            ],
             creditCardOptions: [
                 {
                     id: 0,
@@ -55,6 +59,7 @@ class CustomerDashboard extends React.Component {
         this.toggleSelectedLocation = this.toggleSelectedLocation.bind(this)
         this.getLocation = this.getLocation.bind(this)
         this.submitReview = this.submitReview.bind(this)
+        this.handleCategorySelection = this.handleCategorySelection.bind(this)
     }
 
     changeCurrentCreditCard = (x) => {
@@ -150,6 +155,22 @@ class CustomerDashboard extends React.Component {
 
     getCreditCardInfo = () => {
         return this.state.infoList[1]
+    }
+
+    handleCategorySelection = (option) => {
+        console.log(option)
+        var categoriesSelected = []
+        if (option === null) {
+        } else {
+            option.forEach(item => {
+                categoriesSelected.push(item.value)
+            })
+            console.log("categories selected: ", categoriesSelected)
+        }
+        this.setState({
+            foodCategories: categoriesSelected
+        })
+        console.log("This.state.foodcategories: ", this.state.foodCategories)
     }
 
     async componentDidMount() {
@@ -294,19 +315,25 @@ class CustomerDashboard extends React.Component {
 
         return (
             <div>
-                {/* <Header style={headerStyle}><i>Select Restaurant</i></Header> */}
+                <Card.Header>
+                    <Header style={headerStyle}><i>Food Categories</i></Header>
+                </Card.Header>
+                <Card.Content>
+                    <FoodCategories handleCategorySelection={this.handleCategorySelection} />
+                </Card.Content>
+                <br></br>
                 <br></br>
                 <Card.Header>
                     <Header style={headerStyle}><i>Select Restaurant</i></Header>
                 </Card.Header>
                 <Card.Content>
-                    <RestaurantSelect whenselect={this.onSelectRestaurant} />
+                    <RestaurantSelect foodCategories={this.state.foodCategories} whenselect={this.onSelectRestaurant} />
                 </Card.Content>
                 <br></br>
                 <br></br>
                 <Card.Header>
                     <Header style={headerStyle}><i>Select Location</i></Header>
-                    </Card.Header>
+                </Card.Header>
                 <Card.Content>
                     <LocationSelect whenselect={this.onSelectLocation} />
                 </Card.Content>
@@ -319,11 +346,11 @@ class CustomerDashboard extends React.Component {
             <div>
                 <AppHeader />
                 <Grid celled style={{ height: '120vh' }}>
-                    <Grid.Column style={{ width: '82%', background: '#edf8ff' }}>
+                    <Grid.Column style={{ width: '80%', background: '#edf8ff' }}>
                         {this.customerContent()}
                     </Grid.Column>
 
-                    <Grid.Column style={{ width: '18%' }}>
+                    <Grid.Column style={{ width: '20%' }}>
                         {this.selectRestaurant()}
                     </Grid.Column>
                 </Grid>
