@@ -19,7 +19,7 @@ class CustomerDashboard extends React.Component {
         this.state = {
             infoList: null,
             username: null,
-            isLoadingInfo: 2,
+            isLoadingInfo: true,
             currentRestaurant: null,
             restaurantMenu: null,
             customerLocation: null,
@@ -108,14 +108,16 @@ class CustomerDashboard extends React.Component {
         this.changeCustomerLocation(this.state.recentLocationOptions[id].title)
     }
 
-    submitOrder = (rewardEarned, rewardUsed) => {
-        var rewardPoint = parseInt(rewardEarned) + this.state.rewardPoint - parseInt(rewardUsed)
+    submitOrder = (netReward) => {
+        console.log("Submit order, netReward, state reward", netReward, this.state.rewardPoint)
+        var rewardPoint = parseInt(netReward) + this.state.rewardPoint
         this.setState({
             rewardPoint: rewardPoint
         })
         this.updateRewardPoint(rewardPoint)
         this.updateRecentLocations()
         // window.location.reload(false);
+        console.log("Finish submitting order")
     }
 
     submitReview = () => {
@@ -126,6 +128,7 @@ class CustomerDashboard extends React.Component {
     }
 
     updateRewardPoint = (x) => {
+        console.log("Post reward point")
         myAxios.post('update_reward_point', {
             customerName: this.state.infoList[0],
             rewardPoint: x
@@ -167,6 +170,13 @@ class CustomerDashboard extends React.Component {
         console.log("This.state.foodcategories: ", this.state.foodCategories)
     }
 
+    componentWillReceiveProps(nextProps) {
+        this.setState({
+            infoList: nextProps.infoList,
+            isLoading: true
+        });
+    }
+
     async componentDidMount() {
         // Load async data.
         // Update state with new data.
@@ -179,13 +189,12 @@ class CustomerDashboard extends React.Component {
                 response.data.result[0].forEach(element => {
                     list.push(element)
                 });
-                var isLoadingInfo = this.state.isLoadingInfo - 1
-                this.state.infoList = list // Prevent synchronisation issue
+                this.state.infoList = list
                 this.setState({
                     infoList: list,
                     username: list[0],
                     rewardPoint: list[2],
-                    isLoadingInfo: isLoadingInfo
+                    isLoadingInfo: false
                 })
             })
             .catch(error => {
@@ -195,7 +204,29 @@ class CustomerDashboard extends React.Component {
         this.updateRecentLocations()
     }
 
+    retrieveInfo = () => {
+        myAxios.get('/my_info')
+        .then(response => {
+            console.log(response);
+            const list = []
+            response.data.result[0].forEach(element => {
+                list.push(element)
+            });
+            this.state.infoList = list
+            this.setState({
+                infoList: list,
+                username: list[0],
+                rewardPoint: list[2],
+                isLoadingInfo: false
+            })
+        })
+        .catch(error => {
+            console.log(error);
+        });
+    }
+
     updateRecentLocations = () => {
+        console.log("Update recent locations")
         myAxios.get('/recent_locations')
             .then(response => {
                 const list = []
@@ -211,11 +242,10 @@ class CustomerDashboard extends React.Component {
                     i++
                 });
                 var customerLocation = list.length === 0 ? null : list[0]["title"][0]
-                var isLoadingInfo = this.state.isLoadingInfo - 1
                 this.setState({
                     recentLocationOptions: list,
                     customerLocation: customerLocation,
-                    isLoadingInfo: isLoadingInfo
+                    isLoadingInfo: false
                 })
             })
             .catch(error => {
@@ -232,6 +262,9 @@ class CustomerDashboard extends React.Component {
             return (
                 <Loader size='massive' active />
             );
+        }
+        if (this.state.infoList === null) {
+            this.retrieveInfo()
         }
         const id = this.state.infoList[0]
         this.state.currentCreditCard = this.state.infoList[1]

@@ -17,7 +17,7 @@ class OrderMenuModal extends Component {
             minSpend: 0,
             useRewardPoint: 0,
             discount: 0,
-            // promoDiscount: 0,
+            promoDiscount: 0,
             amtPayable: 0,
             currentRestaurant: props.restaurant,
             modalOpen: false,
@@ -68,8 +68,8 @@ class OrderMenuModal extends Component {
         var totalQty = 0
 
         this.state.restaurantMenu.forEach((item, i) => {
-            this.state.avail[i] -= this.state.order[i]
-            updates[item[0]] = this.state.avail[i]
+            // this.state.avail[i] -= this.state.order[i]
+            // updates[item[0]] = this.state.avail[i]
             order[item[0]] = this.state.order[i]
         })
 
@@ -156,7 +156,7 @@ class OrderMenuModal extends Component {
         myAxios.post('make_order', {
             restaurant: this.state.currentRestaurant,
             order: order,
-            totalPrice: this.state.totalPrice,
+            totalPrice: this.state.totalPrice - this.state.promoDiscount - this.state.discount,
             fee: this.state.fee,
             timeStamp: timeStamp,
             customer: this.state.infoList[0],
@@ -164,13 +164,17 @@ class OrderMenuModal extends Component {
             location: this.props.getLocation()
         })
             .then(response => {
-                this.props.submitOrder(this.state.totalPrice, this.state.useRewardPoint)
-                alert("You earned " + (this.state.totalPrice + " reward points!"))
+                console.log("Reward", this.state.totalPrice, this.state.useRewardPoint)
+                this.props.submitOrder(this.state.totalPrice - this.state.useRewardPoint)
+                this.setState({
+                    modalOpen: false,
+                })
+                alert("You earned " + parseInt(this.state.totalPrice) + " reward points!")
             })
             .catch(error => {
                 console.log(error);
             });
-
+        console.log("Handle save finished")
     }
 
     handleChange = (e, { name, value }) => {
@@ -261,14 +265,14 @@ class OrderMenuModal extends Component {
     }
 
     calculateTotalPromoDiscount = () => {
-        // var discount = 1
-        // console.log("Log promo discount: ", this.state.promotions)
-        // this.state.promotions.map((item) => (
-        //     discount *= (1 - item[2] / 100)
-        // ))
-        // console.log("Discount:", discount)
-        // this.state.promoDiscount = (1 - discount) * (this.state.totalPrice + this.state.fee)
-        // return (100 - discount * 100).toFixed(2)
+        var discount = 1
+        console.log("Log promo discount: ", this.state.promotions)
+        this.state.promotions.map((item) => (
+            discount *= (1 - item[2] / 100)
+        ))
+        console.log("Discount:", discount)
+        this.state.promoDiscount = (1 - discount) * (this.state.totalPrice + this.state.fee)
+        return (100 - discount * 100).toFixed(2)
         return 'test'
     }
 
@@ -371,11 +375,11 @@ class OrderMenuModal extends Component {
                             <br></br><br></br>
                             Fee: {"$" + this.state.fee}
                             <br></br><br></br>
-                            {/* Promo discount: {"$" + this.state.promoDiscount.toFixed(1)} */}
+                            Promo discount: {"$" + this.state.promoDiscount.toFixed(1)}
                             <br></br><br></br>
-                            Discount: {"$" + this.state.discount}
+                            Reward Discount: {"$" + this.state.discount}
                             <br></br><br></br>
-                            <h4>Amount Payable: {"$" + (this.state.amtPayable).toFixed(1)}</h4>
+                            <h4>Amount Payable: {"$" + (this.state.amtPayable - this.state.promoDiscount).toFixed(1)}</h4>
                         </Grid.Column>
                         <Grid.Column>
                             {promotions}
