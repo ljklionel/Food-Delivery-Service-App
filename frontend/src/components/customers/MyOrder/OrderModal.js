@@ -13,8 +13,14 @@ class OrderModal extends Component {
             orderid: this.props.orderid,
             modalOpen: false
         }
-
     }
+
+    componentWillReceiveProps(nextProps) {
+        this.setState({
+            orderDetails: nextProps.orderDetails,
+        });
+    }
+
 
     handleOpen = () => {
         console.log("Order details: ", this.state.orderDetails)
@@ -117,7 +123,6 @@ class OrderModal extends Component {
                     <RatingModal orderid={this.state.orderid} riderUsername={this.state.orderDetails[0][10]} restaurant={this.state.orderDetails[0][11]} />
                 </Table.Cell>
                 <Table.Cell>
-                    {/* <OrderMenuModal/> */}
                 </Table.Cell>
                 <Modal.Actions>
                     <Button onClick={this.handleClose}>

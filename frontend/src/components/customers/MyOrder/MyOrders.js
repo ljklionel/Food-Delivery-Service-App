@@ -15,9 +15,17 @@ class MyOrders extends Component {
             currentCustomer: props.currentCustomer
         }
         this.updateOrders(props.currentCustomer)
+        this.autoUpdate()
     }
 
+    autoUpdate = () => {
+        setInterval( () => {this.updateOrders(this.props.currentCustomer)}, 2000)
+        console.log("UpdatedOrders")
+    }
+
+
     updateOrders(currentCustomer) {
+        console.log("Updating orders")
         myAxios.get('/customer_orders', {
             params: {
                 currentCustomer: currentCustomer,
@@ -26,6 +34,7 @@ class MyOrders extends Component {
             }
         })
             .then(response => {
+                console.log("Response from updatecustomer: ", response)
                 var ordersGroupedByID = []
                 var i;
                 var prevOid = -1
@@ -46,6 +55,7 @@ class MyOrders extends Component {
                     ordersGroupedByID: ordersGroupedByID,
                     isLoading: false
                 })
+                this.render()
             })
             .catch(error => {
                 console.log(error);
