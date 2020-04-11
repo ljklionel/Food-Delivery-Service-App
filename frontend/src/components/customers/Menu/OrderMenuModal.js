@@ -69,8 +69,6 @@ class OrderMenuModal extends Component {
         var totalQty = 0
 
         this.state.restaurantMenu.forEach((item, i) => {
-            // this.state.avail[i] -= this.state.order[i]
-            // updates[item[0]] = this.state.avail[i]
             order[item[0]] = this.state.order[i]
         })
 
@@ -166,7 +164,7 @@ class OrderMenuModal extends Component {
         })
             .then(response => {
                 console.log("Response from make_order: ", response)
-                if (response.data.deliveryRider == '') {
+                if (response.data.deliveryRider == null) {
                     alert("Sorry, no available drivers right now. Please try again later.")
                 } else {
                     console.log("Reward", this.state.totalPrice, this.state.useRewardPoint)

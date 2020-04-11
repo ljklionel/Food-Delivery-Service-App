@@ -385,10 +385,17 @@ def make_order():
 def connectDeliveryRider():
     conn = get_db()
     now = datetime.now()
+    hour = str(now.hour)
+    print("NOW: ", now)
+    print("Hour: ", hour)
     cursor = conn.cursor()
-    cursor.execute("SELECT username from MonthlyWorkSched where %s BETWEEN startHour and endHour;")
+    cursor.execute(
+        "SELECT username from MonthlyWorkSched WHERE startHour <= %s AND endHour > %s;", (hour, hour))
+    # cursor.execute("SELECT promoId, endDate, discount FROM Promotions WHERE rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' ORDER BY endDate;", (rname, now))
+
     monthlyResult = cursor.fetchmany(10)
-    cursor.execute("SELECT username from WeeklyWorkSched where %s BETWEEN startHour and endHour;")
+    cursor.execute(
+        "SELECT username from WeeklyWorkSched WHERE startHour <= %s AND endHour > %s;", (hour, hour))
     weeklyResult = cursor.fetchmany(10)
     totalResult = []
 
@@ -401,14 +408,15 @@ def connectDeliveryRider():
         if weeklyResult:
             totalResult = weeklyResult
 
-    if (len(totalResult != 0)):
+    print("Monthly result: ", monthlyResult)
+    print("Weekly result: ", weeklyResult)
+    print("Total result: ", totalResult)
+
+    if (len(totalResult) != 0):
         selectedDeliveryRider = random.choice(totalResult)
         return selectedDeliveryRider
     else:
         return ''
-    result = cursor.fetchone()
-    print(result)
-    return result[0]
 
 
 @app.route("/customer_orders")
@@ -574,7 +582,8 @@ def get_food_and_restaurants_filtered():
     result2 = filteredResult2
 
     for i, r in enumerate(result2):
-        result2[i] = (str(result2[i][0] + " [" + result2[i][1] + "] (" + result2[i][2] + ")"),)
+        result2[i] = (str(result2[i][0] + " [" + result2[i]
+                          [1] + "] (" + result2[i][2] + ")"),)
 
     result = result1 + result2
     return ({'result': result}, 200)
@@ -585,13 +594,13 @@ def filterCategories(allFood, foodCategories):
     # print("FoodCategories: ", foodCategories)
     filteredResult = []
     for food in allFood:
-        if (len(filteredResult) >= 10): 
+        if (len(filteredResult) >= 10):
             break
-        else :
+        else:
             if (food[2] in foodCategories):
-            # print("food[2]: ", food[2])
+                # print("food[2]: ", food[2])
                 filteredResult.append(food)
-    
+
     # print("Filtered Result: ", filteredResult)
     return filteredResult
 
