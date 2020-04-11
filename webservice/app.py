@@ -1,4 +1,4 @@
-
+import random
 from flask import Flask, request, current_app, g, jsonify
 from db import get_db, close_db
 import psycopg2
@@ -43,6 +43,7 @@ def register():
     not_ok = ({'ok': 0, 'msg': 'Username already exists'}, 200)
 
     data = request.json
+    print(data)
     username, password, firstname, lastname, phonenum, role = data['username'], data[
         'password'], data['firstname'], data['lastname'], data['phonenum'], data['role']
 
@@ -383,13 +384,31 @@ def make_order():
 
 def connectDeliveryRider():
     conn = get_db()
+    now = datetime.now()
     cursor = conn.cursor()
-    cursor.execute("select username from DeliveryRiders")
+    cursor.execute("SELECT username from MonthlyWorkSched where %s BETWEEN startHour and endHour;")
+    monthlyResult = cursor.fetchmany(10)
+    cursor.execute("SELECT username from WeeklyWorkSched where %s BETWEEN startHour and endHour;")
+    weeklyResult = cursor.fetchmany(10)
+    totalResult = []
+
+    if monthlyResult:
+        if weeklyResult:
+            totalResult = monthlyResult + weeklyResult
+        else:
+            totalResult = monthlyResult
+    else:
+        if weeklyResult:
+            totalResult = weeklyResult
+
+    if (len(totalResult != 0)):
+        selectedDeliveryRider = random.choice(totalResult)
+        return selectedDeliveryRider
+    else:
+        return ''
     result = cursor.fetchone()
     print(result)
     return result[0]
-
-    # todo
 
 
 @app.route("/customer_orders")

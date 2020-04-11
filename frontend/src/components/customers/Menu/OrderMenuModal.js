@@ -57,6 +57,7 @@ class OrderMenuModal extends Component {
             avail.push(item[1])
         });
         this.setState({
+            checkout: false,
             avail: avail,
             modalOpen: false
         })
@@ -164,12 +165,17 @@ class OrderMenuModal extends Component {
             location: this.props.getLocation()
         })
             .then(response => {
-                console.log("Reward", this.state.totalPrice, this.state.useRewardPoint)
-                this.props.submitOrder(this.state.totalPrice - this.state.useRewardPoint)
-                this.setState({
-                    modalOpen: false,
-                })
-                alert("You earned " + parseInt(this.state.totalPrice) + " reward points!")
+                console.log("Response from make_order: ", response)
+                if (response.data.deliveryRider == '') {
+                    alert("Sorry, no available drivers right now. Please try again later.")
+                } else {
+                    console.log("Reward", this.state.totalPrice, this.state.useRewardPoint)
+                    this.props.submitOrder(this.state.totalPrice - this.state.useRewardPoint)
+                    this.setState({
+                        modalOpen: false,
+                    })
+                    alert("You used " + parseInt(this.state.useRewardPoint) + " reward points, and earned " + parseInt(this.state.totalPrice) + " reward points.")
+                }
             })
             .catch(error => {
                 console.log(error);
