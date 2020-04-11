@@ -27,7 +27,8 @@ CREATE TABLE Users (
 	hashedPassword VARCHAR(64) NOT NULL,
 	phoneNumber VARCHAR(12) NOT NULL,
 	firstName VARCHAR(64) NOT NULL,
-	lastName VARCHAR(64) NOT NULL
+	lastName VARCHAR(64) NOT NULL,
+    joinDate DATE NOT NULL
 );
 
 -- FDS MANAGERS --
@@ -38,10 +39,10 @@ CREATE TABLE FDSManagers (
 
 CREATE TABLE FDSPromotions (
     promoId VARCHAR(64) PRIMARY KEY,
+    promoDescription VARCHAR(512),
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
     discount NUMERIC(4,2) NOT NULL,
-	promoDescription VARCHAR(512),
 	createdBy VARCHAR(64) NOT NULL REFERENCES FDSManagers
 );
 
@@ -183,6 +184,8 @@ CREATE TABLE ContainsFood (
 ); 
 
 ----- INSERT DATA -----
+INSERT INTO Users(username, hashedPassword, firstName, lastName, phoneNumber, joinDate) VALUES ('man', 'dummy', 'he','llo','123', now()::date);
+INSERT INTO FDSManagers(username) VALUES ('man');
 
 \COPY Locations(location) FROM './csv/locations.csv' CSV HEADER;
 \COPY FoodCategories(category) FROM './csv/food_categories.csv' CSV HEADER;
@@ -198,7 +201,8 @@ CREATE TABLE ContainsFood (
 \COPY FullTimers(username) FROM './csv/part_time.csv' CSV HEADER;
 \COPY WeeklyWorkSched(username, startHour, endHour) FROM './csv/part_time_sched.csv' CSV HEADER;
 \COPY MonthlyWorkSched(username, startHour, endHour) FROM './csv/full_time_sched.csv' CSV HEADER;
-
+\COPY FDSPromotions(promoId, promoDescription, startDate, endDate, discount, createdBy) FROM './csv/FDSpromotions.csv' CSV HEADER;
+                          
 ------ TRIGGERS ------
 
 -- Trigger to enforce total participation constraint on Orders wrt to ContainsFood
