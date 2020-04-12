@@ -55,7 +55,7 @@ def register():
         hash = bcrypt.generate_password_hash(password).decode()
         cursor = conn.cursor()
         cursor.execute('BEGIN;')
-        cursor.execute("INSERT INTO Users(username, hashedPassword, firstName, lastName, phoneNumber) VALUES ('%s','%s','%s','%s','%s');" % (
+        cursor.execute("INSERT INTO Users(username, hashedPassword, firstName, lastName, phoneNumber, joinDate) VALUES ('%s','%s','%s','%s','%s', now()::date);" % (
             username, hash, firstname, lastname, phonenum))
         cursor.execute("INSERT INTO %s(username) VALUES ('%s');" %
                        (roles_dict[role], username))
@@ -304,7 +304,273 @@ def edit_availability():
 
     return ({}, 200)
 
-# == Customers Begin ==
+
+@app.route("/employee_page")
+@login_required
+def get_my_employee_page():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT username FROM DeliveryRiders WHERE username = '%s';" % username)
+    conn.commit()
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+
+@app.route("/get_full_time")
+@login_required
+def get_full_time():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT username FROM FullTimers WHERE username = '%s';" % username)
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+
+@app.route("/get_part_time")
+@login_required
+def get_part_time():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT username FROM PartTimers WHERE username = '%s';" % username)
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+
+@app.route("/get_work_hours")
+@login_required
+def get_work_hours():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT workHours FROM PartTimers WHERE username = '%s';" % username)
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+
+@app.route("/get_salary")
+@login_required
+def get_salary():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT salary FROM DeliveryRiders WHERE username = '%s';" % username)
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+
+@app.route("/add_full_time", methods=['POST'])
+@login_required
+def add_full_time():
+    username = current_user.get_id()
+    data = request.json
+    workDay, startHour, salary = data['startDay'], data['shift'], data['salary']
+    if salary == '0':
+        salary = '1000'
+    startHour = str(int(startHour)+9)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT endHour FROM FullTimeShifts WHERE workDay = %s AND startHour = %s;", (workDay, startHour))
+    endHour = cursor.fetchone()[0]
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute(
+        "UPDATE DeliveryRiders SET salary = %s WHERE username = %s;", (salary, username))
+    cursor.execute(
+        "INSERT INTO FullTimers(username) VALUES ('%s') ON CONFLICT DO NOTHING;" % (username))
+    cursor.execute("INSERT INTO MonthlyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);",
+                   (username, workDay, startHour, endHour))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': '%s now works as Fulltimer!' % (username)}, 200)
+
+
+@app.route("/add_part_time_sched", methods=['POST'])
+@login_required
+def add_part_time_sched():
+    username = current_user.get_id()
+    data = request.json
+    workDay, startHour, endHour = data['workDay'], data['startHour'], data['endHour']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute("INSERT INTO WeeklyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);",
+                   (username, workDay, startHour, endHour))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': '%s now works as Parttimer!' % (username)}, 200)
+
+
+@app.route("/add_part_time", methods=['POST'])
+@login_required
+def add_part_time():
+    username = current_user.get_id()
+    data = request.json
+    totalHours, salary = data['totalHours'], data['salary']
+    if salary == '0':
+        salary = '500'
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute(
+        "UPDATE DeliveryRiders SET salary = %s WHERE username = %s;", (salary, username))
+    cursor.execute("INSERT INTO PartTimers(username, workHours) VALUES (%s, %s) ON CONFLICT (username) DO UPDATE SET workHours = %s;",
+                   (username, totalHours, totalHours))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': '%s now works as Parttimer!' % (username)}, 200)
+
+
+@app.route("/get_part_time_sched")
+@login_required
+def get_part_time_sched():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT workDay, startHour, endHour FROM WeeklyWorkSched WHERE username = '%s' ORDER BY (workDay, startHour);" % (username))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+
+@app.route("/get_full_time_sched")
+@login_required
+def get_full_time_sched():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT workDay, startHour FROM MonthlyWorkSched WHERE username = '%s';" % (username))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+
+@app.route("/delete_full_time", methods=['DELETE'])
+@login_required
+def delete_full_time():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    result = cursor.execute(
+        "DELETE FROM MonthlyWorkSched WHERE EXISTS (SELECT 1 FROM MonthlyWorkSched MWS WHERE MWS.username = '%s');" % (username))
+    cursor.execute("COMMIT;")
+    return ({'result': result}, 200)
+
+
+@app.route("/delete_part_time", methods=['DELETE'])
+@login_required
+def delete_part_time():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    result = cursor.execute(
+        "DELETE FROM WeeklyWorkSched WHERE EXISTS (SELECT 1 FROM WeeklyWorkSched WWS WHERE WWS.username = '%s');" % (username))
+    cursor.execute("COMMIT;")
+    return ({'result': result}, 200)
+
+
+@app.route("/get_delivery_count")
+@login_required
+def get_delivery_count():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT COUNT(*) FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NOT NULL;" % (username))
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+
+@app.route("/get_avg_rating")
+@login_required
+def get_avg_rating():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT AVG(CAST(rating as Float)) FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NOT NULL;" % (username))
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+
+@app.route("/get_delivery")
+@login_required
+def get_delivery():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT orderid, location, orderTime, departTime1, arriveTime, departTime2, fee, rname FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NULL;" % (username))
+    result = cursor.fetchone()
+    return ({'result': result}, 200)
+
+
+@app.route("/set_depart_time_1", methods=['POST'])
+@login_required
+def set_depart_time_1():
+    username = current_user.get_id()
+    data = request.json
+    departTime1, orderId = data['departTime1'], data['orderId']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute(
+        "UPDATE Orders SET departTime1 = %s WHERE orderid = %s;", (departTime1, orderId))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': 'Dispatch time %s has been recorded' % (departTime1)}, 200)
+
+
+@app.route("/set_arrive_time", methods=['POST'])
+@login_required
+def set_arrive_time():
+    username = current_user.get_id()
+    data = request.json
+    arriveTime, orderId = data['arriveTime'], data['orderId']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute(
+        "UPDATE Orders SET arriveTime = %s WHERE orderid = %s;", (arriveTime, orderId))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': 'Arrival time %s has been recorded' % (arriveTime)}, 200)
+
+
+@app.route("/set_otw_time", methods=['POST'])
+@login_required
+def set_otw_time():
+    username = current_user.get_id()
+    data = request.json
+    departTime2, orderId = data['departTime2'], data['orderId']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute(
+        "UPDATE Orders SET departTime2 = %s WHERE orderid = %s;", (departTime2, orderId))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': 'Arrival time %s has been recorded' % (departTime2)}, 200)
+
+
+@app.route("/set_delivery_time", methods=['POST'])
+@login_required
+def set_delivery_time():
+    username = current_user.get_id()
+    data = request.json
+    deliveryTime, orderId, fee = data['deliveryTime'], data['orderId'], data['fee']
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    cursor.execute(
+        "UPDATE Orders SET deliveryTime = %s WHERE orderid = %s;", (deliveryTime, orderId))
+    cursor.execute(
+        "UPDATE DeliveryRiders SET salary = salary +  %s WHERE username = %s;", (fee, username))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': 'Arrival time %s has been recorded' % (deliveryTime)}, 200)
 
 
 @app.route("/my_info")
@@ -606,6 +872,221 @@ def filterCategories(allFood, foodCategories):
 
 
 # == Customers End ==
+
+# FDS MANAGER
+
+@app.route("/all_customers")
+@login_required
+def get_all_customers():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT username FROM Customers;")
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+
+@app.route("/customers")
+@login_required
+def get_customers():
+    keyword = request.args.get('keyword')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT username FROM Customers WHERE username ILIKE '%s%%';" % keyword)
+    result = cursor.fetchmany(10)
+    return ({'result': result}, 200)
+
+
+@app.route("/riders")
+@login_required
+def get_riders():
+    keyword = request.args.get('keyword')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT username FROM DeliveryRiders WHERE username ILIKE '%s%%';" % keyword)
+    result = cursor.fetchmany(10)
+    return ({'result': result}, 200)
+
+
+@app.route("/locations")
+@login_required
+def get_locations():
+    keyword = request.args.get('keyword')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT location FROM Locations WHERE location ILIKE '%s%%';" % keyword)
+    result = cursor.fetchmany(10)
+    return ({'result': result}, 200)
+
+
+@app.route("/all_customer_summary")
+@login_required
+def get_all_customer_summary():  # TODO new customer of the month -yuting
+    now = datetime.now()
+    year, month = now.year, now.month
+    start_time = datetime(year, month, 1)
+    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    conn = get_db()
+    result = []
+    for i in range(0, 25):  # show at most the last 2 years of summary
+        cur_start_time = start_time - relativedelta(months=i)
+        cur_end_time = end_time - relativedelta(months=i)
+        # number of orders
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(*) FROM Orders WHERE deliveryTime BETWEEN %s AND %s;",
+                       (cur_start_time, cur_end_time))
+        all_orders = cursor.fetchone()[0]
+        # total costs of all orders
+        cursor = conn.cursor()
+        cursor.execute("SELECT sum(fee) FROM Orders WHERE deliveryTime BETWEEN %s AND %s;",
+                       (cur_start_time, cur_end_time))
+        all_orders_costs = cursor.fetchone()[0]
+        # number of new customers
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(*) FROM CUSTOMERS NATURAL JOIN USERS WHERE joinDate BETWEEN %s AND %s;",
+                       (cur_start_time, cur_end_time))
+        all_new_customers = cursor.fetchone()[0]
+
+        res = {'year': cur_start_time.year, 'month': cur_start_time.month, 'all_orders': all_orders,
+               'all_orders_costs': all_orders_costs, 'all_new_customers': all_new_customers}
+        result.append(res)
+
+    return ({'result': result}, 200)
+
+
+@app.route("/current_customer_summary")
+@login_required
+def get_customer_summary():
+    username = request.args.get('customer')
+    now = datetime.now()
+    year, month = now.year, now.month
+    start_time = datetime(year, month, 1)
+    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    conn = get_db()
+    result = []
+    for i in range(0, 25):  # show at most the last 2 years of summary
+        cur_start_time = start_time - relativedelta(months=i)
+        cur_end_time = end_time - relativedelta(months=i)
+        # of customer's orders
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(*) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s",
+                       (username, cur_start_time, cur_end_time))
+        customer_orders = cursor.fetchone()[0]
+        # total cost of all of customer's orders
+        cursor = conn.cursor()
+        cursor.execute("SELECT sum(fee) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s",
+                       (username, cur_start_time, cur_end_time))
+        customer_orders_costs = cursor.fetchone()[0]
+        res = {'year': cur_start_time.year, 'month': cur_start_time.month,
+               'customer_orders': customer_orders, 'customer_orders_costs': customer_orders_costs}
+        result.append(res)
+    return ({'result': result}, 200)
+
+
+@app.route("/current_location_summary")
+def get_location_summary():
+    location = request.args.get('location')
+    now = datetime.now()
+    start_time = datetime(now.year, now.month, now.day, now.hour)
+    end_time = start_time + timedelta(hours=1) - timedelta(seconds=1)
+    conn = get_db()
+    result = []
+    for i in range(0, 25):  # show at most the last 1 day of summmary
+        cur_start_time = start_time - relativedelta(hours=i)
+        cur_end_time = end_time - relativedelta(hours=i)
+        # of orders placed
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(*) FROM Orders WHERE location = %s AND orderTime BETWEEN %s AND %s;",
+                       (location, cur_start_time, cur_end_time))
+        location_orders = cursor.fetchone()[0]
+        res = {'day': cur_start_time, 'hour': cur_start_time.hour,
+               'location_orders': location_orders}
+        result.append(res)
+    return ({'result': result}, 200)
+
+
+@app.route("/current_rider_summary")
+def get_rider_summary():
+    username = request.args.get('username')
+    now = datetime.now()
+    year, month = now.year, now.month
+    start_time = datetime(year, month, 1)
+    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    conn = get_db()
+    result = []
+    for i in range(0, 25):  # show at most the last 2 years of summary
+        cur_start_time = start_time - relativedelta(months=i)
+        cur_end_time = end_time - relativedelta(months=i)
+        # of orders delivered
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(*) FROM Orders WHERE riderUsername = %s AND deliveryTime BETWEEN %s AND %s;",
+                       (username, cur_start_time, cur_end_time))
+        rider_orders = cursor.fetchone()[0]
+        # of hours worked
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT sum(endHour - startHour) FROM MonthlyWorkSched WHERE username = %s;", (username,))
+        hours_worked = cursor.fetchone()[0]
+        if not hours_worked:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT sum(endHour - startHour) FROM WeeklyWorkSched WHERE username = %s;", (username,))
+            hours_worked = cursor.fetchone()[0]
+        # total salary
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT sum(salary) FROM DeliveryRiders WHERE username = %s;", (username,))
+        salary = cursor.fetchone()[0]
+        # average delivery time
+        cursor = conn.cursor()
+        cursor.execute("SELECT sum(EXTRACT(EPOCH FROM arriveTime - orderTime)/60)/count(*) FROM Orders WHERE riderUsername = %s AND deliveryTime BETWEEN %s AND %s;",
+                       (username, cur_start_time, cur_end_time))
+        delivery_time = cursor.fetchone()[0]
+        # number of ratings received
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(rating) FROM Orders where riderUsername = %s AND deliveryTime BETWEEN %s AND %s",
+                       (username, cur_start_time, cur_end_time))
+        num_rating = cursor.fetchone()[0]
+        # average rating
+        cursor = conn.cursor()
+        cursor.execute("SELECT avg(rating) FROM Orders where riderUsername = %s AND deliveryTime BETWEEN %s AND %s",
+                       (username, cur_start_time, cur_end_time))
+        avg_rating = cursor.fetchone()[0]
+
+        res = {'year': cur_start_time.year, 'month': cur_start_time.month, 'rider_orders': rider_orders, 'hours_worked': hours_worked, 'salary': salary,
+               'delivery_time': delivery_time, 'num_rating': num_rating, 'avg_rating': avg_rating}
+        result.append(res)
+    return ({'result': result}, 200)
+
+
+@app.route("/ongoing_FDS_promo")
+@login_required
+def get_ongoing_FDS_promo():
+    now = datetime.now()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT promoId, endDate FROM FDSPromotions where %s BETWEEN startDate AND endDate + INTERVAL '1 day' " +
+                   "ORDER BY endDate;", (now,))
+    result = cursor.fetchall()
+    return ({'result': result}, 200)
+
+
+@app.route("/all_FDS_promo")
+@login_required
+def get_all_FDS_promo():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT promoId, promoDescription, startDate, endDate, discount FROM FDSPromotions ORDER BY startDate DESC, endDate DESC;")
+    result = cursor.fetchall()
+
+    for i, r in enumerate(result):  # fix decimal is not serializable
+        l = list(result[i])
+        l[4] = float(l[4])
+        result[i] = tuple(l)
+    return ({'result': result}, 200)
 
 
 if __name__ == '__main__':

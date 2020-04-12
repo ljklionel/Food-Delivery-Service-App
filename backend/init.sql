@@ -27,7 +27,8 @@ CREATE TABLE Users (
 	hashedPassword VARCHAR(64) NOT NULL,
 	phoneNumber VARCHAR(12) NOT NULL,
 	firstName VARCHAR(64) NOT NULL,
-	lastName VARCHAR(64) NOT NULL
+	lastName VARCHAR(64) NOT NULL,
+    joinDate DATE NOT NULL
 );
 
 -- FDS MANAGERS --
@@ -38,10 +39,10 @@ CREATE TABLE FDSManagers (
 
 CREATE TABLE FDSPromotions (
     promoId VARCHAR(64) PRIMARY KEY,
+    promoDescription VARCHAR(512),
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
     discount NUMERIC(4,2) NOT NULL,
-	promoDescription VARCHAR(512),
 	createdBy VARCHAR(64) NOT NULL REFERENCES FDSManagers
 );
 
@@ -183,6 +184,8 @@ CREATE TABLE ContainsFood (
 ); 
 
 ----- INSERT DATA -----
+INSERT INTO Users(username, hashedPassword, firstName, lastName, phoneNumber, joinDate) VALUES ('man', 'dummy', 'he','llo','123', now()::date);
+INSERT INTO FDSManagers(username) VALUES ('man');
 
 \COPY Locations(location) FROM './csv/locations.csv' CSV HEADER;
 \COPY FoodCategories(category) FROM './csv/food_categories.csv' CSV HEADER;
@@ -192,8 +195,14 @@ CREATE TABLE ContainsFood (
 \COPY Sells(fname,rname,avail,maxLimit,price) FROM './csv/sells.csv' CSV HEADER;
 \COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
 \COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
-
-
+\COPY Users(username, hashedPassword, phoneNumber, firstName, lastName) FROM './csv/delivery_users.csv' CSV HEADER;
+\COPY DeliveryRiders(username, salary) FROM './csv/deliver_riders.csv' CSV HEADER;
+\COPY PartTimers(username, workHours) FROM './csv/part_time.csv' CSV HEADER;
+\COPY FullTimers(username) FROM './csv/part_time.csv' CSV HEADER;
+\COPY WeeklyWorkSched(username, startHour, endHour) FROM './csv/part_time_sched.csv' CSV HEADER;
+\COPY MonthlyWorkSched(username, startHour, endHour) FROM './csv/full_time_sched.csv' CSV HEADER;
+\COPY FDSPromotions(promoId, promoDescription, startDate, endDate, discount, createdBy) FROM './csv/FDSpromotions.csv' CSV HEADER;
+                          
 ------ TRIGGERS ------
 
 -- Trigger to enforce total participation constraint on Orders wrt to ContainsFood
@@ -226,6 +235,104 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger to enforce total work hours constraint
+CREATE OR REPLACE FUNCTION 
+check_total_hours_trigger() 
+    RETURNS TRIGGER AS $$
+DECLARE
+    totalHours INTEGER;
+BEGIN
+    SELECT PT.workHours INTO totalHours
+        FROM PartTimers PT
+        WHERE PT.username = NEW.username;
+    IF totalHours > 48 THEN
+        RAISE EXCEPTION '% cannot work for more than 48 hours', NEW.username;
+    END IF;
+    IF totalHours < 10 THEN
+        RAISE EXCEPTION '% cannot work less than 10 hours per week', NEW.username;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to enforce break between to work interval
+CREATE OR REPLACE FUNCTION 
+part_time_break_check() 
+    RETURNS TRIGGER AS $$
+DECLARE
+    endHour INTEGER;
+BEGIN
+    SELECT WWS.endHour INTO endHour
+        FROM WeeklyWorkSched WWS, WeeklyWorkSched WWS1
+        WHERE WWS.username = NEW.username
+        AND WWS.workDay = NEW.workDay
+        AND WWS1.username = NEW.username
+        AND WWS1.workDay = NEW.workDay
+        AND WWS.endHour > WWS1.endHour;
+    IF endHour = NEW.startHour THEN 
+        RAISE EXCEPTION '% does not have an hour break between 2 consecutive interval', NEW.username;
+    END IF;
+    RETURN NEW;
+END;
+$$LANGUAGE plpgsql;
+
+-- Trigger to enforce at least 5 per hour interval
+CREATE OR REPLACE FUNCTION
+at_least_five_check()
+    RETURNS TRIGGER AS $$
+DECLARE
+    total INTEGER;
+    workerNum INTEGER;
+    isFullTime BOOLEAN;
+BEGIN
+    SELECT 
+        (SELECT COUNT(*)
+        FROM WeeklyWorkSched)
+        +
+        (SELECT COUNT(*)
+        FROM MonthlyWorkSched)
+    INTO total;
+    
+    IF NEW.endHour - NEW.startHour = 9 THEN isFullTime := true;
+    ELSE isFullTime := false;
+    END IF;
+
+    IF isFullTime = true THEN 
+        CREATE TEMP TABLE IF NOT EXISTS FullTimeCountAtHour AS 
+            SELECT COUNT(*) AS ftNum
+                FROM MonthlyWorkSched MWS
+                WHERE MWS.startHour = NEW.startHour
+                AND MWS.endHour = NEW.endHour
+                and MWS.workDay = NEW.workDay;
+    ELSE
+        CREATE TEMP TABLE IF NOT EXISTS FullTimeCountAtHour AS 
+            SELECT COUNT(*) AS ftNum
+                FROM MonthlyWorkSched MWS natural join FullTimeShifts FS
+                WHERE MWS.workDay = NEW.workDay
+                AND MWS.startHour <= NEW.startHour
+                AND MWS.endHour >= NEW.endHour 
+                AND FS.breakStart NOT BETWEEN NEW.startHour AND NEW.endHour;
+    END IF;
+
+    CREATE TEMP TABLE IF NOT EXISTS PartTimeCountAtHour AS 
+        SELECT COUNT(*) AS ptNum
+            FROM WeeklyWorkSched WWS
+            WHERE WWS.workDay = NEW.workDay
+            AND (WWS.startHour <= NEW.startHour
+                AND WWS.endHour >= NEW.endHour);
+
+    SELECT ftNum + ptNum INTO workerNum
+        FROM FullTimeCountAtHour, PartTimeCountAtHour;
+    
+    IF total > 420 AND workerNum < 5 THEN
+        RAISE EXCEPTION 'There is less than 5 workers at time % with workerNum %', NEW.startHour, workerNum;
+    END IF;
+    DROP TABLE FullTimeCountAtHour;
+    DROP TABLE PartTimeCountAtHour;
+    RETURN NULL;
+END;
+$$LANGUAGE plpgsql;
+
 /* Trigger for insert/update on Orders */
 DROP TRIGGER IF EXISTS 
 total_participation_orders_containsfood_trigger_on_orders on Orders CASCADE;
@@ -245,3 +352,43 @@ AFTER DELETE OR UPDATE of orderid ON ContainsFood deferrable initially deferred
 FOR EACH ROW
 EXECUTE FUNCTION
 total_participation_orders_wrt_containsfood();
+
+/* Trigger for insert/update on WeeklyWorkSched*/
+DROP TRIGGER IF EXISTS 
+part_time_break_check ON WeeklyWorkSched CASCADE;
+CREATE TRIGGER 
+part_time_break_check
+BEFORE INSERT ON WeeklyWorkSched
+FOR EACH ROW
+EXECUTE FUNCTION 
+part_time_break_check();
+
+/* Trigger for insert/update on PartTimers*/
+DROP TRIGGER IF EXISTS 
+check_total_hours_trigger ON PartTimers CASCADE;
+CREATE TRIGGER 
+check_total_hours_trigger
+BEFORE UPDATE OR INSERT ON PartTimers
+FOR EACH ROW
+EXECUTE FUNCTION
+check_total_hours_trigger();
+
+/* Trigger for insert on WWS */
+DROP TRIGGER IF EXISTS 
+check_total_hours_trigger ON WeeklyWorkSched CASCADE;
+CREATE CONSTRAINT TRIGGER at_least_five_check
+AFTER INSERT ON WeeklyWorkSched
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW
+EXECUTE FUNCTION
+at_least_five_check();
+
+/* Trigger for insert on MWS */
+DROP TRIGGER IF EXISTS 
+check_total_hours_trigger ON MonthlyWorkSched CASCADE;
+CREATE CONSTRAINT TRIGGER at_least_five_check
+AFTER INSERT ON MonthlyWorkSched
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW
+EXECUTE FUNCTION
+at_least_five_check();
