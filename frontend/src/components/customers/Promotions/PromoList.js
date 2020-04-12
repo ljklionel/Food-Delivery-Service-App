@@ -1,38 +1,35 @@
 import React, { Component } from 'react'
 import { Card, Table } from 'semantic-ui-react';
 import myAxios from '../../../webServer.js'
-import OrderMenuModal from './OrderMenuModal.js';
+import ViewPromoModal from './ViewPromoModal.js';
 
-class Menu extends Component {
+class PromoList extends Component {
 
     constructor(props) {
         super(props)
         this.state = {
             isLoading: true,
-            restaurantMenu: [],
-            currentRestaurant: props.restaurant,
-            infoList: props.infoList,
-            location: props.location
+            promotions: [],
+            currentRestaurant: props.restaurant
         }
-        this.updateMenu(props.restaurant)
-        console.log("Logging location in MenuForCustomer: ", this.state.location)
+        this.updatePromo(props.restaurant)
     }
 
-    updateMenu = rname => {
-        console.log("Updating the menu")
-        myAxios.get('/restaurant_sells', {
+    updatePromo(rname) {
+        myAxios.get('/restaurant_promo_for_customers', {
             params: {
                 restaurant: rname
             }
         })
             .then(response => {
+                console.log("Promo info: ", response);
                 this.setState({
-                    restaurantMenu: response.data.result,
+                    promotions: response.data.result,
                     isLoading: false
                 })
             })
             .catch(error => {
-                console.log(error);
+                console.log("Error from update Promo: ", error);
             });
     }
 
@@ -41,65 +38,84 @@ class Menu extends Component {
             currentRestaurant: nextProps.restaurant,
             isLoading: true
         });
-        this.updateMenu(nextProps.restaurant)
+        this.updatePromo(nextProps.restaurant)
     }
 
+    calculateTotalDiscount = () => {
+        var discount = 1
+        this.state.promotions.map((item) => (
+            discount *= (1 - item[2] / 100)
+        ))
+        console.log("Discount:", discount)
+        return (100 - discount * 100).toFixed(2)
+    }
 
     render() {
         var header
         if (this.state.currentRestaurant === null) {
             header = (
                 <Card.Content>
-                    <Card.Header>Menu</Card.Header>
+                    <Card.Header>Promo code</Card.Header>
                     <Card>Choose a restaurant</Card>
                 </Card.Content>)
         } else {
             header = (
                 <Card.Content>
-                    <Card.Header>Menu</Card.Header>
+                    <Card.Header>Promo code</Card.Header>
                     <Card>{this.props.restaurant}</Card>
                 </Card.Content>)
         }
         if (this.state.isLoading) {
             return null// <Loader active/>
         }
-        return (
-            <Card background-color='blue' color='red' style={{ maxWidth: 250 }}>
-                {header}
+        var content
+        if (this.state.promotions.length === 0) {
+            content = <p><i>No ongoing promotions.</i></p>
+        } else {
+            content = (
                 <Card.Content>
+                    <h3>Total Discount: {this.calculateTotalDiscount() + "%"}</h3>
+                    <hr></hr>
                     <Table basic='very' celled>
                         <Table.Header>
                             <Table.Row>
-                                <Table.HeaderCell>Item</Table.HeaderCell>
-                                <Table.HeaderCell>Avail.</Table.HeaderCell>
-                                <Table.HeaderCell>Price</Table.HeaderCell>
+                                <Table.HeaderCell>ID</Table.HeaderCell>
+                                <Table.HeaderCell>Discount</Table.HeaderCell>
+                                <Table.HeaderCell>End</Table.HeaderCell>
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
-                            {this.state.restaurantMenu.map((item) => (
+                            {this.state.promotions.map((item) => (
                                 <Table.Row key={item[0]}>
                                     <Table.Cell>
                                         {item[0]}
                                     </Table.Cell>
                                     <Table.Cell>
-                                        {item[1]}
-                                    </Table.Cell>
+                                        {item[2]}%
+                          </Table.Cell>
                                     <Table.Cell>
-                                        {item[2]}
+                                        {item[1].substring(0, 11)}
                                     </Table.Cell>
                                 </Table.Row>
                             ))}
+
                         </Table.Body>
                     </Table>
+
                 </Card.Content>
+
+            )
+        }
+        return (
+            <Card color='blue' style={{ maxWidth: 250 }}>
+                {header}
+                {content}
                 <Card.Content>
-                    <OrderMenuModal rewardPoint={this.props.rewardPoint} restaurant={this.state.currentRestaurant} getCreditCardInfo={this.props.getCreditCardInfo}
-                        getLocation={this.props.getLocation} location={this.state.location}
-                        infoList={this.state.infoList} submitHandler={this.updateMenu} submitOrder={this.props.submitOrder} />
+                    <ViewPromoModal restaurant={this.state.currentRestaurant} />
                 </Card.Content>
             </Card>
         )
     }
 }
 
-export default Menu;
+export default PromoList;

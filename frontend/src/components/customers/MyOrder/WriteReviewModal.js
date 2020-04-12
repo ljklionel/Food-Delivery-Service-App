@@ -13,32 +13,36 @@ class WriteReviewModal extends Component {
     }
 
     handleOpen = () => {
-        this.setState({ 
+        this.setState({
             modalOpen: true,
         })
     }
 
-    handleReviewChange = (e, {value}) => {
+    handleReviewChange = (e, { value }) => {
         this.state.review = value
     }
 
     handleSave = () => {
+        if (this.state.review === null) {
+            alert("Please do not submit an empty review")
+        }
         myAxios.post('edit_review', {
             orderid: this.props.orderid,
             review: this.state.review,
             fname: this.props.fname,
             restaurant: this.state.restaurant
-          })
-          .then(response => {
-              console.log("Edit_review")
-            this.setState({ 
-                modalOpen: false,
+        })
+            .then(response => {
+                console.log("Edit_review")
+                this.setState({
+                    modalOpen: false,
+                })
+                this.props.submitReview()
+                alert("You submitted a review for " + this.props.fname + " sold by " + this.props.restaurant)
             })
-            this.props.submitReview()
-          })
-          .catch(error => {
-            console.log(error);
-          });
+            .catch(error => {
+                console.log(error);
+            });
     }
 
     handleClose = () => {
@@ -53,36 +57,36 @@ class WriteReviewModal extends Component {
             content = null
         } else {
             content = (
-                    <Form.Field>
+                <Form.Field>
                     <Form.Input
                         placeholder='Leave a review'
-                        onChange={this.handleReviewChange}/>
-                    </Form.Field>
-                )
+                        onChange={this.handleReviewChange} />
+                </Form.Field>
+            )
         }
 
         return (
-        <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Leave a review</Button>}
+            <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Leave a review</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
-            <Modal.Header>Restaurant: {this.props.restaurant}</Modal.Header>
-            <Modal.Content>
-                Order ID: {this.props.orderid} 
-                <br></br>
-                Item: {this.props.fname}                 
-                <br></br>
-                {content}
-            </Modal.Content>
-            
-            <Modal.Actions>
-                <Button color='red' onClick={this.handleClose}>
-                    Cancel
+                <Modal.Header>Restaurant: {this.props.restaurant}</Modal.Header>
+                <Modal.Content>
+                    Order ID: {this.props.orderid}
+                    <br></br>
+                Item: {this.props.fname}
+                    <br></br>
+                    {content}
+                </Modal.Content>
+
+                <Modal.Actions>
+                    <Button color='red' onClick={this.handleClose}>
+                        Cancel
                 </Button>
-                <Button primary onClick={this.handleSave}>
-                    Submit review
+                    <Button primary onClick={this.handleSave}>
+                        Submit review
                 </Button>
-            </Modal.Actions>
-        </Modal>)
+                </Modal.Actions>
+            </Modal>)
     }
 }
 
