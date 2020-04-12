@@ -4,7 +4,7 @@ import { faArrowUp, faArrowDown, faCheck } from '@fortawesome/free-solid-svg-ico
 import onClickOutside from "react-onclickoutside";
 
 class CreditCardSelection extends Component {
-    constructor(props){
+    constructor(props) {
         super(props)
         this.state = {
             listOpen: false,
@@ -13,39 +13,39 @@ class CreditCardSelection extends Component {
         }
     }
 
-    handleClickOutside(){
+    handleClickOutside() {
         this.setState({
-          listOpen: false
+            listOpen: false
         })
     }
 
 
-    toggleList(){
+    toggleList() {
         this.setState(prevState => ({
             listOpen: !prevState.listOpen
         }))
     }
 
-    render(){
-        const{list} = this.props
-        const{listOpen, headerTitle} = this.state
+    render() {
+        const { list } = this.props
+        const { listOpen, headerTitle } = this.state
 
-        return(
+        return (
             <div className="dd-wrapper">
-            <div className="dd-header" onClick={() => this.toggleList()}>
-                <div className="dd-header-title">{headerTitle}</div>
-                {listOpen
-                ? <FontAwesomeIcon icon={faArrowUp} />
-                : <FontAwesomeIcon icon={faArrowDown} />
-                }
-            </div>
-        {listOpen && <ul className="dd-list" style={{textAlign: "left", width: "200px"}}>
-                {list.map((item) => (
-                    <li style={{listStyle: "none", width: "100%"}} className="dd-list-item" key={item.title} onClick={() => this.state.toggleItem(item.id, item.key)}>
-                        {item.title} {item.selected && <FontAwesomeIcon icon={faCheck}/>}
-                    </li>
-                ))}
-            </ul>}
+                <div className="dd-header" onClick={() => this.toggleList()}>
+                    <div className="dd-header-title">{headerTitle}</div>
+                    {listOpen
+                        ? <FontAwesomeIcon icon={faArrowUp} />
+                        : <FontAwesomeIcon icon={faArrowDown} />
+                    }
+                </div>
+                {listOpen && <ul className="dd-list" style={{ textAlign: "left", width: "200px" }}>
+                    {list.map((item) => (
+                        <li style={{ listStyle: "none", width: "100%" }} className="dd-list-item" key={item.title} onClick={() => this.state.toggleItem(item.id, item.key)}>
+                            {item.title} {item.selected && <FontAwesomeIcon icon={faCheck} />}
+                        </li>
+                    ))}
+                </ul>}
             </div>
         )
     }
