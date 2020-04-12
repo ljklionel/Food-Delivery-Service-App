@@ -27,7 +27,7 @@ class ReviewModal extends Component {
 
     render() {
         return (
-            <Modal trigger={<Button onClick={this.handleOpen} fluid basic>{this.state.reviewer}</Button>}
+            <Modal trigger={<Button color='red' onClick={this.handleOpen} fluid basic>{this.state.reviewer}</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
                 <Modal.Header>Reviewer: {this.state.reviewer} </Modal.Header>

@@ -19,7 +19,7 @@ class MyOrders extends Component {
     }
 
     autoUpdate = () => {
-        setInterval( () => {this.updateOrders(this.props.currentCustomer)}, 2000)
+        setInterval(() => { this.updateOrders(this.props.currentCustomer) }, 2000)
         console.log("UpdatedOrders")
     }
 
@@ -108,11 +108,14 @@ class MyOrders extends Component {
             );
         }
         return (
-            <Card color='yellow' style={{ maxWidth: 250 }}>
+            <Card color='blue' style={{ maxWidth: 250 }}>
                 <Card.Content>
                     <Card.Header>
                         My Orders
-                </Card.Header>
+                    </Card.Header>
+                    <Card color='blue'>
+                        {this.state.currentCustomer}
+                    </Card>
                 </Card.Content>
                 <Card.Content>
                     {content}

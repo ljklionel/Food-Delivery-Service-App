@@ -48,13 +48,13 @@ class RestaurantReviews extends Component {
             header = (
                 <Card.Content>
                     <Card.Header>Reviews</Card.Header>
-                    <Card>Choose a restaurant</Card>
+                    <Card color='red' >Choose a restaurant</Card>
                 </Card.Content>)
         } else {
             header = (
                 <Card.Content>
                     <Card.Header>Reviews</Card.Header>
-                    <Card>{this.props.restaurant}</Card>
+                    <Card color='red' >{this.props.restaurant}</Card>
                 </Card.Content>)
         }
         if (this.state.isLoading) {
