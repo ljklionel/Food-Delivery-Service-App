@@ -131,7 +131,27 @@ class OrderMenuModal extends Component {
             return
         }
 
-        myAxios.post('edit_availability', {
+        myAxios.post('connectDeliveryRider', {})
+            .then(response => {
+                console.log("Connect deliveryrider response: ", response)
+                if (response.data.deliveryRider == '') {
+                    const avail = []
+                    this.state.restaurantMenu.forEach(item => {
+                        avail.push(item[1])
+                    });
+                    this.setState({
+                        checkout: false,
+                        avail: avail,
+                        modalOpen: false
+                    })
+                    alert("Sorry, no available drivers right now. Please try again later.")
+                } else {
+                    editAvailability()
+                    makeOrder()
+                }
+            })
+
+        const editAvailability = () => myAxios.post('edit_availability', {
             restaurant: this.state.currentRestaurant,
             updates: updates
         })
@@ -142,6 +162,7 @@ class OrderMenuModal extends Component {
                 });
                 this.setState({
                     modalOpen: false,
+                    checkout: false,
                     restaurantMenu: menu
                 })
                 this.props.submitHandler(this.state.currentRestaurant)
@@ -152,7 +173,7 @@ class OrderMenuModal extends Component {
 
         var creditCard = this.props.getCreditCardInfo()
 
-        myAxios.post('make_order', {
+        const makeOrder = () => myAxios.post('make_order', {
             restaurant: this.state.currentRestaurant,
             order: order,
             totalPrice: this.state.totalPrice - this.state.promoDiscount - this.state.discount,
@@ -164,16 +185,13 @@ class OrderMenuModal extends Component {
         })
             .then(response => {
                 console.log("Response from make_order: ", response)
-                if (response.data.deliveryRider == null) {
-                    alert("Sorry, no available drivers right now. Please try again later.")
-                } else {
-                    console.log("Reward", this.state.totalPrice, this.state.useRewardPoint)
-                    this.props.submitOrder(this.state.totalPrice - this.state.useRewardPoint)
-                    this.setState({
-                        modalOpen: false,
-                    })
-                    alert("You used " + parseInt(this.state.useRewardPoint) + " reward points, and earned " + parseInt(this.state.totalPrice) + " reward points.")
-                }
+                console.log("Reward", this.state.totalPrice, this.state.useRewardPoint)
+                this.props.submitOrder(this.state.totalPrice - this.state.useRewardPoint)
+                this.setState({
+                    checkout: false,
+                    modalOpen: false,
+                })
+                alert("You used " + parseInt(this.state.useRewardPoint) + " reward points, and earned " + parseInt(this.state.totalPrice) + " reward points.")
             })
             .catch(error => {
                 console.log(error);
@@ -205,7 +223,6 @@ class OrderMenuModal extends Component {
                 amtPayable: amtPayable
             })
         }
-        // Some function
     }
 
     componentDidMount() {

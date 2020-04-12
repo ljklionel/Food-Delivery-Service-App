@@ -206,23 +206,23 @@ class CustomerDashboard extends React.Component {
 
     retrieveInfo = () => {
         myAxios.get('/my_info')
-        .then(response => {
-            console.log(response);
-            const list = []
-            response.data.result[0].forEach(element => {
-                list.push(element)
-            });
-            this.state.infoList = list
-            this.setState({
-                infoList: list,
-                username: list[0],
-                rewardPoint: list[2],
-                isLoadingInfo: false
+            .then(response => {
+                console.log(response);
+                const list = []
+                response.data.result[0].forEach(element => {
+                    list.push(element)
+                });
+                this.state.infoList = list
+                this.setState({
+                    infoList: list,
+                    username: list[0],
+                    rewardPoint: list[2],
+                    isLoadingInfo: false
+                })
             })
-        })
-        .catch(error => {
-            console.log(error);
-        });
+            .catch(error => {
+                console.log(error);
+            });
     }
 
     updateRecentLocations = () => {
@@ -265,6 +265,7 @@ class CustomerDashboard extends React.Component {
         }
         if (this.state.infoList === null) {
             this.retrieveInfo()
+            window.location.reload(false);
         }
         const id = this.state.infoList[0]
         this.state.currentCreditCard = this.state.infoList[1]
@@ -273,7 +274,7 @@ class CustomerDashboard extends React.Component {
             <div>
                 <Grid columns={4}>
                     <Grid.Column>
-                        <Image avatar style={{ fontSize: '80px' }} src={'/images/avatar/customer.svg'} />
+                        <Image align="middle" avatar style={{ fontSize: '30px' }} src={'/images/avatar/customer.svg'} />
                     </Grid.Column>
 
                     <Grid.Column>
@@ -306,7 +307,6 @@ class CustomerDashboard extends React.Component {
                         <MyOrders submitReview={this.submitReview} orderSubmitted={this.state.orderSubmitted} currentCustomer={this.state.infoList[0]} />
                     </Grid.Column>
                 </Grid>
-
             </div>
         );
     }

@@ -600,12 +600,15 @@ def get_restaurant_sells():
 @app.route("/make_order", methods=['POST'])
 @login_required
 def make_order():
+    print("Make order")
     data = request.json
     print(data)
     rname, order, totalPrice, fee, timeStamp, customer, creditCard, location = data['restaurant'], data['order'], data[
         'totalPrice'], data['fee'], data['timeStamp'], data['customer'], data['creditCard'], data['location']
     deliveryRider = connectDeliveryRider()
-
+    print("Delivery rider: ", deliveryRider)
+    print("Delivery rider: ", deliveryRider[0]['deliveryRider'])
+    deliveryRider = deliveryRider[0]['deliveryRider']
     # Make order's data:
     # {'restaurant': 'Amigos/Kings Classic',
     # 'order': {'Hash browns': 0, 'Kaya toast': 0, 'Laksa': 0, 'Kimchi': 1},
@@ -617,6 +620,7 @@ def make_order():
 
     if deliveryRider:
         # Response have to include: orderID, riderUsername
+        print("Have delivery rider: ", deliveryRider)
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute("BEGIN;")
@@ -645,9 +649,12 @@ def make_order():
 
         return ({'orderId': orderId, 'deliveryRider': deliveryRider}, 200)
     else:
+        print("No delivery rider: ", deliveryRider)
         return ({}, 200)
 
 
+@app.route("/connectDeliveryRider", methods=['POST'])
+@login_required
 def connectDeliveryRider():
     conn = get_db()
     now = datetime.now()
@@ -655,34 +662,38 @@ def connectDeliveryRider():
     print("NOW: ", now)
     print("Hour: ", hour)
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT username from MonthlyWorkSched WHERE startHour <= %s AND endHour > %s;", (hour, hour))
-    # cursor.execute("SELECT promoId, endDate, discount FROM Promotions WHERE rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' ORDER BY endDate;", (rname, now))
 
-    monthlyResult = cursor.fetchmany(10)
-    cursor.execute(
-        "SELECT username from WeeklyWorkSched WHERE startHour <= %s AND endHour > %s;", (hour, hour))
-    weeklyResult = cursor.fetchmany(10)
-    totalResult = []
+    cursor.execute("SELECT username FROM DeliveryRiders") # Randomly select one 
+    totalResult = cursor.fetchone()
+    print("TOTAL RESULT: ", totalResult)
+    
+    # cursor.execute(
+    #     "SELECT username from MonthlyWorkSched WHERE startHour <= %s AND endHour > %s;", (hour, hour))
+    # monthlyResult = cursor.fetchmany(10)
 
-    if monthlyResult:
-        if weeklyResult:
-            totalResult = monthlyResult + weeklyResult
-        else:
-            totalResult = monthlyResult
-    else:
-        if weeklyResult:
-            totalResult = weeklyResult
+    # cursor.execute(
+    #     "SELECT username from WeeklyWorkSched WHERE startHour <= %s AND endHour > %s;", (hour, hour))
+    # weeklyResult = cursor.fetchmany(10)
+    # totalResult = []
 
-    print("Monthly result: ", monthlyResult)
-    print("Weekly result: ", weeklyResult)
-    print("Total result: ", totalResult)
+    # if monthlyResult:
+    #     if weeklyResult:
+    #         totalResult = monthlyResult + weeklyResult
+    #     else:
+    #         totalResult = monthlyResult
+    # else:
+    #     if weeklyResult:
+    #         totalResult = weeklyResult
+
+    # print("Monthly result: ", monthlyResult)
+    # print("Weekly result: ", weeklyResult)
+    # print("Total result: ", totalResult)
 
     if (len(totalResult) != 0):
         selectedDeliveryRider = random.choice(totalResult)
-        return selectedDeliveryRider
+        return ({'deliveryRider': selectedDeliveryRider}, 200)
     else:
-        return ''
+        return ({'deliveryRider': ''}, 200)
 
 
 @app.route("/customer_orders")
@@ -905,18 +916,6 @@ def get_riders():
     cursor = conn.cursor()
     cursor.execute(
         "SELECT username FROM DeliveryRiders WHERE username ILIKE '%s%%';" % keyword)
-    result = cursor.fetchmany(10)
-    return ({'result': result}, 200)
-
-
-@app.route("/locations")
-@login_required
-def get_locations():
-    keyword = request.args.get('keyword')
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT location FROM Locations WHERE location ILIKE '%s%%';" % keyword)
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
