@@ -9,6 +9,12 @@ from user import User
 from datetime import datetime
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta  # $ pip install python-dateutil
+import random
+from random import seed
+from random import randint
+from random import randrange
+import datetime as mydatetime
+
 
 app = Flask(__name__)
 app.secret_key = 'super secret key'
@@ -595,22 +601,12 @@ def get_restaurant_sells():
 @app.route("/make_order", methods=['POST'])
 @login_required
 def make_order():
-    print("Make order")
     data = request.json
     rname, order, totalPrice, fee, timeStamp, customer, creditCard, location, totalDiscount = data['restaurant'], data['order'], data[
         'totalPrice'], data['fee'], data['timeStamp'], data['customer'], data['creditCard'], data['location'], data['totalDiscount']
     deliveryRider = connectDeliveryRider()
-
     deliveryRider = deliveryRider[0]['deliveryRider']
-    # Make order's data:
-    # {'restaurant': 'Amigos/Kings Classic',
-    # 'order': {'Hash browns': 0, 'Kaya toast': 0, 'Laksa': 0, 'Kimchi': 1},
-    # 'totalPrice': 4.5,
-    # 'fee': 0.45,
-    # 'timeStamp': 'Wed Apr 01 2020 22:43:21 (+08)',
-    # 'customer': 'c',
-    # 'location': None}
-
+    
     if deliveryRider:
         # Response have to include: orderID, riderUsername
         conn = get_db()
@@ -624,8 +620,12 @@ def make_order():
         # Retrieve orderId from Orders
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT orderid from Orders WHERE orderid >= all(SELECT orderid from Orders)")
-        orderId = cursor.fetchall()[0]
+            "SELECT max(orderid) from Orders")
+        # cursor.execute(
+        #     "SELECT orderid from Orders WHERE orderid >= all(SELECT orderid from Orders)")
+        # cursor.execute(
+        #     "SELECT orderid from Orders WHERE orderTime == %s AND riderUsername = %s and customerUsername = %s", (timeStamp, deliveryRider, customer))
+        orderId = cursor.fetchone()[0]
 
         cursor = conn.cursor()
         cursor.execute("BEGIN;")
@@ -641,23 +641,65 @@ def make_order():
         return ({}, 200)
 
 
+def convertDayToNumber(day):
+    if day == 'Mon':
+        return '1'
+    if day == 'Tue':
+        return '2'
+    if day == 'Wed':
+        return '3'
+    if day == 'Thu':
+        return '4'
+    if day == 'Fri':
+        return '5'
+    if day == 'Sat':
+        return '6'
+    if day == 'Sun':
+        return '7'
+
+
 @app.route("/connectDeliveryRider", methods=['POST'])
 @login_required
 def connectDeliveryRider():
     conn = get_db()
     now = datetime.now()
+    day = str(now.day)
     hour = str(now.hour)
     cursor = conn.cursor()
+    day = mydatetime.datetime(now.year, now.month, now.day).strftime("%a")
+    dayInNumber = convertDayToNumber(day)
 
-    cursor.execute("SELECT username FROM DeliveryRiders") # Randomly select one 
-    totalResult = cursor.fetchone()
-    
-    # cursor.execute(dki
-    if (len(totalResult) != 0):
-        selectedDeliveryRider = random.choice(totalResult)
+    # Randomly select one
+    # cursor.execute("SELECT username FROM DeliveryRiders")
+    # totalResult = cursor.fetchone()
+
+    # Select according to schedule
+    cursor.execute("SELECT username FROM MonthlyWorkSched MWS natural join FullTimeShifts FTS WHERE MWS.workday = %s AND (%s < FTS.breakStart OR %s >= FTS.breakEnd) AND MWS.startHour <= %s AND MWS.endHour > %s", (dayInNumber, hour, hour, hour, hour))
+    fullTimers = cursor.fetchall()
+    cursor.execute("SELECT username FROM WeeklyWorkSched WWS natural join PartTimeShifts PTS WHERE WWS.workday = %s AND WWS.startHour <= %s AND WWS.endHour > %s", (dayInNumber, hour, hour))
+    partTimers = cursor.fetchall()
+
+    allDr = fullTimers + partTimers
+    if (len(allDr) != 0):
+        selectedDeliveryRider = random.choice(allDr)
         return ({'deliveryRider': selectedDeliveryRider}, 200)
     else:
         return ({'deliveryRider': ''}, 200)
+
+    # if monthlyResult:
+    #     if weeklyResult:
+    #         totalResult = monthlyResult + weeklyResult
+    #     else:
+    #         totalResult = monthlyResult
+    # else:
+    #     if weeklyResult:
+    #         totalResult = weeklyResult
+
+    # if (len(totalResult) != 0):
+    #     selectedDeliveryRider = random.choice(totalResult)
+    #     return ({'deliveryRider': selectedDeliveryRider}, 200)
+    # else:
+    #     return ({'deliveryRider': ''}, 200)
 
 
 @app.route("/customer_orders")
@@ -795,7 +837,7 @@ def get_restaurant_promo_for_customers():
         l[2] = float(l[2])
         restPromo[i] = tuple(l)
 
-    rname = 'aRandomName' # Bypass some parsing error in the query
+    rname = 'aRandomName'  # Bypass some parsing error in the query
     cursor.execute("SELECT promoId, endDate, discount FROM FDSPromotions WHERE promoId <> %s AND %s BETWEEN startDate and endDate + INTERVAL '1 day' ORDER BY endDate;", (rname, now))
     fdsPromo = cursor.fetchall()
 
@@ -810,63 +852,44 @@ def get_restaurant_promo_for_customers():
 @app.route("/food_and_restaurants_filtered", methods=['POST'])
 @login_required
 def get_food_and_restaurants_filtered():
-    # data = request.args
     data = request.json
     keyword, foodCategories, check = data['keyword'], data['foodCategories'], data['check']
-    print("Food categories: ", foodCategories)
-    print("Check: ", check)
-    # print("Data from restaurant select: ", data)
     conn = get_db()
     cursor = conn.cursor()
 
-    if (check): # Search by food
+    if (check):  # Search by food
         cursor.execute(
             "SELECT rname, fname, category FROM Food natural join Sells WHERE fname ILIKE '%s%%';" % keyword)
         result = cursor.fetchall()
         result = filterCategories(result, foodCategories)
-        print("Filtered results:" , result)
-        # for i, r in enumerate(result):
-        #     result[i] = (str(result[i]),)
 
         restDict = {}
         for x in result:
-            if restDict.get(x[0]) is not None: # May be []
+            if restDict.get(x[0]) is not None:  # May be []
                 restDict[x[0]].append(x[1] + " (" + x[2] + ")")
             else:
                 restDict[x[0]] = []
                 restDict[x[0]].append(x[1] + " (" + x[2] + ")")
-
-        print("============================================================: ", restDict)
         return ({'result': restDict}, 200)
 
-    else: # Search by restaurant
-        cursor.execute("SELECT rname, fname FROM Sells WHERE rname ILIKE '%s%%'" % keyword)
+    else:  # Search by restaurant
+        cursor.execute(
+            "SELECT rname, fname FROM Sells WHERE rname ILIKE '%s%%'" % keyword)
         result = cursor.fetchall()
-        print("Results: ", result)
         restDict = {}
         for x in result:
-            if restDict.get(x[0]) is not None: # May be []
+            if restDict.get(x[0]) is not None:  # May be []
                 restDict[x[0]].append(x[1])
             else:
                 restDict[x[0]] = []
                 restDict[x[0]].append(x[1])
         return ({'result': restDict}, 200)
-
-    # filteredResult2 = filterCategories(result2, foodCategories)
-    # result2 = filteredResult2
-
-    # for i, r in enumerate(result):
-    #     result[i] = (str(result[i][0] + " [" + result[i]
-    #                       [1] + "] (" + result[i][2] + ")"),)
 
 
 
 def filterCategories(allFood, foodCategories):
     filteredResult = []
     for food in allFood:
-        # if (len(filteredResult) >= 10):
-        #     break
-        # else:
         if (food[2] in foodCategories):
             filteredResult.append(food)
 

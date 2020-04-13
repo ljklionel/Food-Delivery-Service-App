@@ -114,11 +114,9 @@ class CustomerDashboard extends React.Component {
         this.setState({
             check: !check
         })
-        console.log(this.state.check)
     }
 
     submitOrder = (netReward) => {
-        console.log("Submit order, netReward, state reward", netReward, this.state.rewardPoint)
         var rewardPoint = parseInt(netReward) + this.state.rewardPoint
         this.setState({
             rewardPoint: rewardPoint
@@ -126,18 +124,15 @@ class CustomerDashboard extends React.Component {
         this.updateRewardPoint(rewardPoint)
         this.updateRecentLocations()
         // window.location.reload(false);
-        console.log("Finish submitting order")
     }
 
     submitReview = () => {
-        console.log("SubmitReview")
         this.setState({
             refreshReview: this.state.refreshReview++
         })
     }
 
     updateRewardPoint = (x) => {
-        console.log("Post reward point")
         myAxios.post('update_reward_point', {
             customerName: this.state.infoList[0],
             rewardPoint: x
@@ -164,19 +159,16 @@ class CustomerDashboard extends React.Component {
     }
 
     handleCategorySelection = (option) => {
-        console.log(option)
         var categoriesSelected = []
         if (option === null) {
         } else {
             option.forEach(item => {
                 categoriesSelected.push(item.value)
             })
-            console.log("categories selected: ", categoriesSelected)
         }
         this.setState({
             foodCategories: categoriesSelected
         })
-        console.log("This.state.foodcategories: ", this.state.foodCategories)
     }
 
     componentWillReceiveProps(nextProps) {
@@ -235,7 +227,6 @@ class CustomerDashboard extends React.Component {
     }
 
     updateRecentLocations = () => {
-        console.log("Update recent locations")
         myAxios.get('/recent_locations')
             .then(response => {
                 const list = []
@@ -261,11 +252,7 @@ class CustomerDashboard extends React.Component {
                 console.log(error);
             });
     }
-
-    setGender(event) {
-        console.log(event.target.value);
-    }
-
+    
     customerContent() {
         if (this.state.isLoadingInfo) {
             return (

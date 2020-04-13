@@ -34,7 +34,6 @@ class WriteReviewModal extends Component {
             restaurant: this.state.restaurant
         })
             .then(response => {
-                console.log("Edit_review")
                 this.setState({
                     modalOpen: false,
                 })

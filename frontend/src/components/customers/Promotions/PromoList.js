@@ -17,14 +17,12 @@ class PromoList extends Component {
     }
 
     updatePromo(rname) {
-        console.log("UPdate promo")
         myAxios.get('/restaurant_promo_for_customers', {
             params: {
                 restaurant: rname
             }
         })
             .then(response => {
-                console.log("Promo info: ", response);
                 this.setState({
                     promotions: response.data.restPromo,
                     fdsPromotions: response.data.fdsPromo,
@@ -49,7 +47,6 @@ class PromoList extends Component {
         this.state.promotions.map((item) => (
             discount *= (1 - item[2] / 100)
         ))
-        console.log("Discount:", discount)
         return (100 - discount * 100).toFixed(2)
     }
 
@@ -58,7 +55,6 @@ class PromoList extends Component {
         this.state.fdsPromotions.map((item) => (
             discount *= (1 - item[2] / 100)
         ))
-        console.log("Discount:", discount)
         return (100 - discount * 100).toFixed(2)
     }
 
@@ -121,7 +117,6 @@ class PromoList extends Component {
 
             )
         }
-        console.log("FDS PROMO: ", this.state.fdsPromotions)
         if (this.state.fdsPromotions.length === 0) {
             content2 = <p><i>No ongoing promo for FDS.</i></p>
         } else {

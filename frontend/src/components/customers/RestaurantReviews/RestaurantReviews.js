@@ -31,7 +31,6 @@ class RestaurantReviews extends Component {
             }
         })
             .then(response => {
-                console.log("Response within updateReviews: ", response);
                 this.setState({
                     restaurantReviews: response.data.result,
                     isLoading: false
