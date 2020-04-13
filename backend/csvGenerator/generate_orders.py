@@ -134,11 +134,11 @@ for x in f1:
 # print(locations)
 # print(full_time_shifts)
 
-startDate = datetime.datetime(2013, 9, 20, 16, 00)
+startDate = datetime.datetime(2013, 9, 20, 16, 00) # time to be normalised from 4pm
 # for x in random_date(startDate, 5):
 #     print(x.strftime("%d/%m/%y %H:%M"))
 
-start_date = datetime.date(2020, 1, 15)
+start_date = datetime.date(2019, 4, 12)
 end_date = datetime.date(2020, 4, 12)
 time_between_dates = end_date - start_date
 days_between_dates = time_between_dates.days
@@ -179,9 +179,11 @@ def generateRandomReview(fname):
     return fname + " is " + random.choice(adverbs)[0] + " " + random.choice(adjectives)[0]
 
 containsFoodCsv = []
+totalOrders = 10000
+
 
 # randomize time and sort them for orders
-for i in range(0, 3000):
+for i in range(0, totalOrders):
     thisTime = []
     random_number_of_days = random.randrange(days_between_dates)
     ran_date = start_date + datetime.timedelta(days=random_number_of_days)
@@ -204,7 +206,7 @@ for i in range(0, 3000):
             ":" + str(v6) + ":" + genSeconds()
         deliveryTime = str(ran_date) + " " + str(v7) + \
             ":" + str(v8) + ":" + genSeconds()
-        val = ran_date.month * 1000000 + ran_date.day * 10000 + startHour * 100 + int(secs)
+        val = ran_date.month * 1000000 + ran_date.day * 10000 + startHour * 100 + x.minute + int(secs)/100
     thisTime = [timestamp, departTime1, arriveTime, departTime2, deliveryTime, val]
     timeArray.append(thisTime)
 
@@ -217,7 +219,7 @@ timeArray.sort(key=sortingKey)
 
 runningVariable = 1
 # for i in range(0, 3000):
-while runningVariable <= 5000:
+while runningVariable <= 10000:
     # orderId
     # orderId = i
 
@@ -314,7 +316,7 @@ while runningVariable <= 5000:
             foodArray = food.split(',')
             review = generateRandomReview(foodArray[0])
             foodName = foodArray[0]
-            dice2 = randint(10, 70) / 100 # percentage
+            dice2 = randint(5, 30) / 100 # percentage
             amount = round(dice2 * int(foodArray[1])) # in integer
             if (amount == 0):
                 amount = 1
