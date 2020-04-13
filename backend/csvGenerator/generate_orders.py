@@ -143,7 +143,6 @@ end_date = datetime.date(2020, 4, 12)
 time_between_dates = end_date - start_date
 days_between_dates = time_between_dates.days
 
-
 def nextTiming(hh, mm):
     mm += randint(1, 5)
     if (mm >= 60):
@@ -181,9 +180,8 @@ def generateRandomReview(fname):
 containsFoodCsv = []
 totalOrders = 10000
 
-
 # randomize time and sort them for orders
-for i in range(0, totalOrders):
+for i in range(0, totalOrders + 1):
     thisTime = []
     random_number_of_days = random.randrange(days_between_dates)
     ran_date = start_date + datetime.timedelta(days=random_number_of_days)
@@ -206,7 +204,7 @@ for i in range(0, totalOrders):
             ":" + str(v6) + ":" + genSeconds()
         deliveryTime = str(ran_date) + " " + str(v7) + \
             ":" + str(v8) + ":" + genSeconds()
-        val = ran_date.month * 1000000 + ran_date.day * 10000 + startHour * 100 + x.minute + int(secs)/100
+        val = ran_date.year * 1000000 + ran_date.month * 10000 + ran_date.day * 100 + startHour * 1 + x.minute/100 + int(secs)/10000
     thisTime = [timestamp, departTime1, arriveTime, departTime2, deliveryTime, val]
     timeArray.append(thisTime)
 
@@ -218,6 +216,8 @@ timeArray.sort(key=sortingKey)
 # print(timeArray)
 
 runningVariable = 1
+print("paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname")
+
 # for i in range(0, 3000):
 while runningVariable <= 10000:
     # orderId
@@ -245,11 +245,11 @@ while runningVariable <= 10000:
     #         ":" + str(v6) + ":" + genSeconds()
     #     deliveryTime = str(ran_date) + " " + str(v7) + \
     #         ":" + str(v8) + ":" + genSeconds()
-    timestamp = timeArray[i][0]
-    departTime1 = timeArray[i][1]
-    arriveTime = timeArray[i][2]
-    departTime2 = timeArray[i][3]
-    deliveryTime = timeArray[i][4]
+    timestamp = timeArray[runningVariable][0]
+    departTime1 = timeArray[runningVariable][1]
+    arriveTime = timeArray[runningVariable][2]
+    departTime2 = timeArray[runningVariable][3]
+    deliveryTime = timeArray[runningVariable][4]
 
     # Customer
     c = random.choice(customers)
@@ -314,13 +314,17 @@ while runningVariable <= 10000:
         dice = randint(0,3)
         if dice:
             foodArray = food.split(',')
-            review = generateRandomReview(foodArray[0])
             foodName = foodArray[0]
             dice2 = randint(5, 30) / 100 # percentage
             amount = round(dice2 * int(foodArray[1])) # in integer
             if (amount == 0):
                 amount = 1
             totalPrice = amount * float(foodArray[3])
+            reviewdice = randint(0,6)
+            if not reviewdice:
+                review = generateRandomReview(foodArray[0])
+            else:
+                review = ''
             containsfood = [str(amount), review, foodName, str(runningVariable)]
             multipleContainsFood.append(containsfood)
             # print(containsfood)
@@ -337,6 +341,7 @@ while runningVariable <= 10000:
     # containsfood = [qty, review, fname, orderid]
     # order = [str(orderId), payment, str(randint(1, 5)), location, str(fee), timestamp, departTime1, arriveTime, departTime2, deliveryTime, deliveryRider[0], customerName, restaurant]
 
+    
     order = [payment, str(randint(1, 5)), location, str(fee), timestamp, departTime1, arriveTime, departTime2, deliveryTime, deliveryRider[0], customerName, restaurant]
     print(','.join(order))
     runningVariable += 1
@@ -348,6 +353,7 @@ while runningVariable <= 10000:
 # 
 print("END OF ORDERS")
 
+print("quantity,review,fname,orderid")
 for list in containsFoodCsv:
     print(','.join(list))
 # print('\n'.join(containsFoodCsv))
