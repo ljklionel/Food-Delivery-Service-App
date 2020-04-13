@@ -129,7 +129,7 @@ class ManagerDashboard extends React.Component {
         <Header style={headerStyle}><i>Select to View</i></Header>
         <br/>
         <Button primary onClick={this.showAll}>
-          SHOW ALL
+          HOME
         </Button>
         <br/>
         <br/>
