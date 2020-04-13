@@ -249,7 +249,7 @@ def get_all_restaurant_summary():
         found = True
         # total cost of all completed orders
         cursor = conn.cursor()
-        cursor.execute("SELECT sum(fee) FROM Orders NATURAL JOIN ContainsFood NATURAL JOIN Sells WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+        cursor.execute("SELECT sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
                        (rname, cur_start_time, cur_end_time))
         total_cost = cursor.fetchone()[0]
         # top 5 favorite food items
