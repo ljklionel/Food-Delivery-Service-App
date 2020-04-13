@@ -43,7 +43,6 @@ def register():
     not_ok = ({'ok': 0, 'msg': 'Username already exists'}, 200)
 
     data = request.json
-    print(data)
     username, password, firstname, lastname, phonenum, role = data['username'], data[
         'password'], data['firstname'], data['lastname'], data['phonenum'], data['role']
 
@@ -261,14 +260,12 @@ def get_all_restaurant_summary():
 @login_required
 def get_ongoing_restaurant_promo():
     rname = request.args.get('restaurant')
-    print("Rname for ongoing rest:", rname)
     now = datetime.now()
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT promoId, endDate, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname WHERE P.rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' " +
                    "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) GROUP BY promoId, endDate ORDER BY endDate;", (rname, now))
     result = cursor.fetchall()
-    print("Result for ongoing rest:", result)
     return ({'result': result}, 200)
 
 
@@ -296,7 +293,6 @@ def edit_availability():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("BEGIN;")
-    print(updates)
     for fname in updates:
         cursor.execute("UPDATE Sells SET avail = %s WHERE fname = %s AND rname = %s;",
                        (updates[fname], fname, rname))
@@ -581,7 +577,6 @@ def get_my_info():
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Customers WHERE username = '%s';" % username)
     result = cursor.fetchall()
-    print("Myinfo result: ", result)
     return ({'result': result}, 200)
 
 
@@ -602,12 +597,10 @@ def get_restaurant_sells():
 def make_order():
     print("Make order")
     data = request.json
-    print(data)
-    rname, order, totalPrice, fee, timeStamp, customer, creditCard, location = data['restaurant'], data['order'], data[
-        'totalPrice'], data['fee'], data['timeStamp'], data['customer'], data['creditCard'], data['location']
+    rname, order, totalPrice, fee, timeStamp, customer, creditCard, location, totalDiscount = data['restaurant'], data['order'], data[
+        'totalPrice'], data['fee'], data['timeStamp'], data['customer'], data['creditCard'], data['location'], data['totalDiscount']
     deliveryRider = connectDeliveryRider()
-    print("Delivery rider: ", deliveryRider)
-    print("Delivery rider: ", deliveryRider[0]['deliveryRider'])
+
     deliveryRider = deliveryRider[0]['deliveryRider']
     # Make order's data:
     # {'restaurant': 'Amigos/Kings Classic',
@@ -620,14 +613,12 @@ def make_order():
 
     if deliveryRider:
         # Response have to include: orderID, riderUsername
-        print("Have delivery rider: ", deliveryRider)
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute("BEGIN;")
         # Update Orders first
-        print(timeStamp)
         cursor.execute("INSERT INTO Orders(paymentMethod, location, fee, orderTime, riderUsername, customerUsername, rname) VALUES (%s, %s, %s, %s, %s, %s, %s);",
-                       (creditCard, location, totalPrice + fee, timeStamp, deliveryRider, customer, rname,))
+                       (creditCard, location, round(totalPrice + fee - totalDiscount, 2), timeStamp, deliveryRider, customer, rname,))
         cursor.execute("COMMIT;")
 
         # Retrieve orderId from Orders
@@ -641,15 +632,12 @@ def make_order():
         for fname in order:
             if order[fname] == 0:  # Quantity is 0
                 continue
-            print(fname)
-            print(order[fname])
             cursor.execute(
                 "INSERT INTO ContainsFood(quantity, fname, orderid) VALUES(%s, %s, %s);", (order[fname], fname, orderId))
         cursor.execute("COMMIT;")
 
         return ({'orderId': orderId, 'deliveryRider': deliveryRider}, 200)
     else:
-        print("No delivery rider: ", deliveryRider)
         return ({}, 200)
 
 
@@ -659,36 +647,12 @@ def connectDeliveryRider():
     conn = get_db()
     now = datetime.now()
     hour = str(now.hour)
-    print("NOW: ", now)
-    print("Hour: ", hour)
     cursor = conn.cursor()
 
     cursor.execute("SELECT username FROM DeliveryRiders") # Randomly select one 
     totalResult = cursor.fetchone()
-    print("TOTAL RESULT: ", totalResult)
     
-    # cursor.execute(
-    #     "SELECT username from MonthlyWorkSched WHERE startHour <= %s AND endHour > %s;", (hour, hour))
-    # monthlyResult = cursor.fetchmany(10)
-
-    # cursor.execute(
-    #     "SELECT username from WeeklyWorkSched WHERE startHour <= %s AND endHour > %s;", (hour, hour))
-    # weeklyResult = cursor.fetchmany(10)
-    # totalResult = []
-
-    # if monthlyResult:
-    #     if weeklyResult:
-    #         totalResult = monthlyResult + weeklyResult
-    #     else:
-    #         totalResult = monthlyResult
-    # else:
-    #     if weeklyResult:
-    #         totalResult = weeklyResult
-
-    # print("Monthly result: ", monthlyResult)
-    # print("Weekly result: ", weeklyResult)
-    # print("Total result: ", totalResult)
-
+    # cursor.execute(dki
     if (len(totalResult) != 0):
         selectedDeliveryRider = random.choice(totalResult)
         return ({'deliveryRider': selectedDeliveryRider}, 200)
@@ -720,7 +684,6 @@ def update_credit_card():
     cursor.execute(
         "UPDATE Customers SET creditCard = %s WHERE username = %s;", (creditCard, customerName))
     cursor.execute("COMMIT;")
-    print("Commited in update")
     return ({}, 200)
 
 
@@ -741,11 +704,9 @@ def get_locations():
 def get_recent_locations():
     username = current_user.get_id()
     conn = get_db()
-    print("Getting recent location")
     cursor = conn.cursor()
     cursor.execute("SELECT location FROM Customers C, Orders O WHERE C.username = '%s' AND C.username = O.customerUsername GROUP BY location ORDER BY MAX(orderTime) DESC LIMIT 5;" % username)
     result = cursor.fetchall()
-    print("recent_locations result: ", result)
     return ({'result': result}, 200)
 
 
@@ -770,8 +731,6 @@ def edit_rating():
     data = request.json
     orderid, rating = data['orderid'], data['rating']
     conn = get_db()
-    print(orderid)
-    print(rating)
     cursor = conn.cursor()
     cursor.execute("BEGIN;")
     cursor.execute(
@@ -799,7 +758,6 @@ def update_reward_point():
     rewardPoint, customerName = data['rewardPoint'], data['customerName']
     conn = get_db()
     cursor = conn.cursor()
-    print("Updating rewardPoint: ", rewardPoint)
     cursor.execute("BEGIN;")
     cursor.execute("UPDATE Customers SET rewardPoint = %s WHERE username = %s;",
                    (rewardPoint, customerName))
@@ -813,7 +771,6 @@ def get_restaurant_menu():
     rname = request.args.get('restaurant')
     conn = get_db()
     cursor = conn.cursor()
-    print(rname)
     cursor.execute(
         "SELECT fname, avail, price, minSpending FROM Sells natural join Restaurants WHERE rname = %s", (rname,))
     result = cursor.fetchall()
@@ -823,21 +780,31 @@ def get_restaurant_menu():
 @app.route("/restaurant_promo_for_customers")
 @login_required
 def get_restaurant_promo_for_customers():
-    print("Getting restaurant promotions for customers")
     rname = request.args.get('restaurant')
     now = datetime.now()
     conn = get_db()
     cursor = conn.cursor()
+    # cursor.execute("SELECT promoId, endDate, discount FROM Promotions WHERE rname = %s and %s BETWEEN startDate and endDate + INTERVAL '1 day' ORDER BY endDate;", (rname, now))
+
     cursor.execute("SELECT promoId, endDate, discount FROM Promotions WHERE rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' ORDER BY endDate;", (rname, now))
 
-    result = cursor.fetchall()
-    print("Result: ", result)
+    restPromo = cursor.fetchall()
 
-    for i, r in enumerate(result):  # fix decimal is not serializable
-        l = list(result[i])
+    for i, r in enumerate(restPromo):  # fix decimal is not serializable
+        l = list(restPromo[i])
         l[2] = float(l[2])
-        result[i] = tuple(l)
-    return ({'result': result}, 200)
+        restPromo[i] = tuple(l)
+
+    rname = 'aRandomName' # Bypass some parsing error in the query
+    cursor.execute("SELECT promoId, endDate, discount FROM FDSPromotions WHERE promoId <> %s AND %s BETWEEN startDate and endDate + INTERVAL '1 day' ORDER BY endDate;", (rname, now))
+    fdsPromo = cursor.fetchall()
+
+    for i, r in enumerate(fdsPromo):  # fix decimal is not serializable
+        l = list(fdsPromo[i])
+        l[2] = float(l[2])
+        fdsPromo[i] = tuple(l)
+
+    return ({'restPromo': restPromo, 'fdsPromo': fdsPromo}, 200)
 
 
 @app.route("/food_and_restaurants_filtered", methods=['POST'])
@@ -845,40 +812,64 @@ def get_restaurant_promo_for_customers():
 def get_food_and_restaurants_filtered():
     # data = request.args
     data = request.json
-    keyword, foodCategories = data['keyword'], data['foodCategories']
+    keyword, foodCategories, check = data['keyword'], data['foodCategories'], data['check']
+    print("Food categories: ", foodCategories)
+    print("Check: ", check)
+    # print("Data from restaurant select: ", data)
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT rname FROM Restaurants WHERE rname ILIKE '%s%%'" % keyword)
-    result1 = cursor.fetchmany(5)
-    cursor.execute(
-        "SELECT fname, rname, category FROM Food natural join Sells WHERE fname ILIKE '%s%%';" % keyword)
-    result2 = cursor.fetchall()
 
-    filteredResult2 = filterCategories(result2, foodCategories)
-    result2 = filteredResult2
+    if (check): # Search by food
+        cursor.execute(
+            "SELECT rname, fname, category FROM Food natural join Sells WHERE fname ILIKE '%s%%';" % keyword)
+        result = cursor.fetchall()
+        result = filterCategories(result, foodCategories)
+        print("Filtered results:" , result)
+        # for i, r in enumerate(result):
+        #     result[i] = (str(result[i]),)
 
-    for i, r in enumerate(result2):
-        result2[i] = (str(result2[i][0] + " [" + result2[i]
-                          [1] + "] (" + result2[i][2] + ")"),)
+        restDict = {}
+        for x in result:
+            if restDict.get(x[0]) is not None: # May be []
+                restDict[x[0]].append(x[1] + " (" + x[2] + ")")
+            else:
+                restDict[x[0]] = []
+                restDict[x[0]].append(x[1] + " (" + x[2] + ")")
 
-    result = result1 + result2
-    return ({'result': result}, 200)
+        print("============================================================: ", restDict)
+        return ({'result': restDict}, 200)
+
+    else: # Search by restaurant
+        cursor.execute("SELECT rname, fname FROM Sells WHERE rname ILIKE '%s%%'" % keyword)
+        result = cursor.fetchall()
+        print("Results: ", result)
+        restDict = {}
+        for x in result:
+            if restDict.get(x[0]) is not None: # May be []
+                restDict[x[0]].append(x[1])
+            else:
+                restDict[x[0]] = []
+                restDict[x[0]].append(x[1])
+        return ({'result': restDict}, 200)
+
+    # filteredResult2 = filterCategories(result2, foodCategories)
+    # result2 = filteredResult2
+
+    # for i, r in enumerate(result):
+    #     result[i] = (str(result[i][0] + " [" + result[i]
+    #                       [1] + "] (" + result[i][2] + ")"),)
+
 
 
 def filterCategories(allFood, foodCategories):
-    # print("allFood: ", allFood)
-    # print("FoodCategories: ", foodCategories)
     filteredResult = []
     for food in allFood:
-        if (len(filteredResult) >= 10):
-            break
-        else:
-            if (food[2] in foodCategories):
-                # print("food[2]: ", food[2])
-                filteredResult.append(food)
+        # if (len(filteredResult) >= 10):
+        #     break
+        # else:
+        if (food[2] in foodCategories):
+            filteredResult.append(food)
 
-    # print("Filtered Result: ", filteredResult)
     return filteredResult
 
 

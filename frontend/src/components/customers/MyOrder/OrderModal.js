@@ -68,22 +68,22 @@ class OrderModal extends Component {
                             {this.state.orderDetails[0][4]}
                         </Table.Cell>
                         <Table.Cell>
-                            {this.state.orderDetails[0][5]}
+                            {this.state.orderDetails[0][5].toFixed(2)}
                         </Table.Cell>
                         <Table.Cell>
                             {this.state.orderDetails[0][10]}
                         </Table.Cell>
                         <Table.Cell>
-                            {this.state.orderDetails[0][6]}
+                            {this.state.orderDetails[0][6] == null ? '' : this.state.orderDetails[0][6].split(' ')[4]}
                         </Table.Cell>
                         <Table.Cell>
-                            {this.state.orderDetails[0][7]}
+                            {this.state.orderDetails[0][7] == null ? '' : this.state.orderDetails[0][7].split(' ')[4]}
                         </Table.Cell>
                         <Table.Cell>
-                            {this.state.orderDetails[0][8]}
+                            {this.state.orderDetails[0][8] == null ? '' : this.state.orderDetails[0][8].split(' ')[4]}
                         </Table.Cell>
                         <Table.Cell>
-                            {this.state.orderDetails[0][9]}
+                            {this.state.orderDetails[0][9] == null ? '' : this.state.orderDetails[0][9].split(' ')[4]}
                         </Table.Cell>
 
                     </Table.Row>
@@ -112,7 +112,8 @@ class OrderModal extends Component {
             </Table>
         )
         return (
-            <Modal trigger={<Button onClick={this.handleOpen} fluid basic>{this.state.orderid}</Button>}
+            <Modal trigger={<Button color='blue' onClick={this.handleOpen} fluid basic>{this.state.orderid}</Button>}
+            //fluid basic
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
                 <Modal.Header>Order ID: {this.state.orderDetails[0][12]} </Modal.Header>

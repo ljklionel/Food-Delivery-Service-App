@@ -51,20 +51,20 @@ class Menu extends Component {
             header = (
                 <Card.Content>
                     <Card.Header>Menu</Card.Header>
-                    <Card>Choose a restaurant</Card>
+                    <Card color='green'>Choose a restaurant</Card>
                 </Card.Content>)
         } else {
             header = (
                 <Card.Content>
                     <Card.Header>Menu</Card.Header>
-                    <Card>{this.props.restaurant}</Card>
+                    <Card color='green'>{this.props.restaurant}</Card>
                 </Card.Content>)
         }
         if (this.state.isLoading) {
             return null// <Loader active/>
         }
         return (
-            <Card background-color='blue' color='red' style={{ maxWidth: 250 }}>
+            <Card color='green' style={{ maxWidth: 250 }}>
                 {header}
                 <Card.Content>
                     <Table basic='very' celled>

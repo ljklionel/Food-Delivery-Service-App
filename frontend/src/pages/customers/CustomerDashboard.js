@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Image, Header, Loader, Card } from 'semantic-ui-react';
+import { Grid, Image, Header, Loader, Card, Radio } from 'semantic-ui-react';
 import RestaurantSelect from '../../components/customers/SelectComponents/RestaurantSelect.js'
 import LocationSelect from '../../components/customers/SelectComponents/LocationSelect.js'
 import Menu from '../../components/customers/Menu/Menu.js'
@@ -28,6 +28,7 @@ class CustomerDashboard extends React.Component {
             recentLocationOptions: [],
             refreshReview: 0,
             promotions: [],
+            check: false,
             foodCategories: [
                 'Singaporean'
             ],
@@ -106,6 +107,14 @@ class CustomerDashboard extends React.Component {
             [key]: temp
         })
         this.changeCustomerLocation(this.state.recentLocationOptions[id].title)
+    }
+
+    toggleFoodCheck = () => {
+        var check = this.state.check
+        this.setState({
+            check: !check
+        })
+        console.log(this.state.check)
     }
 
     submitOrder = (netReward) => {
@@ -337,28 +346,32 @@ class CustomerDashboard extends React.Component {
 
         return (
             <div>
-                <Card.Header>
-                    <Header style={headerStyle}><i>Food Categories</i></Header>
-                </Card.Header>
-                <Card.Content>
-                    <FoodCategories handleCategorySelection={this.handleCategorySelection} />
-                </Card.Content>
+                <Card color='purple'>
+                    <Card.Header>
+                        <Header style={headerStyle}><i>Select Restaurant</i></Header>
+                    </Card.Header>
+                    <Card.Content>
+                        <RestaurantSelect check={this.state.check} foodCategories={this.state.foodCategories} whenselect={this.onSelectRestaurant} />
+                        <br></br>
+                        <Radio label='Enable search by Food'
+                            toggle
+                            onChange={this.toggleFoodCheck}
+                            checked={this.state.check} />
+                        <h3>Choose your category:</h3>
+                        <FoodCategories handleCategorySelection={this.handleCategorySelection} />
+                        <br></br>
+                    </Card.Content>
+                </Card>
+
                 <br></br>
-                <br></br>
-                <Card.Header>
-                    <Header style={headerStyle}><i>Select Restaurant</i></Header>
-                </Card.Header>
-                <Card.Content>
-                    <RestaurantSelect foodCategories={this.state.foodCategories} whenselect={this.onSelectRestaurant} />
-                </Card.Content>
-                <br></br>
-                <br></br>
-                <Card.Header>
-                    <Header style={headerStyle}><i>Select Location</i></Header>
-                </Card.Header>
-                <Card.Content>
-                    <LocationSelect whenselect={this.onSelectLocation} />
-                </Card.Content>
+                <Card color='orange'>
+                    <Card.Header>
+                        <Header style={headerStyle}><i>Select Location</i></Header>
+                    </Card.Header>
+                    <Card.Content>
+                        <LocationSelect whenselect={this.onSelectLocation} />
+                    </Card.Content>
+                </Card>
             </div>
         )
     }
