@@ -215,10 +215,11 @@ def sortingKey(x):
 timeArray.sort(key=sortingKey)
 # print(timeArray)
 
-runningVariable = 0
-for i in range(0, 3000):
+runningVariable = 1
+# for i in range(0, 3000):
+while runningVariable <= 5000:
     # orderId
-    orderId = i
+    # orderId = i
 
     # Get the time required
     # random_number_of_days = random.randrange(days_between_dates)
@@ -308,15 +309,12 @@ for i in range(0, 3000):
     multipleContainsFood = []
     fee = 0
     for food in menu:
-        dice = randint(0,1)
+        dice = randint(0,3)
         if dice:
             foodArray = food.split(',')
             review = generateRandomReview(foodArray[0])
-            # print("FoodArray: ", foodArray)
-            # print("Review: ", review)
-            #foodName, avail, limit, price
             foodName = foodArray[0]
-            dice2 = randint(0, 10) / 100 # percentage
+            dice2 = randint(10, 70) / 100 # percentage
             amount = round(dice2 * int(foodArray[1])) # in integer
             if (amount == 0):
                 amount = 1

@@ -9,28 +9,42 @@ from dateutil.relativedelta import relativedelta  # $ pip install python-dateuti
 import random
 from random import seed
 from random import randint
+import sys
 
 bcrypt = Bcrypt()
 
 # Choose one for loop to run, comment the other
 
-# for i in range(0, 300):
-#         key = i
-#         username = "customer" + str(key)
-#         firstName = "customer"
-#         lastName = str(key)
-#         phoneNumber = key * 123456
-#         password = username
-#         now = str(datetime.now()).split(' ')[0]
-#         hash = bcrypt.generate_password_hash(password).decode()
-#         # print(hash)
-#         user = [str(username), str(hash), str(firstName), str(lastName), str(phoneNumber), str(now)]
-#         print(','.join(user))
+customers = []
+f = open("./customernames.txt", "r")
+f1 = f.readlines()
+for x in f1:
+    c = x.rstrip().split(' ')
+    if c in customers:
+        c[0] = c[0] + "n"
+        print(c)
+    customers.append(c)
 
+print(customers)
 
-for i in range(0, 300):
-        key = i
-        username = "customer" + str(key)
+runningVariable = 1
+for name in customers:
+        username = name[0]
+        firstName = "customer"
+        lastName = "customer"
+        phoneNumber = runningVariable * 123456
+        password = username
+        now = str(datetime.now()).split(' ')[0]
+        hash = bcrypt.generate_password_hash(password).decode()
+        # print(hash)
+        user = [str(username), str(hash), str(firstName), str(lastName), str(phoneNumber), str(now)]
+        print(','.join(user))
+        runningVariable += 1
+
+print("End of users")
+
+for name in customers:
+        username = name[0]
         payment = ['Cash', 'Mastercard', 'Visa']
         selectedPayment = random.choice(payment)
         rewardpoint = randint(0,2000)
