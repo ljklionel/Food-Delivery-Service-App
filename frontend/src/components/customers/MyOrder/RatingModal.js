@@ -91,8 +91,6 @@ class RatingModal extends Component {
     render() {
         var content
         const list = this.state.ratingList
-        console.log(this.state.ratingList)
-        console.log(this.state.modalOpen)
         if (this.state.isLoading) {
             content = null
         } else {

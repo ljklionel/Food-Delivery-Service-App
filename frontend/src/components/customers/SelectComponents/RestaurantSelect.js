@@ -10,7 +10,6 @@ class RestaurantSelect extends Component {
 
     handleResultSelect = (e, { result }) => {
         this.setState({ value: '' })
-        console.log(typeof (result.title))
         if (result.title.includes("[")) {
             result.title = result.title.split("[")[1].split("]")[0]
         }
@@ -19,8 +18,6 @@ class RestaurantSelect extends Component {
 
     handleSearchChange = (e, { value }) => {
         this.setState({ isLoading: true, value })
-        console.log("Props.foodcategories: ", this.props.foodCategories)
-
         myAxios.post('food_and_restaurants_filtered', {
             keyword: value,
             foodCategories: this.props.foodCategories,
@@ -28,7 +25,6 @@ class RestaurantSelect extends Component {
         })
             .then(response => {
                 console.log(response);
-                console.log("type of ", typeof(response.data.result))
                 if (this.state.value.length < 1) {
                     this.setState(initialState)
                 } else {
@@ -52,18 +48,10 @@ class RestaurantSelect extends Component {
                         })
                         i++
                     }
-
-                    // response.data.result.forEach(element => {
-                    //     res.push({
-                    //         'title': element[0],
-                    //         'description': element[0]
-                    //     })
-                    // });
                     this.setState({
                         isLoading: false,
                         results: res
                     })
-                    console.log(this.state.results)
                 }
             })
             .catch(error => {

@@ -59,20 +59,17 @@ for x in f1:
 sellsDict = {}
 for x in sells:
     if sellsDict.get(x[1]) is not None: # May be []
-        # rname, food, avail, maxLimit, price
         sellsDict[x[1]].append(x[0] + "," + x[2] + "," + x[3] + "," + x[4])
     else:
         sellsDict[x[1]] = []
         sellsDict[x[1]].append(x[0] + "," + x[2] + "," + x[3] + "," + x[4])
 
-# fname,rname,avail,maxLimit,price
 for x in restaurants:
     if sellsDict.get(x[0]) is not None: # May be []
         sellsDict[x[0]].append(x[1])
     else:
         x = "read the string: rname from csv file"
 
-# print(sellsDict)
 
 f = open("../csv/full_time_sched.csv", "r")
 f1 = f.readlines()
@@ -218,7 +215,7 @@ def sortingKey(x):
 timeArray.sort(key=sortingKey)
 # print(timeArray)
 
-
+runningVariable = 0
 for i in range(0, 3000):
     # orderId
     orderId = i
@@ -324,7 +321,7 @@ for i in range(0, 3000):
             if (amount == 0):
                 amount = 1
             totalPrice = amount * float(foodArray[3])
-            containsfood = [str(amount), review, foodName, str(orderId)]
+            containsfood = [str(amount), review, foodName, str(runningVariable)]
             multipleContainsFood.append(containsfood)
             # print(containsfood)
             fee += totalPrice
@@ -338,9 +335,11 @@ for i in range(0, 3000):
         containsFoodCsv.append(containsfood)
     fee = round(fee * 1.2, 2) # 20% 
     # containsfood = [qty, review, fname, orderid]
+    # order = [str(orderId), payment, str(randint(1, 5)), location, str(fee), timestamp, departTime1, arriveTime, departTime2, deliveryTime, deliveryRider[0], customerName, restaurant]
 
-    order = [str(orderId), payment, str(randint(1, 5)), location, str(fee), timestamp, departTime1, arriveTime, departTime2, deliveryTime, deliveryRider[0], customerName, restaurant]
+    order = [payment, str(randint(1, 5)), location, str(fee), timestamp, departTime1, arriveTime, departTime2, deliveryTime, deliveryRider[0], customerName, restaurant]
     print(','.join(order))
+    runningVariable += 1
 
 # orderid,paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname
 # quantity,review,fname,orderid

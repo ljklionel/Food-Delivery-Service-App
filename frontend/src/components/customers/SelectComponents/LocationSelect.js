@@ -21,7 +21,6 @@ class LocationSelect extends Component {
             }
         })
             .then(response => {
-                console.log(response);
                 if (this.state.value.length < 1) {
                     this.setState(initialState)
                 } else {

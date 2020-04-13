@@ -23,7 +23,6 @@ class OrderModal extends Component {
 
 
     handleOpen = () => {
-        console.log("Order details: ", this.state.orderDetails)
         this.setState({
             modalOpen: true,
         })
