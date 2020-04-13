@@ -84,7 +84,7 @@ class MyOrders extends Component {
                 <Table basic='very' celled>
                     <Table.Header>
                         <Table.Row>
-                            <Table.HeaderCell>View Orders</Table.HeaderCell>
+                            <Table.HeaderCell><p align='middle'>View Orders</p></Table.HeaderCell>
                             <Table.HeaderCell>Restaurant</Table.HeaderCell>
                             <Table.HeaderCell>Done</Table.HeaderCell>
                         </Table.Row>

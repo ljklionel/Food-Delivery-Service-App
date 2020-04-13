@@ -77,13 +77,13 @@ class OrderModal extends Component {
                             {this.state.orderDetails[0][6] == null ? '' : this.state.orderDetails[0][6].split(' ')[4]}
                         </Table.Cell>
                         <Table.Cell>
-                            {this.state.orderDetails[0][7] == null ? '' : this.state.orderDetails[0][6].split(' ')[4]}
+                            {this.state.orderDetails[0][7] == null ? '' : this.state.orderDetails[0][7].split(' ')[4]}
                         </Table.Cell>
                         <Table.Cell>
-                            {this.state.orderDetails[0][8] == null ? '' : this.state.orderDetails[0][6].split(' ')[4]}
+                            {this.state.orderDetails[0][8] == null ? '' : this.state.orderDetails[0][8].split(' ')[4]}
                         </Table.Cell>
                         <Table.Cell>
-                            {this.state.orderDetails[0][9] == null ? '' : this.state.orderDetails[0][6].split(' ')[4]}
+                            {this.state.orderDetails[0][9] == null ? '' : this.state.orderDetails[0][9].split(' ')[4]}
                         </Table.Cell>
 
                     </Table.Row>

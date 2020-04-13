@@ -67,9 +67,9 @@ class RestaurantReviews extends Component {
                     <Table basic='very' celled>
                         <Table.Header>
                             <Table.Row>
-                                <Table.HeaderCell>Reviewer</Table.HeaderCell>
-                                <Table.HeaderCell>Item</Table.HeaderCell>
-                                <Table.HeaderCell>Order Date</Table.HeaderCell>
+                                <Table.HeaderCell><p align='middle'>Reviewer</p></Table.HeaderCell>
+                                <Table.HeaderCell><p>Item</p></Table.HeaderCell>
+                                {/* <Table.HeaderCell>Order Date</Table.HeaderCell> */}
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
@@ -81,9 +81,9 @@ class RestaurantReviews extends Component {
                                     <Table.Cell>
                                         {item[0]}
                                     </Table.Cell>
-                                    <Table.Cell>
+                                    {/* <Table.Cell>
                                         {item[3].substring(5, 16)}
-                                    </Table.Cell>
+                                    </Table.Cell> */}
                                 </Table.Row>
                             ))}
                         </Table.Body>

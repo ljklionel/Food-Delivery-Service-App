@@ -150,7 +150,7 @@ CREATE TABLE Customers (
 );
 
 CREATE TABLE Locations (
-    location VARCHAR(256) PRIMARY KEY
+    location VARCHAR(32) PRIMARY KEY
 );
 
 CREATE TABLE Orders (
@@ -206,6 +206,10 @@ INSERT INTO FDSManagers(username) VALUES ('man');
 \COPY WeeklyWorkSched(username,workday,starthour,endhour) FROM './csv/part_time_sched.csv' CSV HEADER;
 \COPY MonthlyWorkSched(username,workday,starthour,endhour) FROM './csv/full_time_sched.csv' CSV HEADER;
 \COPY FDSPromotions(promoId, promoDescription, startDate, endDate, discount, createdBy) FROM './csv/FDSpromotions.csv' CSV HEADER;
+-- \COPY Orders(orderid,paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/correctorder.csv' CSV HEADER;
+\COPY Orders(orderid,paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
+\COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
+
                           
 ------ TRIGGERS ------
 

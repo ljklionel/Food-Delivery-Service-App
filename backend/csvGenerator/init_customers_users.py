@@ -14,13 +14,12 @@ bcrypt = Bcrypt()
 
 # Choose one for loop to run, comment the other
 
-# for i in range(0, 10):
-#     for j in range(0, 10):
-#         key = i * 10 + j
+# for i in range(0, 300):
+#         key = i
 #         username = "customer" + str(key)
 #         firstName = "customer"
 #         lastName = str(key)
-#         phoneNumber = key * 12345
+#         phoneNumber = key * 123456
 #         password = username
 #         now = str(datetime.now()).split(' ')[0]
 #         hash = bcrypt.generate_password_hash(password).decode()
@@ -29,11 +28,10 @@ bcrypt = Bcrypt()
 #         print(','.join(user))
 
 
-for i in range(0, 10):
-    for j in range(0, 10):
-        key = i * 10 + j
+for i in range(0, 300):
+        key = i
         username = "customer" + str(key)
         payment = ['Cash', 'Mastercard', 'Visa']
         selectedPayment = random.choice(payment)
-        rewardpoint = randint(0,999)
+        rewardpoint = randint(0,2000)
         print(username + ',' + selectedPayment + ',' +str(rewardpoint))
