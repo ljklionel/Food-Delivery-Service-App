@@ -55,6 +55,7 @@ class ViewStats extends Component {
         if (this.props.isPartTime) {
             myAxios.get('get_part_time_sched').then(response => {
                 if (response.data.result !== null) {
+                    console.log(response.data.result)
                     this.setState(prevState => {
                         return {
                             ...prevState,

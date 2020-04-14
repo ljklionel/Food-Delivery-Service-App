@@ -335,9 +335,6 @@ class PartTimeInfo extends Component {
         this.setState(prevState => {
             return {
                 ...prevState,
-                day: 0,
-                dayString: '',
-                time: [],
                 noteList: [...this.state.noteList, note],
                 daysRecorded: [...this.state.daysRecorded, this.state.day],
                 totalHours: this.state.totalHours + size

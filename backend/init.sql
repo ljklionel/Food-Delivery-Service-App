@@ -289,54 +289,54 @@ CREATE OR REPLACE FUNCTION
 at_least_five_check()
     RETURNS TRIGGER AS $$
 DECLARE
-    total INTEGER;
-    workerNum INTEGER;
-    isFullTime BOOLEAN;
+    ftNum INTEGER := 0;
+    ptNum INTEGER;
 BEGIN
-    SELECT 
-        (SELECT COUNT(*)
-        FROM WeeklyWorkSched)
-        +
-        (SELECT COUNT(*)
-        FROM MonthlyWorkSched)
-    INTO total;
-    
-    IF NEW.endHour - NEW.startHour = 9 THEN isFullTime := true;
-    ELSE isFullTime := false;
-    END IF;
-
-    IF isFullTime = true THEN 
-        CREATE TEMP TABLE IF NOT EXISTS FullTimeCountAtHour AS 
-            SELECT COUNT(*) AS ftNum
-                FROM MonthlyWorkSched MWS
-                WHERE MWS.startHour = NEW.startHour
-                AND MWS.endHour = NEW.endHour
-                and MWS.workDay = NEW.workDay;
-    ELSE
-        CREATE TEMP TABLE IF NOT EXISTS FullTimeCountAtHour AS 
-            SELECT COUNT(*) AS ftNum
-                FROM MonthlyWorkSched MWS natural join FullTimeShifts FS
-                WHERE MWS.workDay = NEW.workDay
-                AND MWS.startHour <= NEW.startHour
-                AND MWS.endHour >= NEW.endHour 
-                AND FS.breakStart NOT BETWEEN NEW.startHour AND NEW.endHour;
-    END IF;
-
-    CREATE TEMP TABLE IF NOT EXISTS PartTimeCountAtHour AS 
-        SELECT COUNT(*) AS ptNum
-            FROM WeeklyWorkSched WWS
-            WHERE WWS.workDay = NEW.workDay
-            AND (WWS.startHour <= NEW.startHour
-                AND WWS.endHour >= NEW.endHour);
-
-    SELECT ftNum + ptNum INTO workerNum
-        FROM FullTimeCountAtHour, PartTimeCountAtHour;
-    
-    IF total > 420 AND workerNum < 5 THEN
-        RAISE EXCEPTION 'There is less than 5 workers at time % with workerNum %', NEW.startHour, workerNum;
-    END IF;
-    DROP TABLE FullTimeCountAtHour;
-    DROP TABLE PartTimeCountAtHour;
+    FOR i IN 1..7 LOOP
+        FOR j IN 10..21 LOOP
+            -- Count the number of workers for that work day in full time schedule for old value
+            SELECT ftNum + COUNT(*) INTO ftNum
+                FROM MonthlyWorkSched MWS NATURAL JOIN FullTimeShifts FTS
+                WHERE i = MWS.workDay
+                AND j >= MWS.startHour
+                AND j <= MWS.endHour
+                AND j <> FTS.breakStart;
+            SELECT ftNum + COUNT(*) INTO ftNum
+                FROM MonthlyWorkSched MWS NATURAL JOIN FullTimeShifts FTS
+                WHERE (i+7-1)%8 = MWS.workDay
+                AND j >= MWS.startHour
+                AND j <= MWS.endHour
+                AND j <> FTS.breakStart;
+            SELECT ftNum + COUNT(*) INTO ftNum
+                FROM MonthlyWorkSched MWS NATURAL JOIN FullTimeShifts FTS
+                WHERE (i+7-2)%8 = MWS.workDay
+                AND j >= MWS.startHour
+                AND j <= MWS.endHour
+                AND j <> FTS.breakStart;
+            SELECT ftNum + COUNT(*) INTO ftNum
+                FROM MonthlyWorkSched MWS NATURAL JOIN FullTimeShifts FTS
+                WHERE (i+7-3)%8 = MWS.workDay
+                AND j >= MWS.startHour
+                AND j <= MWS.endHour
+                AND j <> FTS.breakStart;
+            SELECT ftNum + COUNT(*) INTO ftNum
+                FROM MonthlyWorkSched MWS NATURAL JOIN FullTimeShifts FTS
+                WHERE (i+7-4)%8 = MWS.workDay
+                AND j >= MWS.startHour
+                AND j <= MWS.endHour
+                AND j <> FTS.breakStart;
+            -- COunt the number of workers for that work day in part time schedule for old value
+            SELECT COUNT(*) INTO ptNum
+                FROM WeeklyWorkSched WWS
+                WHERE i = WWS.workDay
+                AND j >= WWS.startHour
+                AND j <= WWS.endHour;
+            -- if same workday, check for same timing. if both same, check if total count is less than 4.
+            IF ftNum + ptNum < 5 THEN
+                RAISE EXCEPTION 'There is less than 5 workers for this hour %', i;
+            END IF;
+        END LOOP;
+    END LOOP;
     RETURN NULL;
 END;
 $$LANGUAGE plpgsql;
@@ -385,7 +385,7 @@ check_total_hours_trigger();
 DROP TRIGGER IF EXISTS 
 check_total_hours_trigger ON WeeklyWorkSched CASCADE;
 CREATE CONSTRAINT TRIGGER at_least_five_check
-AFTER INSERT ON WeeklyWorkSched
+AFTER DELETE ON WeeklyWorkSched
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
 EXECUTE FUNCTION
@@ -395,7 +395,7 @@ at_least_five_check();
 DROP TRIGGER IF EXISTS 
 check_total_hours_trigger ON MonthlyWorkSched CASCADE;
 CREATE CONSTRAINT TRIGGER at_least_five_check
-AFTER INSERT ON MonthlyWorkSched
+AFTER DELETE ON MonthlyWorkSched
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
 EXECUTE FUNCTION

@@ -55,7 +55,7 @@ class JoinNow extends Component {
                         onClick={() => this.handleOpenPartTimeInfo()}
                     >
                         <Image
-                            className="image"
+                            className="riderimage"
                             src={'/images/riderimage/parttime.svg'}
                         />
                         <h3 style={{ textAlign: 'center' }}>Part Timer</h3>
@@ -68,7 +68,7 @@ class JoinNow extends Component {
                         onClick={() => this.handleOpenFullTimeInfo()}
                     >
                         <Image
-                            className="image"
+                            className="riderimage"
                             src={'/images/riderimage/fulltime.svg'}
                         />
                         <h3 style={{ textAlign: 'center' }}>Full Timer</h3>
