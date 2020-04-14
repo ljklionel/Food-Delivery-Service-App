@@ -19,13 +19,11 @@ class MyOrders extends Component {
     }
 
     autoUpdate = () => {
-        setInterval( () => {this.updateOrders(this.props.currentCustomer)}, 2000)
-        console.log("UpdatedOrders")
+        setInterval(() => { this.updateOrders(this.props.currentCustomer) }, 5000)
     }
 
 
     updateOrders(currentCustomer) {
-        console.log("Updating orders")
         myAxios.get('/customer_orders', {
             params: {
                 currentCustomer: currentCustomer,
@@ -34,7 +32,6 @@ class MyOrders extends Component {
             }
         })
             .then(response => {
-                console.log("Response from updatecustomer: ", response)
                 var ordersGroupedByID = []
                 var i;
                 var prevOid = -1
@@ -84,7 +81,7 @@ class MyOrders extends Component {
                 <Table basic='very' celled>
                     <Table.Header>
                         <Table.Row>
-                            <Table.HeaderCell>View Orders</Table.HeaderCell>
+                            <Table.HeaderCell><p align='middle'>View Orders</p></Table.HeaderCell>
                             <Table.HeaderCell>Restaurant</Table.HeaderCell>
                             <Table.HeaderCell>Done</Table.HeaderCell>
                         </Table.Row>
@@ -108,11 +105,14 @@ class MyOrders extends Component {
             );
         }
         return (
-            <Card color='yellow' style={{ maxWidth: 250 }}>
+            <Card color='blue' style={{ maxWidth: 250 }}>
                 <Card.Content>
                     <Card.Header>
                         My Orders
-                </Card.Header>
+                    </Card.Header>
+                    <Card color='blue'>
+                        {this.state.currentCustomer}
+                    </Card>
                 </Card.Content>
                 <Card.Content>
                     {content}

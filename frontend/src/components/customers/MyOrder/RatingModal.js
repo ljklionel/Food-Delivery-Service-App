@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Modal, Form, Button, Table } from 'semantic-ui-react';
+import { Modal, Rating, Button, Table } from 'semantic-ui-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import myAxios from '../../../webServer.js'
@@ -12,10 +12,6 @@ class RatingModal extends Component {
             modalOpen: false,
             rating: null,
             ratingList: [
-                {
-                    id: 0,
-                    selected: false,
-                },
                 {
                     id: 1,
                     selected: false,
@@ -46,7 +42,7 @@ class RatingModal extends Component {
             x.selected = false
         )
         let temp = this.state["ratingList"]
-        temp[id].selected = !temp[id].selected
+        temp[id - 1].selected = !temp[id - 1].selected
         this.setState({
             ["ratingList"]: temp
         })
@@ -89,11 +85,12 @@ class RatingModal extends Component {
         })
     }
 
+    handleRate = (e, { rating, maxRating }) =>
+        this.setState({ rating, maxRating })
+
     render() {
         var content
         const list = this.state.ratingList
-        console.log(this.state.ratingList)
-        console.log(this.state.modalOpen)
         if (this.state.isLoading) {
             content = null
         } else {
@@ -101,7 +98,7 @@ class RatingModal extends Component {
         }
 
         return (
-            <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Rate this delivery</Button>}
+            <Modal trigger={<Button color='blue' onClick={this.handleOpen} fluid basic>Rate this delivery</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
                 <Modal.Header>Restaurant: {this.props.restaurant}</Modal.Header>
@@ -112,11 +109,12 @@ class RatingModal extends Component {
                     <br></br>
                     <br></br>
                     {content}
-                    {list.map((item) => (
+                    {/* {list.map((item) => (
                         <li style={{ width: "100%" }} className="dd-list-item" key={item.title} onClick={() => this.toggleItem(item.id)}>
                             {item.id} {item.selected && <FontAwesomeIcon icon={faCheck} />}
                         </li>
-                    ))}
+                    ))} */}
+                    <Rating icon='star' maxRating={5} onRate={this.handleRate} />
                 </Modal.Content>
 
                 <Modal.Actions>

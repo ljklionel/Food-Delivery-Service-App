@@ -31,7 +31,6 @@ class RestaurantReviews extends Component {
             }
         })
             .then(response => {
-                console.log("Response within updateReviews: ", response);
                 this.setState({
                     restaurantReviews: response.data.result,
                     isLoading: false
@@ -48,13 +47,13 @@ class RestaurantReviews extends Component {
             header = (
                 <Card.Content>
                     <Card.Header>Reviews</Card.Header>
-                    <Card>Choose a restaurant</Card>
+                    <Card color='red' >Choose a restaurant</Card>
                 </Card.Content>)
         } else {
             header = (
                 <Card.Content>
                     <Card.Header>Reviews</Card.Header>
-                    <Card>{this.props.restaurant}</Card>
+                    <Card color='red' >{this.props.restaurant}</Card>
                 </Card.Content>)
         }
         if (this.state.isLoading) {
@@ -67,9 +66,9 @@ class RestaurantReviews extends Component {
                     <Table basic='very' celled>
                         <Table.Header>
                             <Table.Row>
-                                <Table.HeaderCell>Reviewer</Table.HeaderCell>
-                                <Table.HeaderCell>Item</Table.HeaderCell>
-                                <Table.HeaderCell>Order Date</Table.HeaderCell>
+                                <Table.HeaderCell><p align='middle'>Reviewer</p></Table.HeaderCell>
+                                <Table.HeaderCell><p>Item</p></Table.HeaderCell>
+                                {/* <Table.HeaderCell>Order Date</Table.HeaderCell> */}
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
@@ -81,9 +80,9 @@ class RestaurantReviews extends Component {
                                     <Table.Cell>
                                         {item[0]}
                                     </Table.Cell>
-                                    <Table.Cell>
+                                    {/* <Table.Cell>
                                         {item[3].substring(5, 16)}
-                                    </Table.Cell>
+                                    </Table.Cell> */}
                                 </Table.Row>
                             ))}
                         </Table.Body>

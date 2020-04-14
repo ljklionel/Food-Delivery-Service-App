@@ -78,7 +78,7 @@ class ViewPromoModal extends Component {
             )
         }
         return (
-        <Modal trigger={<Button onClick={this.handleOpen} fluid basic>View All</Button>}
+        <Modal trigger={<Button color='yellow' onClick={this.handleOpen} fluid basic>View All</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
             <Modal.Header>View Promotions</Modal.Header>
