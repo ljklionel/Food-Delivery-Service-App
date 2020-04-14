@@ -8,7 +8,8 @@ class ViewRiderModal extends Component {
         this.state = {
             isLoading: true,
             contents: [],
-            modalOpen: false
+            modalOpen: false,
+            currentRider: props.rider
         }
     }
 
@@ -19,7 +20,7 @@ class ViewRiderModal extends Component {
     componentDidMount() {
         myAxios.get('/current_rider_summary', {
             params: {
-                customer: this.state.currentRider
+                rider: this.state.currentRider
             }
           })
           .then(response => {
@@ -81,23 +82,23 @@ class ViewRiderModal extends Component {
                             {item['rider_orders']}
                         </Table.Cell>
                         <Table.Cell>
-                            {item['hours_worked'] === null ?
+                            {item['hours_worked'] == null ?
                                     0 : item['hours_worked']}
                         </Table.Cell>
 						<Table.Cell>
-                            ${item['salary'] === null ?
-                                    0 : item['salary'].toFixed(1)}
+                            ${item['salary'] == null ?
+                                    0 : item['salary'].toFixed(2)}
                         </Table.Cell>
 						<Table.Cell>
-                            {item['delivery_time'] === null ?
+                            {item['delivery_time'] == null ?
                                     0 : item['delivery_time'].toFixed(1)} minutes
                         </Table.Cell>
 						<Table.Cell>
-                            {item['num_rating'] === null ?
-                                    0 : item['num_rating'].toFixed(0)}
+                            {item['num_rating'] == null ?
+                                    0 : item['num_rating']}
                         </Table.Cell>
 						<Table.Cell>
-                            {item['avg_rating'] === null ?
+                            {item['avg_rating'] == null ?
                                     0 : item['avg_rating'].toFixed(1)}
                         </Table.Cell>
                     </Table.Row>

@@ -24,7 +24,7 @@ class CustomerSummary extends Component {
         .then(response => {
           console.log(response);
           this.setState({
-            monthlySummary: response.data.result,
+            monthlySummary: response.data.result[0],
             isLoading: false
           })
         })
@@ -51,7 +51,7 @@ class CustomerSummary extends Component {
                 </Statistic>
                 <Statistic>
                 <Statistic.Value>${this.state.monthlySummary['customer_orders_costs'] == null ?
-                                0 : this.state.monthlySummary['customer_orders_costs'].toFixed(1)}</Statistic.Value>
+                                0 : this.state.monthlySummary['customer_orders_costs'].toFixed(2)}</Statistic.Value>
                 <Statistic.Label>Total Costs</Statistic.Label>
                 </Statistic>
             </Statistic.Group>
@@ -61,8 +61,8 @@ class CustomerSummary extends Component {
 	render() {
         if (this.state.isLoading) {
             return null// <Loader active/>
-		}
-		
+    }
+  
 		return (
 		<Card color='teal' style={{marginLeft: '10%'}}>
 			<Card.Content>

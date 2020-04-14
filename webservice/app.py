@@ -201,7 +201,7 @@ def get_restaurant_summary():
     now = datetime.now()
     year, month = now.year, now.month
     start_time = datetime(year, month, 1)
-    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
     conn = get_db()
     # number of completed orders and total cost of all completed orders
     cursor = conn.cursor()
@@ -731,7 +731,7 @@ def get_locations():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT location FROM Locations WHERE location ILIKE '%s%%';" % keyword)
+        "SELECT location FROM Locations WHERE location ILIKE '%s%%' ORDER BY location ASC;" % keyword)
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
@@ -900,7 +900,7 @@ def filterCategories(allFood, foodCategories):
 def get_all_customers():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT username FROM Customers;")
+    cursor.execute("SELECT username FROM Customers ORDER BY username ASC;")
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
@@ -912,7 +912,7 @@ def get_customers():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT username FROM Customers WHERE username ILIKE '%s%%';" % keyword)
+        "SELECT username FROM Customers WHERE username ILIKE '%s%%' ORDER BY username ASC;" % keyword)
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
@@ -924,7 +924,7 @@ def get_riders():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT username FROM DeliveryRiders WHERE username ILIKE '%s%%';" % keyword)
+        "SELECT username FROM DeliveryRiders WHERE username ILIKE '%s%%' ORDER BY username ASC;" % keyword)
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
@@ -935,7 +935,7 @@ def get_all_customer_summary():  # TODO new customer of the month -yuting
     now = datetime.now()
     year, month = now.year, now.month
     start_time = datetime(year, month, 1)
-    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
     conn = get_db()
     result = []
     for i in range(0, 25):  # show at most the last 2 years of summary
@@ -971,7 +971,7 @@ def get_customer_summary():
     now = datetime.now()
     year, month = now.year, now.month
     start_time = datetime(year, month, 1)
-    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
     conn = get_db()
     result = []
     for i in range(0, 25):  # show at most the last 2 years of summary
@@ -979,12 +979,12 @@ def get_customer_summary():
         cur_end_time = end_time - relativedelta(months=i)
         # of customer's orders
         cursor = conn.cursor()
-        cursor.execute("SELECT count(*) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s",
+        cursor.execute("SELECT count(*) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s ;",
                        (username, cur_start_time, cur_end_time))
         customer_orders = cursor.fetchone()[0]
         # total cost of all of customer's orders
         cursor = conn.cursor()
-        cursor.execute("SELECT sum(fee) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s",
+        cursor.execute("SELECT sum(fee) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s ;",
                        (username, cur_start_time, cur_end_time))
         customer_orders_costs = cursor.fetchone()[0]
         res = {'year': cur_start_time.year, 'month': cur_start_time.month,
@@ -996,6 +996,7 @@ def get_customer_summary():
 @app.route("/current_location_summary")
 def get_location_summary():
     location = request.args.get('location')
+    print(location)
     now = datetime.now()
     start_time = datetime(now.year, now.month, now.day, now.hour)
     end_time = start_time + timedelta(hours=1) - timedelta(seconds=1)
@@ -1009,6 +1010,7 @@ def get_location_summary():
         cursor.execute("SELECT count(*) FROM Orders WHERE location = %s AND orderTime BETWEEN %s AND %s;",
                        (location, cur_start_time, cur_end_time))
         location_orders = cursor.fetchone()[0]
+        print(location_orders)
         res = {'day': cur_start_time, 'hour': cur_start_time.hour,
                'location_orders': location_orders}
         result.append(res)
@@ -1017,11 +1019,11 @@ def get_location_summary():
 
 @app.route("/current_rider_summary")
 def get_rider_summary():
-    username = request.args.get('username')
+    username = request.args.get('rider')
     now = datetime.now()
     year, month = now.year, now.month
     start_time = datetime(year, month, 1)
-    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
     conn = get_db()
     result = []
     for i in range(0, 25):  # show at most the last 2 years of summary
@@ -1037,7 +1039,7 @@ def get_rider_summary():
         cursor.execute(
             "SELECT sum(endHour - startHour) FROM MonthlyWorkSched WHERE username = %s;", (username,))
         hours_worked = cursor.fetchone()[0]
-        if not hours_worked:
+        if hours_worked is None:
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT sum(endHour - startHour) FROM WeeklyWorkSched WHERE username = %s;", (username,))
@@ -1059,7 +1061,7 @@ def get_rider_summary():
         num_rating = cursor.fetchone()[0]
         # average rating
         cursor = conn.cursor()
-        cursor.execute("SELECT avg(rating) FROM Orders where riderUsername = %s AND deliveryTime BETWEEN %s AND %s",
+        cursor.execute("SELECT sum(rating)/count(rating) FROM Orders where riderUsername = %s AND deliveryTime BETWEEN %s AND %s",
                        (username, cur_start_time, cur_end_time))
         avg_rating = cursor.fetchone()[0]
 
