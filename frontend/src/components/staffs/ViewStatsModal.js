@@ -7,7 +7,7 @@ class ViewStatsModal extends Component {
         super(props)
         this.state = {
             isLoading: true,
-            promotions: [],
+            stats: [],
             currentRestaurant: props.restaurant,
             modalOpen: false
         }
@@ -25,8 +25,28 @@ class ViewStatsModal extends Component {
           })
           .then(response => {
             console.log(response);
+            var res = []
+            var orders_and_fee = response.data.result['orders_and_fee']
+            var top_five = response.data.result['top_five']
+            var j = 0
+            for (var i = 0; i < orders_and_fee.length; ++i) {
+                var data = {}
+                data['year'] = orders_and_fee[i][2]
+                data['month'] = orders_and_fee[i][3]
+                data['completed_orders'] = orders_and_fee[i][0]
+                data['total_cost'] = orders_and_fee[i][1]
+                data['top_five'] = ''
+                for (var k = 0; j < top_five.length && top_five[j][2] == data['year'] && top_five[j][3] == data['month']; ++j, ++k) {
+                    if (k < 5) {
+                        data['top_five'] += top_five[j][1] + ' (' + top_five[j][0] + '), '
+                    }
+                }
+                data['top_five'] = data['top_five'].substring(0, data['top_five'].length-2)
+                res.push(data)
+            }
+            console.log(res)
             this.setState({
-              promotions: response.data.result,
+              stats: res,
               isLoading: false
             })
           })
@@ -43,10 +63,10 @@ class ViewStatsModal extends Component {
         if (this.state.isLoading) {
             content = null
         } else {
-            const promos = this.state.promotions
+            const stats = this.state.stats
             const first_month = []
-            for (let i = 0; i < promos.length; i++) {
-                if (i !== 0 && promos[i].year === promos[i-1].year) {
+            for (let i = 0; i < stats.length; i++) {
+                if (i !== 0 && stats[i].year === stats[i-1].year) {
                     first_month.push(false)
                 } else {
                     first_month.push(true)
@@ -65,7 +85,7 @@ class ViewStatsModal extends Component {
                 </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                {promos.map((item, i) => (
+                {stats.map((item, i) => (
                     <Table.Row key={item['year'] + '-' + item['month']}>
                         { first_month[i] ? 
                         (<Table.Cell rowSpan={item['month']}>
@@ -83,7 +103,7 @@ class ViewStatsModal extends Component {
                                     0 : item['total_cost'].toFixed(1)}
                         </Table.Cell>
                         <Table.Cell>
-                            {item['top_five'].map(x => x[0] + ' (' + x[1] + ')').join(', ')}
+                            {item['top_five']}
                         </Table.Cell>
                     </Table.Row>
                 ))}

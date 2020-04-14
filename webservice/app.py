@@ -179,8 +179,7 @@ def get_restaurant_items():
 @app.route("/restaurant_orders")
 @login_required
 def get_restaurant_orders():
-    rname, limit, offset = request.args.get(
-        'restaurant'), request.args.get('limit'), request.args.get('offset')
+    rname, limit, offset = request.args.get('restaurant'), request.args.get('limit'), request.args.get('offset')
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT fname, quantity, orderTime FROM Orders NATURAL JOIN ContainsFood " +
@@ -204,19 +203,16 @@ def get_restaurant_summary():
     start_time = datetime(year, month, 1)
     end_time = addMonths(start_time, 1) - timedelta(seconds=1)
     conn = get_db()
-    # number of completed orders
+    # number of completed orders and total cost of all completed orders
     cursor = conn.cursor()
-    cursor.execute("SELECT count(*) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+    cursor.execute("SELECT count(*), sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
                    (rname, start_time, end_time))
-    completed_orders = cursor.fetchone()[0]
-    # total cost of all completed orders
-    cursor = conn.cursor()
-    cursor.execute("SELECT sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
-                   (rname, start_time, end_time))
-    total_cost = cursor.fetchone()[0]
+    res = cursor.fetchone()
+    completed_orders = res[0]
+    total_cost = res[1]
     # top 5 favorite food items
     cursor = conn.cursor()
-    cursor.execute('SELECT fname, sum(quantity) FROM Orders NATURAL JOIN ContainsFood WHERE rname = %s AND deliveryTime BETWEEN %s AND %s GROUP BY fname ORDER BY sum(quantity) DESC LIMIT 5',
+    cursor.execute('SELECT fname, sum(quantity) FROM Orders O JOIN ContainsFood C ON rname = %s AND deliveryTime BETWEEN %s AND %s AND O.orderid = C.orderid GROUP BY fname ORDER BY sum(quantity) DESC LIMIT 5',
                    (rname, start_time, end_time))
     top_five = cursor.fetchall()
 
@@ -230,37 +226,31 @@ def get_restaurant_summary():
 def get_all_restaurant_summary():
     rname = request.args.get('restaurant')
 
-    now = datetime.now()
-    year, month = now.year, now.month
-    start_time = datetime(year, month, 1)
+    result = {}
     conn = get_db()
-    result = []
-    found = False
-    for i in range(24, -1, -1):  # show at most the last 2 years of summary
-        cur_start_time = start_time - relativedelta(months=i)
-        cur_end_time = cur_start_time + relativedelta(months=1) - relativedelta(seconds=1)
-        # number of completed orders
-        cursor = conn.cursor()
-        cursor.execute("SELECT count(*) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
-                       (rname, cur_start_time, cur_end_time))
-        completed_orders = cursor.fetchone()[0]
-        if not found and completed_orders == 0 and i != 0:
-            continue
-        found = True
-        # total cost of all completed orders
-        cursor = conn.cursor()
-        cursor.execute("SELECT sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
-                       (rname, cur_start_time, cur_end_time))
-        total_cost = cursor.fetchone()[0]
-        # top 5 favorite food items
-        cursor = conn.cursor()
-        cursor.execute('SELECT fname, sum(quantity) FROM Orders NATURAL JOIN ContainsFood WHERE rname = %s AND deliveryTime BETWEEN %s AND %s GROUP BY fname ORDER BY sum(quantity) DESC LIMIT 5',
-                       (rname, cur_start_time, cur_end_time))
-        top_five = cursor.fetchall()
-        res = {'year': cur_start_time.year, 'month': cur_start_time.month,
-               'completed_orders': completed_orders, 'total_cost': total_cost, 'top_five': top_five}
-        result.append(res)
-    result.reverse()
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT count(*), sum(fee), extract(year from deliveryTime), extract(mon from deliveryTime) " +
+        "FROM Orders " + 
+        "WHERE rname = %s " + 
+        "GROUP BY 3,4 "
+        "ORDER BY 3 DESC,4 DESC", (rname,))
+    result['orders_and_fee'] = cursor.fetchall()
+
+    cursor = conn.cursor()
+    cursor.execute(
+        "with Ranked as (" +
+            "SELECT *, rank() OVER (" + 
+                "PARTITION BY year, mon " +
+                "ORDER BY quantity DESC"
+            ") FROM (" +
+                "SELECT sum(quantity) as quantity, fname, extract(year from deliveryTime) as year, extract(month from deliveryTime) as mon " +
+                "FROM Orders O JOIN ContainsFood C ON rname = %s AND O.orderid = C.orderid " +
+                "GROUP BY 3,4,fname"
+            ") as FoodQuantities " + 
+        ") SELECT * FROM Ranked WHERE rank <= 5 ORDER BY year DESC, mon DESC, rank", (rname,))
+    result['top_five'] = cursor.fetchall()
+
     return ({'result': result}, 200)
 
 
