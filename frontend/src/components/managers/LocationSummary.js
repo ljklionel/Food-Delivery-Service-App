@@ -24,7 +24,7 @@ class LocationSummary extends Component {
         .then(response => {
           console.log(response);
           this.setState({
-            hourlySummary: response.data.result,
+            hourlySummary: response.data.result[0],
             isLoading: false
           });
         })

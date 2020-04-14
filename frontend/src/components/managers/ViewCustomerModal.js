@@ -8,6 +8,7 @@ class ViewCustomerModal extends Component {
         this.state = {
             isLoading: true,
             contents: [],
+            currentCustomer: props.customer,
             modalOpen: false
         }
     }
@@ -78,7 +79,7 @@ class ViewCustomerModal extends Component {
                         </Table.Cell>
                         <Table.Cell>
                             ${item['customer_orders_costs'] == null ?
-                                    0 : item['customer_orders_costs'].toFixed(1)}
+                                    0 : item['customer_orders_costs'].toFixed(2)}
                         </Table.Cell>
                     </Table.Row>
                 ))}

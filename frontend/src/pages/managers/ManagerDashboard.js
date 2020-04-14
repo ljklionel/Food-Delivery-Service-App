@@ -59,7 +59,7 @@ class ManagerDashboard extends React.Component {
         <div>
           <Header textAlign='left' style={{fontSize:'60px', paddingLeft:'5%'}}>{this.state.currentCustomer}</Header>
           <br/>
-            <CustomerSummary customer={this.state.currentcustomer}/>
+            <CustomerSummary customer={this.state.currentCustomer}/>
         </div>
       );
     }
