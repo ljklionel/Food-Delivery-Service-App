@@ -56,7 +56,7 @@ class ViewPromoModal extends Component {
                 </Table.Header>
                 <Table.Body>
                 {this.state.promotions.map((item) => (
-                    <Table.Row key={item[0]}>
+                    <Table.Row key={item[0]} disabled={(new Date(item[3]).getTime())<Date.now()} active={(new Date(item[2]).getTime() < Date.now()) && (Date.now() < new Date(item[3]).getTime())}>
                         <Table.Cell>
                             {item[0]}
                         </Table.Cell>

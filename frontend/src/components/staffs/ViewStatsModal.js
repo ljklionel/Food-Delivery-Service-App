@@ -83,7 +83,7 @@ class ViewStatsModal extends Component {
                                     0 : item['total_cost'].toFixed(1)}
                         </Table.Cell>
                         <Table.Cell>
-                            {item['top_five']}
+                            {item['top_five'].map(x => x[0] + ' (' + x[1] + ')').join(', ')}
                         </Table.Cell>
                     </Table.Row>
                 ))}

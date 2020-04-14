@@ -211,7 +211,7 @@ def get_restaurant_summary():
     completed_orders = cursor.fetchone()[0]
     # total cost of all completed orders
     cursor = conn.cursor()
-    cursor.execute("SELECT sum(price * quantity) FROM Orders NATURAL JOIN ContainsFood NATURAL JOIN Sells WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+    cursor.execute("SELECT sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
                    (rname, start_time, end_time))
     total_cost = cursor.fetchone()[0]
     # top 5 favorite food items
@@ -233,22 +233,23 @@ def get_all_restaurant_summary():
     now = datetime.now()
     year, month = now.year, now.month
     start_time = datetime(year, month, 1)
-    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
     conn = get_db()
     result = []
-    for i in range(0, 25):  # show at most the last 2 years of summary
+    found = False
+    for i in range(24, -1, -1):  # show at most the last 2 years of summary
         cur_start_time = start_time - relativedelta(months=i)
-        cur_end_time = end_time - relativedelta(months=i)
+        cur_end_time = cur_start_time + relativedelta(months=1) - relativedelta(seconds=1)
         # number of completed orders
         cursor = conn.cursor()
         cursor.execute("SELECT count(*) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
                        (rname, cur_start_time, cur_end_time))
         completed_orders = cursor.fetchone()[0]
-        if completed_orders == 0 and i != 0:
+        if not found and completed_orders == 0 and i != 0:
             continue
+        found = True
         # total cost of all completed orders
         cursor = conn.cursor()
-        cursor.execute("SELECT sum(price * quantity) FROM Orders NATURAL JOIN ContainsFood NATURAL JOIN Sells WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+        cursor.execute("SELECT sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
                        (rname, cur_start_time, cur_end_time))
         total_cost = cursor.fetchone()[0]
         # top 5 favorite food items
@@ -259,6 +260,7 @@ def get_all_restaurant_summary():
         res = {'year': cur_start_time.year, 'month': cur_start_time.month,
                'completed_orders': completed_orders, 'total_cost': total_cost, 'top_five': top_five}
         result.append(res)
+    result.reverse()
     return ({'result': result}, 200)
 
 
@@ -269,8 +271,9 @@ def get_ongoing_restaurant_promo():
     now = datetime.now()
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT promoId, endDate, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname WHERE P.rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' " +
-                   "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) GROUP BY promoId, endDate ORDER BY endDate;", (rname, now))
+    cursor.execute("SELECT promoId, endDate, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname " + 
+        "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) WHERE P.rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' " +
+                   "GROUP BY promoId, endDate ORDER BY endDate;", (rname, now))
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
@@ -281,9 +284,11 @@ def get_restaurant_promo():
     rname = request.args.get('restaurant')
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT promoId, description, startDate, endDate, discount, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname WHERE P.rname = %s GROUP BY promoId, P.rname ORDER BY startDate DESC, endDate DESC;", (rname,))
+    cursor.execute("SELECT promoId, description, startDate, endDate, discount, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname " + 
+        "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) " +
+        "WHERE P.rname = %s GROUP BY promoId, P.rname ORDER BY startDate DESC, endDate DESC;", (rname,))
     result = cursor.fetchall()
-
+    
     for i, r in enumerate(result):  # fix decimal is not serializable
         l = list(result[i])
         l[4] = float(l[4])
