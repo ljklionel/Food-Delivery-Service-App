@@ -4,10 +4,8 @@ from dateutil.relativedelta import relativedelta  # $ pip install python-dateuti
 import random
 from random import seed
 from random import randint
-
 from random import randrange
 import datetime
-
 
 def random_date(start, l):
     current = start
@@ -15,7 +13,6 @@ def random_date(start, l):
         curr = current + datetime.timedelta(minutes=randrange(360))
         yield curr
         l -= 1
-
 
 customers = []
 sells = []
@@ -178,7 +175,7 @@ def generateRandomReview(fname):
     return fname + " is " + random.choice(adverbs)[0] + " " + random.choice(adjectives)[0]
 
 containsFoodCsv = []
-totalOrders = 10000
+totalOrders = 120000
 
 # randomize time and sort them for orders
 for i in range(0, totalOrders + 1):
@@ -187,7 +184,7 @@ for i in range(0, totalOrders + 1):
     ran_date = start_date + datetime.timedelta(days=random_number_of_days)
 
     startHour = 0  # To be filled in the one loop
-    for x in random_date(startDate, 0):
+    for x in random_date(startDate, 0): # loop runs one time
         startHour = x.hour
         [v1, v2] = nextTiming(x.hour, x.minute)
         [v3, v4] = nextTiming(v1, v2)
@@ -219,7 +216,7 @@ runningVariable = 1
 print("paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname")
 
 # for i in range(0, 3000):
-while runningVariable <= 10000:
+while runningVariable <= totalOrders:
     # orderId
     # orderId = i
 
@@ -270,7 +267,7 @@ while runningVariable <= 10000:
 
     # Select full time & parttime driver
     while drNotSelected and partTimeDrNotSelected:
-        dice = randint(0, 5) # Choose partTime or Full time, Give more chance for part time to balance 
+        dice = randint(0, 4) # Choose partTime or Full time, Give more chance for part time to balance 
 
         if not dice:
             dr = random.choice(full_timers)
@@ -310,15 +307,18 @@ while runningVariable <= 10000:
     
     multipleContainsFood = []
     fee = 0
+    totalFood = 0
     for food in menu:
-        dice = randint(0,3)
-        if dice:
+        # if totalFood == 4:
+        #     break
+        dice = randint(0,5)
+        if not dice:
             foodArray = food.split(',')
             foodName = foodArray[0]
-            dice2 = randint(5, 30) / 100 # percentage
+            dice2 = randint(0, 5) / 100 # percentage
             amount = round(dice2 * int(foodArray[1])) # in integer
             if (amount == 0):
-                amount = 1
+                amount = randint(1, 3)
             totalPrice = amount * float(foodArray[3])
             reviewdice = randint(0,6)
             if not reviewdice:
@@ -329,6 +329,7 @@ while runningVariable <= 10000:
             multipleContainsFood.append(containsfood)
             # print(containsfood)
             fee += totalPrice
+            totalFood += 1
     
     if (fee < float(minSpend)):
         continue
