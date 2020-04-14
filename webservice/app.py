@@ -731,7 +731,7 @@ def get_locations():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT location FROM Locations WHERE location ILIKE '%s%%';" % keyword)
+        "SELECT location FROM Locations WHERE location ILIKE '%s%%' ORDER BY location ASC;" % keyword)
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
@@ -891,7 +891,7 @@ def filterCategories(allFood, foodCategories):
 def get_all_customers():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT username FROM Customers;")
+    cursor.execute("SELECT username FROM Customers ORDER BY username ASC;")
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
@@ -903,7 +903,7 @@ def get_customers():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT username FROM Customers WHERE username ILIKE '%s%%';" % keyword)
+        "SELECT username FROM Customers WHERE username ILIKE '%s%%' ORDER BY username ASC;" % keyword)
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
@@ -915,7 +915,7 @@ def get_riders():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT username FROM DeliveryRiders WHERE username ILIKE '%s%%';" % keyword)
+        "SELECT username FROM DeliveryRiders WHERE username ILIKE '%s%%' ORDER BY username ASC;" % keyword)
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
