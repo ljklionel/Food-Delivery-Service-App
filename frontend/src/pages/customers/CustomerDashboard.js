@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Image, Header, Loader, Card } from 'semantic-ui-react';
+import { Grid, Image, Header, Loader, Card, Radio } from 'semantic-ui-react';
 import RestaurantSelect from '../../components/customers/SelectComponents/RestaurantSelect.js'
 import LocationSelect from '../../components/customers/SelectComponents/LocationSelect.js'
 import Menu from '../../components/customers/Menu/Menu.js'
@@ -28,6 +28,7 @@ class CustomerDashboard extends React.Component {
             recentLocationOptions: [],
             refreshReview: 0,
             promotions: [],
+            check: false,
             foodCategories: [
                 'Singaporean'
             ],
@@ -108,8 +109,14 @@ class CustomerDashboard extends React.Component {
         this.changeCustomerLocation(this.state.recentLocationOptions[id].title)
     }
 
+    toggleFoodCheck = () => {
+        var check = this.state.check
+        this.setState({
+            check: !check
+        })
+    }
+
     submitOrder = (netReward) => {
-        console.log("Submit order, netReward, state reward", netReward, this.state.rewardPoint)
         var rewardPoint = parseInt(netReward) + this.state.rewardPoint
         this.setState({
             rewardPoint: rewardPoint
@@ -117,18 +124,15 @@ class CustomerDashboard extends React.Component {
         this.updateRewardPoint(rewardPoint)
         this.updateRecentLocations()
         // window.location.reload(false);
-        console.log("Finish submitting order")
     }
 
     submitReview = () => {
-        console.log("SubmitReview")
         this.setState({
             refreshReview: this.state.refreshReview++
         })
     }
 
     updateRewardPoint = (x) => {
-        console.log("Post reward point")
         myAxios.post('update_reward_point', {
             customerName: this.state.infoList[0],
             rewardPoint: x
@@ -155,19 +159,16 @@ class CustomerDashboard extends React.Component {
     }
 
     handleCategorySelection = (option) => {
-        console.log(option)
         var categoriesSelected = []
         if (option === null) {
         } else {
             option.forEach(item => {
                 categoriesSelected.push(item.value)
             })
-            console.log("categories selected: ", categoriesSelected)
         }
         this.setState({
             foodCategories: categoriesSelected
         })
-        console.log("This.state.foodcategories: ", this.state.foodCategories)
     }
 
     componentWillReceiveProps(nextProps) {
@@ -226,7 +227,6 @@ class CustomerDashboard extends React.Component {
     }
 
     updateRecentLocations = () => {
-        console.log("Update recent locations")
         myAxios.get('/recent_locations')
             .then(response => {
                 const list = []
@@ -252,11 +252,7 @@ class CustomerDashboard extends React.Component {
                 console.log(error);
             });
     }
-
-    setGender(event) {
-        console.log(event.target.value);
-    }
-
+    
     customerContent() {
         if (this.state.isLoadingInfo) {
             return (
@@ -337,28 +333,32 @@ class CustomerDashboard extends React.Component {
 
         return (
             <div>
-                <Card.Header>
-                    <Header style={headerStyle}><i>Food Categories</i></Header>
-                </Card.Header>
-                <Card.Content>
-                    <FoodCategories handleCategorySelection={this.handleCategorySelection} />
-                </Card.Content>
+                <Card color='purple'>
+                    <Card.Header>
+                        <Header style={headerStyle}><i>Select Restaurant</i></Header>
+                    </Card.Header>
+                    <Card.Content>
+                        <RestaurantSelect check={this.state.check} foodCategories={this.state.foodCategories} whenselect={this.onSelectRestaurant} />
+                        <br></br>
+                        <Radio label='Enable search by Food'
+                            toggle
+                            onChange={this.toggleFoodCheck}
+                            checked={this.state.check} />
+                        <h3>Choose your category:</h3>
+                        <FoodCategories handleCategorySelection={this.handleCategorySelection} />
+                        <br></br>
+                    </Card.Content>
+                </Card>
+
                 <br></br>
-                <br></br>
-                <Card.Header>
-                    <Header style={headerStyle}><i>Select Restaurant</i></Header>
-                </Card.Header>
-                <Card.Content>
-                    <RestaurantSelect foodCategories={this.state.foodCategories} whenselect={this.onSelectRestaurant} />
-                </Card.Content>
-                <br></br>
-                <br></br>
-                <Card.Header>
-                    <Header style={headerStyle}><i>Select Location</i></Header>
-                </Card.Header>
-                <Card.Content>
-                    <LocationSelect whenselect={this.onSelectLocation} />
-                </Card.Content>
+                <Card color='orange'>
+                    <Card.Header>
+                        <Header style={headerStyle}><i>Select Location</i></Header>
+                    </Card.Header>
+                    <Card.Content>
+                        <LocationSelect whenselect={this.onSelectLocation} />
+                    </Card.Content>
+                </Card>
             </div>
         )
     }

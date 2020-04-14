@@ -90,10 +90,8 @@ class OrderMenuModal extends Component {
 
     getOrderTimeStamp() {
         var currentDate = new Date().toString()
-        console.log("Curr date: ", currentDate)
         var dateString = ""
         var dateArray = currentDate.split(" ")
-        console.log("dateArray: ", dateArray)
         var i;
         for (i = 0; i < dateArray.length; i++) {
             if (i >= 5) {
@@ -101,8 +99,6 @@ class OrderMenuModal extends Component {
             }
             dateString += dateArray[i] + " "
         }
-        console.log("dateString: ", dateString)
-        console.log("dateString.trim(): ", dateString.trim())
         return dateString.trim()
     }
 
@@ -133,7 +129,6 @@ class OrderMenuModal extends Component {
 
         myAxios.post('connectDeliveryRider', {})
             .then(response => {
-                console.log("Connect deliveryrider response: ", response)
                 if (response.data.deliveryRider == '') {
                     const avail = []
                     this.state.restaurantMenu.forEach(item => {
@@ -176,16 +171,15 @@ class OrderMenuModal extends Component {
         const makeOrder = () => myAxios.post('make_order', {
             restaurant: this.state.currentRestaurant,
             order: order,
-            totalPrice: this.state.totalPrice - this.state.promoDiscount - this.state.discount,
+            totalPrice: this.state.totalPrice,
             fee: this.state.fee,
+            totalDiscount: this.state.promoDiscount + this.state.discount,
             timeStamp: timeStamp,
             customer: this.state.infoList[0],
             creditCard: creditCard,
             location: this.props.getLocation()
         })
             .then(response => {
-                console.log("Response from make_order: ", response)
-                console.log("Reward", this.state.totalPrice, this.state.useRewardPoint)
                 this.props.submitOrder(this.state.totalPrice - this.state.useRewardPoint)
                 this.setState({
                     checkout: false,
@@ -196,7 +190,6 @@ class OrderMenuModal extends Component {
             .catch(error => {
                 console.log(error);
             });
-        console.log("Handle save finished")
     }
 
     handleChange = (e, { name, value }) => {
@@ -213,7 +206,7 @@ class OrderMenuModal extends Component {
     handleRewardPointChange = (e, { value }) => {
         value = value ? parseInt(value) : 0
         if ((value <= this.props.rewardPoint) &&
-            (value / 20 <= (this.state.totalPrice + this.state.fee)) * 0.1) {
+            (value / 20 <= (this.state.totalPrice + this.state.fee - this.state.promoDiscount) * 0.1)) {
             var discount = value / 20;
             discount = Math.round(discount * 100) / 100
             var amtPayable = Math.round((this.state.totalPrice + this.state.fee - discount) * 100) / 100
@@ -226,7 +219,6 @@ class OrderMenuModal extends Component {
     }
 
     componentDidMount() {
-        console.log("Trying to get restaurant menu")
         myAxios.get('/restaurant_menu', {
             params: {
                 restaurant: this.state.currentRestaurant
@@ -238,7 +230,6 @@ class OrderMenuModal extends Component {
                 response.data.result.forEach(item => {
                     avail.push(item[1])
                 });
-                console.log(response.data.result[0][3])
                 response.data.result.forEach(item => {
                     price.push(item[2])
                 });
@@ -261,9 +252,9 @@ class OrderMenuModal extends Component {
             }
         })
             .then(response => {
-                console.log("Promo info: ", response);
                 this.setState({
-                    promotions: response.data.result,
+                    promotions: response.data.restPromo,
+                    fdsPromotions: response.data.fdsPromo,
                     isLoading: false
                 })
             })
@@ -287,11 +278,12 @@ class OrderMenuModal extends Component {
 
     calculateTotalPromoDiscount = () => {
         var discount = 1
-        console.log("Log promo discount: ", this.state.promotions)
         this.state.promotions.map((item) => (
             discount *= (1 - item[2] / 100)
         ))
-        console.log("Discount:", discount)
+        this.state.fdsPromotions.map((item) => (
+            discount *= (1 - item[2] / 100)
+        ))
         this.state.promoDiscount = (1 - discount) * (this.state.totalPrice + this.state.fee)
         return (100 - discount * 100).toFixed(2)
         return 'test'
@@ -368,7 +360,7 @@ class OrderMenuModal extends Component {
                 <Table basic='very' celled>
 
                     <Table.Header>
-                        <h3>All Discount: {this.calculateTotalPromoDiscount() + "%"} </h3>
+                        <h4>All Discount: {this.calculateTotalPromoDiscount() + "%"} </h4>
                         <Table.Row>
                             <Table.HeaderCell>ID</Table.HeaderCell>
                             <Table.HeaderCell>Discount</Table.HeaderCell>
@@ -378,7 +370,17 @@ class OrderMenuModal extends Component {
                         {this.state.promotions.map((item) => (
                             <Table.Row key={item[0]}>
                                 <Table.Cell>
-                                    {item[0]}
+                                    {item[0] + " (Rest)"}
+                                </Table.Cell>
+                                <Table.Cell>
+                                    {item[2]}%
+                                </Table.Cell>
+                            </Table.Row>
+                        ))}
+                        {this.state.fdsPromotions.map((item) => (
+                            <Table.Row key={item[0]}>
+                                <Table.Cell>
+                                    {item[0] + " (FDS)"}
                                 </Table.Cell>
                                 <Table.Cell>
                                     {item[2]}%
@@ -398,13 +400,17 @@ class OrderMenuModal extends Component {
                             <br></br><br></br>
                             Promo discount: {"$" + this.state.promoDiscount.toFixed(1)}
                             <br></br><br></br>
+                            Price + Fee after promo discount: {"$" + (this.state.totalPrice + this.state.fee - this.state.promoDiscount).toFixed(1)}
+                            <br></br><br></br>
                             Reward Discount: {"$" + this.state.discount}
                             <br></br><br></br>
                             <h4>Amount Payable: {"$" + (this.state.amtPayable - this.state.promoDiscount).toFixed(1)}</h4>
                         </Grid.Column>
                         <Grid.Column>
                             {promotions}
-                            <div align='right'>You have {this.props.rewardPoint} reward point <br></br> Use them to get up to 10% discount</div>
+                            <div align='right'>You have {this.props.rewardPoint} reward point 
+                            <br></br> 
+                            Use them to get up to 10% discount off after promo discount deduction</div>
                             <Form.Field align="right">
                                 <Form.Input
                                     placeholder='0'
@@ -441,7 +447,7 @@ class OrderMenuModal extends Component {
         }
 
         return (
-            <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Make Order</Button>}
+            <Modal trigger={<Button color='green' onClick={this.handleOpen} fluid basic>Make Order</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
                 {header}

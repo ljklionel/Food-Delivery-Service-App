@@ -10,6 +10,7 @@ class PromoList extends Component {
         this.state = {
             isLoading: true,
             promotions: [],
+            fdsPromotions: [],
             currentRestaurant: props.restaurant
         }
         this.updatePromo(props.restaurant)
@@ -22,9 +23,9 @@ class PromoList extends Component {
             }
         })
             .then(response => {
-                console.log("Promo info: ", response);
                 this.setState({
-                    promotions: response.data.result,
+                    promotions: response.data.restPromo,
+                    fdsPromotions: response.data.fdsPromo,
                     isLoading: false
                 })
             })
@@ -46,35 +47,45 @@ class PromoList extends Component {
         this.state.promotions.map((item) => (
             discount *= (1 - item[2] / 100)
         ))
-        console.log("Discount:", discount)
         return (100 - discount * 100).toFixed(2)
     }
 
+    calculateTotalFDSDiscount = () => {
+        var discount = 1
+        this.state.fdsPromotions.map((item) => (
+            discount *= (1 - item[2] / 100)
+        ))
+        return (100 - discount * 100).toFixed(2)
+    }
+
+
     render() {
+        // this.updatePromo('')
         var header
         if (this.state.currentRestaurant === null) {
             header = (
                 <Card.Content>
                     <Card.Header>Promo code</Card.Header>
-                    <Card>Choose a restaurant</Card>
+                    <Card color='yellow'>Choose a restaurant</Card>
                 </Card.Content>)
         } else {
             header = (
                 <Card.Content>
                     <Card.Header>Promo code</Card.Header>
-                    <Card>{this.props.restaurant}</Card>
+                    <Card color='yellow'>{this.props.restaurant}</Card>
                 </Card.Content>)
         }
         if (this.state.isLoading) {
             return null// <Loader active/>
         }
         var content
+        var content2
         if (this.state.promotions.length === 0) {
-            content = <p><i>No ongoing promotions.</i></p>
+            content = <p><i>No ongoing promo for this restaurant.</i></p>
         } else {
             content = (
                 <Card.Content>
-                    <h3>Total Discount: {this.calculateTotalDiscount() + "%"}</h3>
+                    <h4>Total Rest Discount: {this.calculateTotalDiscount() + "%"}</h4>
                     <hr></hr>
                     <Table basic='very' celled>
                         <Table.Header>
@@ -106,12 +117,52 @@ class PromoList extends Component {
 
             )
         }
+        if (this.state.fdsPromotions.length === 0) {
+            content2 = <p><i>No ongoing promo for FDS.</i></p>
+        } else {
+            content2 = (
+                <Card.Content>
+                    <h4>FDS Promos: {this.calculateTotalFDSDiscount() + "%"}</h4>
+                    <hr></hr>
+                    <Table basic='very' celled>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell>ID</Table.HeaderCell>
+                                <Table.HeaderCell>Discount</Table.HeaderCell>
+                                <Table.HeaderCell>End</Table.HeaderCell>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {this.state.fdsPromotions.map((item) => (
+                                <Table.Row key={item[0]}>
+                                    <Table.Cell>
+                                        {item[0]}
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        {item[2]}%
+                              </Table.Cell>
+                                    <Table.Cell>
+                                        {item[1].substring(0, 11)}
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+
+                        </Table.Body>
+                    </Table>
+
+                </Card.Content>
+            )
+        }
+
         return (
-            <Card color='blue' style={{ maxWidth: 250 }}>
+            <Card color='yellow' style={{ maxWidth: 250 }}>
                 {header}
                 {content}
                 <Card.Content>
                     <ViewPromoModal restaurant={this.state.currentRestaurant} />
+                </Card.Content>
+                <Card.Content>
+                    {content2}
                 </Card.Content>
             </Card>
         )

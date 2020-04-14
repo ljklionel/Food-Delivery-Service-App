@@ -21,10 +21,9 @@ class LocationSelect extends Component {
             }
         })
             .then(response => {
-                console.log(response);
                 if (this.state.value.length < 1) {
                     this.setState(initialState)
-                } else {    
+                } else {
                     const res = []
                     response.data.result.forEach(element => {
                         res.push({
@@ -45,25 +44,21 @@ class LocationSelect extends Component {
     render() {
         const { isLoading, value, results } = this.state
         return (
-            <Grid>
-                <Grid.Column width={6}>
-                    <Search
-                        loading={isLoading}
-                        onResultSelect={this.handleResultSelect}
-                        onSearchChange={_.debounce(this.handleSearchChange, 500, {
-                            leading: true,
-                        })}
-                        onSelectionChange={this.handleSelectionChange}
-                        results={results}
-                        value={value}
-                        {...this.props}
-                        placeholder='Select Location'
-                    >
-                    </Search>
-                </Grid.Column>
-                <Grid.Column width={10}>
-                </Grid.Column>
-            </Grid>
+            <div>
+                <Search
+                    loading={isLoading}
+                    onResultSelect={this.handleResultSelect}
+                    onSearchChange={_.debounce(this.handleSearchChange, 500, {
+                        leading: true,
+                    })}
+                    onSelectionChange={this.handleSelectionChange}
+                    results={results}
+                    value={value}
+                    {...this.props}
+                    placeholder='Select Location'
+                >
+                </Search>
+            </div>
         )
     }
 }

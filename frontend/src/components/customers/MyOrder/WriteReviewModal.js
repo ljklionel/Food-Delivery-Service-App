@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Modal, Form, Button, Table } from 'semantic-ui-react';
+import { Modal, Form, Button, TextArea, Table } from 'semantic-ui-react';
 import myAxios from '../../../webServer.js'
 
 class WriteReviewModal extends Component {
@@ -23,8 +23,9 @@ class WriteReviewModal extends Component {
     }
 
     handleSave = () => {
-        if (this.state.review === null) {
+        if (this.state.review === null || this.state.review === '') {
             alert("Please do not submit an empty review")
+            return
         }
         myAxios.post('edit_review', {
             orderid: this.props.orderid,
@@ -33,7 +34,6 @@ class WriteReviewModal extends Component {
             restaurant: this.state.restaurant
         })
             .then(response => {
-                console.log("Edit_review")
                 this.setState({
                     modalOpen: false,
                 })
@@ -57,16 +57,21 @@ class WriteReviewModal extends Component {
             content = null
         } else {
             content = (
-                <Form.Field>
-                    <Form.Input
+                <Form>
+                    <TextArea
                         placeholder='Leave a review'
                         onChange={this.handleReviewChange} />
-                </Form.Field>
+                </Form>
+                // <Form.Field>
+                //     <Form.Input
+                //         placeholder='Leave a review'
+                //         onChange={this.handleReviewChange} />
+                // </Form.Field>
             )
         }
 
         return (
-            <Modal trigger={<Button onClick={this.handleOpen} fluid basic>Leave a review</Button>}
+            <Modal trigger={<Button color='blue' onClick={this.handleOpen} fluid basic>Leave a review</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}>
                 <Modal.Header>Restaurant: {this.props.restaurant}</Modal.Header>
