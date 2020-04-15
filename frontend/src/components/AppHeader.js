@@ -1,14 +1,15 @@
 import React, { Component } from 'react'
-import { Menu, Confirm } from 'semantic-ui-react';
+import { Menu, Confirm, Icon } from 'semantic-ui-react';
 import { Redirect } from 'react-router-dom';
 import myAxios from '../webServer.js'
+import EditUserModal from './EditUserModal.js';
 
 class AppHeader extends Component {
     
-    state = { open: false, loggedOut: false }
+    state = { openLogOut: false, loggedOut: false, name: false }
 
-    open = () => this.setState({ open: true })
-    close = () => this.setState({ open: false })
+    openLogOut = () => this.setState({ openLogOut: true })
+    closeLogOut = () => this.setState({ openLogOut: false })
 
     logout = () => {
         myAxios.post('/signout')
@@ -21,6 +22,17 @@ class AppHeader extends Component {
           });
     }
 
+    componentDidMount() {
+        myAxios.get('/user_data')
+        .then(response => {
+          console.log(response);
+          this.setState({name: response.data.result[0]})
+        })
+        .catch(error => {
+          console.log(error);
+        });    
+    }
+
     render() {
         if (this.state.loggedOut) {
             return <Redirect to={'/'} />
@@ -29,15 +41,19 @@ class AppHeader extends Component {
             <div>
                 <Menu>
                     <Menu.Menu position='right'>
+                        <Menu.Item>
+                            {this.state.name ? this.state.name : ''}
+                        </Menu.Item>
+                        <EditUserModal/>
                         <Menu.Item
                             name='Logout'
-                            onClick={this.open}
+                            onClick={this.openLogOut}
                         />
                     </Menu.Menu>
                 </Menu>
                 <Confirm
-                    open={this.state.open}
-                    onCancel={this.close}
+                    open={this.state.openLogOut}
+                    onCancel={this.closeLogOut}
                     onConfirm={this.logout}
                 />
             </div>

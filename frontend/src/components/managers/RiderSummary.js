@@ -23,8 +23,19 @@ class RiderSummary extends Component {
         })
         .then(response => {
           console.log(response);
+          var res = {}
+          if (response.data.result['orders_and_ratings'].length !== 0) {
+            res['rider_orders'] = response.data.result['orders_and_ratings'][0][0]
+            res['delivery_time'] = response.data.result['orders_and_ratings'][0][1]
+            res['num_rating'] = response.data.result['orders_and_ratings'][0][2]
+            res['avg_rating'] = response.data.result['orders_and_ratings'][0][3]
+            res['salary'] = response.data.result['salary']
+            res['hours_worked'] = response.data.result['hours_worked']
+          } else {
+            res = null
+          }
           this.setState({
-            monthlySummary: response.data.result[0],
+            monthlySummary: res,
             isLoading: false
           })
         })
@@ -97,7 +108,9 @@ class RiderSummary extends Component {
 				<Card.Header>This Month's Stats</Card.Header>
 			</Card.Content>
 			<Card.Content>
-				{this.orderStatistics()}
+        {this.state.monthlySummary != null
+        ? this.orderStatistics()
+        : <span>No orders this month</span>}
 			</Card.Content>
       <Card.Content>
         <ViewRiderModal rider={this.state.currentRider}/>

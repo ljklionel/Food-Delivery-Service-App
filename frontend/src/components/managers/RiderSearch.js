@@ -31,7 +31,6 @@ class RiderSearch extends Component {
                 isLoading: false,
                 results: res
 			})
-			this.setState.props(res.title)
         }
       })
       .catch(error => {
