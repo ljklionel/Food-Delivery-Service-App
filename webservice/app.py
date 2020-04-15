@@ -115,8 +115,60 @@ def logout():
     logout_user()
     return {}, 200
 
-# RESTAURANT STAFF
+@app.route("/user_data")
+@login_required
+def user_data():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT username, firstName, lastName, phoneNumber FROM Users WHERE username = %s", (username,)
+    )
+    return ({'result': cursor.fetchone()}, 200)
 
+@app.route("/edit_profile", methods=['POST'])
+@login_required
+def edit_profile():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    updates = request.json['updates']
+    if 'firstName' in updates:
+        cursor.execute("UPDATE Users SET firstName = %s WHERE username = %s;", (updates['firstName'], username))
+
+    if 'lastName' in updates:
+        cursor.execute("UPDATE Users SET lastName = %s WHERE username = %s;", (updates['lastName'], username))
+
+    if 'phoneNumber' in updates:
+        cursor.execute("UPDATE Users SET phoneNUmber = %s WHERE username = %s;", (updates['phoneNumber'], username))
+
+    if 'password' in updates:
+        cursor.execute("UPDATE Users SET hashedPassword = %s WHERE username= %s;", (bcrypt.generate_password_hash(updates['password']).decode(), username))
+
+    cursor.execute('COMMIT;')
+    return ({'result': {'ok': 1, 'msg': 'Update successful'}}, 200)
+
+@app.route("/edit_password", methods=['POST'])
+@login_required
+def edit_password():
+    username = current_user.get_id()
+    conn = get_db()
+    oldPassword = request.json['updates']['oldPassword']
+    newPassword = request.json['updates']['newPassword']
+    cursor = conn.cursor()
+    cursor.execute("SELECT hashedPassword FROM Users WHERE username = %s;", (username,))
+    hashedPassword = cursor.fetchone()[0]
+    if bcrypt.check_password_hash(hashedPassword, oldPassword):
+        cursor = conn.cursor()
+        cursor.execute("BEGIN;")
+        cursor.execute("UPDATE Users SET hashedPassword = %s WHERE username= %s;", (bcrypt.generate_password_hash(newPassword).decode(), username))
+        cursor.execute("COMMIT;")
+        return {'result': {'ok': 1, 'msg': 'Update successful'}}
+    else:
+        return {'result': {'ok': 0, 'msg': 'Wrong Password'}}
+    
+# RESTAURANT STAFF
 
 @app.route("/restaurants")
 @login_required

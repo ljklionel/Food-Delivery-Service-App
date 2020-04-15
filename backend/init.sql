@@ -69,7 +69,7 @@ CREATE TABLE Promotions (
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
     discount NUMERIC(4,2) NOT NULL,
-    description VARCHAR(128) DEFAULT '',
+    description VARCHAR(128) NOT NULL DEFAULT '',
     PRIMARY KEY (promoId, rname)
 );
 
