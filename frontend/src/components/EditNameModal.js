@@ -65,7 +65,7 @@ class EditNameModal extends Component {
     render() {
         return (
             <Modal trigger={<Menu.Item><Button basic icon onClick={this.handleOpen}><Icon name='write'/></Button></Menu.Item>}
-                pen={this.state.modalOpen}
+                open={this.state.modalOpen}
                 onClose={this.handleClose}o>
 
                 <Modal.Header>Edit Name</Modal.Header>
