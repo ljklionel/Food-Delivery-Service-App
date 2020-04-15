@@ -10,7 +10,7 @@ Chen Hui, Jason Sathya Citro, Lim Jun Kuang Lionel, Lin Yuting
 A Food Delivery Service App for Customers, Delivery Riders, Restaurant Staff and FDS Manager.
 
 <p align = 'center'>
-<img src="images/FDS.png" alt="Homepage" border="0"></a>
+<img src="images/FDS.png" alt="Homepagear" border="0"></a>
 </p>
 <p align = 'center'><b>Home page</b></p>
 

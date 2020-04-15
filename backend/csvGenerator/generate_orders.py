@@ -157,7 +157,7 @@ days_between_dates = time_between_dates.days
 
 
 def nextTiming(hh, mm):
-    mm += randint(4, 11)
+    mm += randint(1, 11)
     if (mm >= 60):
         mm -= 60
         hh += 1
@@ -290,9 +290,19 @@ while runningVariable <= totalOrders:
     # Get delivery rider
     drNotSelected = True
     partTimeDrNotSelected = True
-    day = datetime.datetime(ran_date.year, ran_date.month,
-                            ran_date.day).strftime("%a")
+    # day = datetime.datetime(ran_date.year, ran_date.month,
+    #                         ran_date.day).strftime("%a")
+
+    # print(timestamp)
+    year = int(timestamp[0:4])
+    month = int(timestamp[5:7])
+    date = int(timestamp[8:10])
+    # print(year, month, date)
+    day = datetime.datetime(year, month, date).strftime("%a")
+    # print(day)
     dayInNumber = convertDayToNumber(day)
+    # print("Day: ", day)
+    # print("Day in number: ", dayInNumber)
     correctShiftCheck = ""
     dr = ""
     partTimeDr = ""
@@ -320,8 +330,15 @@ while runningVariable <= totalOrders:
                                 break
         else:
             partTimeDr = random.choice(part_timers)
+            # print("First: ", partTimeDr)
+            # print("Day in number: ", dayInNumber)
             if partTimeDr[1] == dayInNumber:
+                # print("partTimeDr[1]: ", partTimeDr[1])
                 if int(partTimeDr[2]) <= startHour < int(partTimeDr[3]):
+                    # print("partTimeDr[2]: ", partTimeDr[2])
+                    # print("partTimeDr[3]: ", partTimeDr[3])
+                    # print("startHour ", startHour)
+                    
                     dr = "No Full time"
                     partTimeDrNotSelected = False
                     break
@@ -374,7 +391,13 @@ while runningVariable <= totalOrders:
     # containsfood = [qty, review, fname, orderid]
     # order = [str(orderId), payment, str(randint(1, 5)), location, str(fee), timestamp, departTime1, arriveTime, departTime2, deliveryTime, deliveryRider[0], customerName, restaurant]
 
-    order = [payment, str(randint(1, 5)), location, str(fee), timestamp, departTime1,
+    rating = randint(2, 8)
+    if rating > 5:
+        rating = ''
+    else:
+        rating = str(rating)
+
+    order = [payment, rating, location, str(fee), timestamp, departTime1,
              arriveTime, departTime2, deliveryTime, deliveryRider[0], customerName, restaurant]
     # print(','.join(order))
     f_orders.write(','.join(order)+"\n")
