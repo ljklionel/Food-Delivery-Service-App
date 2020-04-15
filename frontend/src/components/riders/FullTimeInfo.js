@@ -22,13 +22,13 @@ const shiftsOptions = [
 ];
 
 const dayCombination = [
-    { value: '1', label: ['1','2','3','4','5'] },
-    { value: '2', label: ['2','3','4','5','6'] },
-    { value: '3', label: ['3','4','5','6','7'] },
-    { value: '4', label: ['1','4','5','6','7'] },
-    { value: '5', label: ['1','2','5','6','7'] },
-    { value: '6', label: ['1','2','3','6','7'] },
-    { value: '7', label: ['1','2','3','4','7'] }
+    { value: '1', label: ['1', '2', '3', '4', '5'] },
+    { value: '2', label: ['2', '3', '4', '5', '6'] },
+    { value: '3', label: ['3', '4', '5', '6', '7'] },
+    { value: '4', label: ['1', '4', '5', '6', '7'] },
+    { value: '5', label: ['1', '2', '5', '6', '7'] },
+    { value: '6', label: ['1', '2', '3', '6', '7'] },
+    { value: '7', label: ['1', '2', '3', '4', '7'] }
 ];
 
 class FullTimeInfo extends Component {
@@ -55,58 +55,42 @@ class FullTimeInfo extends Component {
             var tempDaysList = this.state.daysList;
             var check = false;
             tempDaysList.sort();
-            console.log('templist',tempDaysList);
+            console.log('templist', tempDaysList);
+            var count = 0;
             dayCombination.forEach(value => {
+                count = 0;
                 for (var i = 0; i < 5; i++) {
                     if (value.label[i] == tempDaysList[i]) {
-                        check = true;
+                        count++;
                     }
+                }               
+                if (count == 5) {
+                    check = true;
                 }
-            })
+            });
             if (!check) {
                 alert('You do not have 5 consecutive days!!');
                 return;
             }
-            var axiosArray = [];
             myAxios
-                .delete('delete_full_time')
+                .post('add_full_time', {
+                    salary: this.state.salary
+                })
                 .then(response => {
+                    var postData = {};
                     console.log(response);
-                })
-                .then(() => {
-                    myAxios
-                        .post('add_full_time', {
-                            salary: this.state.salary
-                        })
-                        .then(response => {
-                            console.log(response);
-                            this.state.noteList.forEach(note => {
-                                var postData = {};
-                                postData['workDay'] = note.day;
-                                postData['shift'] = note.currShift;
-                                console.log(postData);
-                                var newPromise = myAxios({
-                                    method: 'post',
-                                    url: 'add_full_time_sched',
-                                    data: postData
-                                });
-                                axiosArray.push(newPromise);
+                    this.state.noteList.forEach(note => {
+                        postData[note.day] = note.currShift;
+                        myAxios
+                            .post('add_full_time_sched', {
+                                workDayShift: postData
+                            })
+                            .then(response => {
+                                console.log(response);
+                                window.location.reload();
                             });
-                            console.log(this.state);
-                        });
-                })
-                .then(() => {
-                    Promise.all(axiosArray)
-                        .then(responses => {
-                            console.log(responses);
-                            window.location.reload();
-                        })
-                        .catch(error => {
-                            console.log(error.message);
-                        });
+                    });
                 });
-            console.log(axiosArray);
-            this.setState({ showModal: true });
         }
     };
 

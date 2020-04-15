@@ -28,8 +28,7 @@ class ViewStats extends Component {
         reload: false,
         partTimeSched: [],
         showPartTimeInfo: false,
-        showFullTimeInfo: false,
-        salary: ''
+        showFullTimeInfo: false
     };
 
     handleUpdate = () => {
@@ -76,16 +75,6 @@ class ViewStats extends Component {
                 }
             });
         }
-        myAxios.get('/get_salary').then(response => {
-            if (response.data.result !== null) {
-                this.setState(prevState => {
-                    return {
-                        ...prevState,
-                        salary: response.data.result[0]
-                    };
-                });
-            }
-        });
     }
 
     partTimeTable = () => {
@@ -187,10 +176,10 @@ class ViewStats extends Component {
         return (
             <Card style={{ width: '100%' }}>
                 {this.state.showPartTimeInfo && (
-                    <PartTimeInfo salary={this.state.salary} />
+                    <PartTimeInfo salary={500} />
                 )}
                 {this.state.showFullTimeInfo && (
-                    <FullTimeInfo salary={this.state.salary} />
+                    <FullTimeInfo salary={1000} />
                 )}
                 <CardContent>
                     <CardHeader>Schedule</CardHeader>

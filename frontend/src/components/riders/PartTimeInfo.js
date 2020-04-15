@@ -65,49 +65,33 @@ class PartTimeInfo extends Component {
             alert('You have more than 48 hours of work!! Please work less!!');
             return;
         } else {
-            var axiosArray = [];
+            var postData = [];
+            this.state.noteList.forEach(note => {
+                note.pairArr.forEach(pair => {
+                    const triple = {
+                        day: note.day,
+                        start: pair.start,
+                        end: pair.end
+                    }
+                    postData.push(triple);
+                    console.log(postData);
+                });
+            });
             myAxios
-                .delete('delete_part_time')
+                .post('add_part_time', {
+                    salary: this.state.salary
+                })
                 .then(response => {
                     console.log(response);
-                })
-                .then(() => {
                     myAxios
-                        .post('add_part_time', {
-                            salary: this.state.salary
+                        .post('add_part_time_sched', {
+                            triple: postData
                         })
                         .then(response => {
                             console.log(response);
-                            this.state.noteList.forEach(note => {
-                                note.pairArr.forEach(pair => {
-                                    var postData = {};
-                                    postData['workDay'] = note.day;
-                                    postData['startHour'] = pair.start;
-                                    postData['endHour'] = pair.end;
-                                    console.log(postData);
-                                    var newPromise = myAxios({
-                                        method: 'post',
-                                        url: 'add_part_time_sched',
-                                        data: postData
-                                    });
-                                    axiosArray.push(newPromise);
-                                });
-                            });
-                            console.log(this.state);
-                        });
-                })
-                .then(() => {
-                    Promise.all(axiosArray)
-                        .then(responses => {
-                            console.log(responses);
                             window.location.reload();
-                        })
-                        .catch(error => {
-                            console.log(error.message);
                         });
                 });
-            console.log(axiosArray);
-            this.setState({ showModal: true });
         }
     };
 
@@ -150,8 +134,8 @@ class PartTimeInfo extends Component {
 
     handleMultiTimeSelection = options => {
         console.log('time', this.state.time);
-        console.log(options);
-        if (!options) {
+        console.log('val',options);
+        if (options.length == 0) {
             this.setState(prevState => {
                 return {
                     ...prevState,
