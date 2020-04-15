@@ -978,34 +978,18 @@ def get_riders():
 @app.route("/all_customer_summary")
 @login_required
 def get_all_customer_summary():  # TODO new customer of the month -yuting
-    now = datetime.now()
-    year, month = now.year, now.month
-    start_time = datetime(year, month, 1)
-    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
     conn = get_db()
-    result = []
-    for i in range(0, 25):  # show at most the last 2 years of summary
-        cur_start_time = start_time - relativedelta(months=i)
-        cur_end_time = end_time - relativedelta(months=i)
-        # number of orders
-        cursor = conn.cursor()
-        cursor.execute("SELECT count(*) FROM Orders WHERE deliveryTime BETWEEN %s AND %s;",
-                       (cur_start_time, cur_end_time))
-        all_orders = cursor.fetchone()[0]
-        # total costs of all orders
-        cursor = conn.cursor()
-        cursor.execute("SELECT sum(amtPayable) FROM Orders WHERE deliveryTime BETWEEN %s AND %s;",
-                       (cur_start_time, cur_end_time))
-        all_orders_costs = cursor.fetchone()[0]
-        # number of new customers
-        cursor = conn.cursor()
-        cursor.execute("SELECT count(*) FROM CUSTOMERS NATURAL JOIN USERS WHERE joinDate BETWEEN %s AND %s;",
-                       (cur_start_time, cur_end_time))
-        all_new_customers = cursor.fetchone()[0]
+    result = {}
+    # number of orders
+    cursor = conn.cursor()
+    cursor.execute("SELECT count(*), sum(amtPayable) * 10/12, extract(year from deliveryTime), extract(mon from deliveryTime) "  +
+    "FROM Orders GROUP BY 3,4 ORDER BY 3 DESC, 4 DESC;")
+    result['orders_and_fee'] = cursor.fetchall()
 
-        res = {'year': cur_start_time.year, 'month': cur_start_time.month, 'all_orders': all_orders,
-               'all_orders_costs': all_orders_costs, 'all_new_customers': all_new_customers}
-        result.append(res)
+    cursor = conn.cursor()
+    cursor.execute("SELECT count(*), extract(year from joinDate), extract(mon from joinDate) FROM CUSTOMERS NATURAL JOIN USERS " +
+    "GROUP BY 2, 3 ORDER BY 2 DESC, 3 DESC")
+    result['all_new_customers'] = cursor.fetchall()
 
     return ({'result': result}, 200)
 
@@ -1014,28 +998,15 @@ def get_all_customer_summary():  # TODO new customer of the month -yuting
 @login_required
 def get_customer_summary():
     username = request.args.get('customer')
-    now = datetime.now()
-    year, month = now.year, now.month
-    start_time = datetime(year, month, 1)
-    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
     conn = get_db()
-    result = []
-    for i in range(0, 25):  # show at most the last 2 years of summary
-        cur_start_time = start_time - relativedelta(months=i)
-        cur_end_time = end_time - relativedelta(months=i)
-        # of customer's orders
-        cursor = conn.cursor()
-        cursor.execute("SELECT count(*) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s ;",
-                       (username, cur_start_time, cur_end_time))
-        customer_orders = cursor.fetchone()[0]
-        # total cost of all of customer's orders
-        cursor = conn.cursor()
-        cursor.execute("SELECT sum(amtPayable) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s ;",
-                       (username, cur_start_time, cur_end_time))
-        customer_orders_costs = cursor.fetchone()[0]
-        res = {'year': cur_start_time.year, 'month': cur_start_time.month,
-               'customer_orders': customer_orders, 'customer_orders_costs': customer_orders_costs}
-        result.append(res)
+    result = {}
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT count(*), sum(amtPayable) * 10/12,  extract(year from deliveryTime), extract(mon from deliveryTime) " +
+    "FROM Orders WHERE customerUsername = %s GROUP BY 3,4 ORDER BY 3 DESC, 4 DESC ;",
+                    (username,))
+    result['orders_and_fee'] = cursor.fetchall()
+
     return ({'result': result}, 200)
 
 
@@ -1066,54 +1037,34 @@ def get_location_summary():
 @app.route("/current_rider_summary")
 def get_rider_summary():
     username = request.args.get('rider')
-    now = datetime.now()
-    year, month = now.year, now.month
-    start_time = datetime(year, month, 1)
-    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
+    result = {}
     conn = get_db()
-    result = []
-    for i in range(0, 25):  # show at most the last 2 years of summary
-        cur_start_time = start_time - relativedelta(months=i)
-        cur_end_time = end_time - relativedelta(months=i)
-        # of orders delivered
-        cursor = conn.cursor()
-        cursor.execute("SELECT count(*) FROM Orders WHERE riderUsername = %s AND deliveryTime BETWEEN %s AND %s;",
-                       (username, cur_start_time, cur_end_time))
-        rider_orders = cursor.fetchone()[0]
-        # of hours worked
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT sum(endHour - startHour) FROM MonthlyWorkSched WHERE username = %s;", (username,))
-        hours_worked = cursor.fetchone()[0]
-        if hours_worked is None:
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT sum(endHour - startHour) FROM WeeklyWorkSched WHERE username = %s;", (username,))
-            hours_worked = cursor.fetchone()[0]
-        # total salary
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT sum(salary) FROM DeliveryRiders WHERE username = %s;", (username,))
-        salary = cursor.fetchone()[0]
-        # average delivery time
-        cursor = conn.cursor()
-        cursor.execute("SELECT sum(EXTRACT(EPOCH FROM arriveTime - orderTime)/60)/count(*) FROM Orders WHERE riderUsername = %s AND deliveryTime BETWEEN %s AND %s;",
-                       (username, cur_start_time, cur_end_time))
-        delivery_time = cursor.fetchone()[0]
-        # number of ratings received
-        cursor = conn.cursor()
-        cursor.execute("SELECT count(rating) FROM Orders where riderUsername = %s AND deliveryTime BETWEEN %s AND %s",
-                       (username, cur_start_time, cur_end_time))
-        num_rating = cursor.fetchone()[0]
-        # average rating
-        cursor = conn.cursor()
-        cursor.execute("SELECT sum(rating)/count(rating) FROM Orders where riderUsername = %s AND deliveryTime BETWEEN %s AND %s",
-                       (username, cur_start_time, cur_end_time))
-        avg_rating = cursor.fetchone()[0]
+    cursor = conn.cursor()
+    # number of orders, average delivery time, number of ratings, average rating
+    cursor.execute("SELECT count(*), sum(EXTRACT(EPOCH FROM arriveTime - orderTime)/60)/count(*), count(rating), sum(rating)/count(rating), " + 
+    "extract(year from deliveryTime), extract(mon from deliveryTime) " +
+    "FROM Orders WHERE riderUsername = %s GROUP BY 5, 6 ORDER BY 5 DESC, 6 DESC;",
+                    (username,))
+    result['orders_and_ratings'] = cursor.fetchall()
 
-        res = {'year': cur_start_time.year, 'month': cur_start_time.month, 'rider_orders': rider_orders, 'hours_worked': hours_worked, 'salary': salary,
-               'delivery_time': delivery_time, 'num_rating': num_rating, 'avg_rating': avg_rating}
-        result.append(res)
+    # of hours worked
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT sum(endHour - startHour) FROM MonthlyWorkSched WHERE username = %s;", (username,))
+    hours_worked = cursor.fetchone()[0]
+    if hours_worked is None:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT sum(endHour - startHour) FROM WeeklyWorkSched WHERE username = %s;", (username,))
+        hours_worked = cursor.fetchone()[0]
+    result['hours_worked'] = hours_worked
+
+    # total salary
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT sum(salary) FROM DeliveryRiders WHERE username = %s;", (username,))
+    result['salary'] = cursor.fetchone()[0]
+
     return ({'result': result}, 200)
 
 

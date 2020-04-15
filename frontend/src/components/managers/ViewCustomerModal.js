@@ -25,8 +25,19 @@ class ViewCustomerModal extends Component {
           })
           .then(response => {
             console.log(response);
+            var res = []
+            var orders_and_fee = response.data.result['orders_and_fee']
+            for (var i = 0; i < orders_and_fee.length; ++i) {
+                var data = {}
+                data['year'] = orders_and_fee[i][2]
+                data['month'] = orders_and_fee[i][3]
+                data['customer_orders'] = orders_and_fee[i][0]
+                data['customer_orders_costs'] = orders_and_fee[i][1]
+                res.push(data)
+            }
+            console.log(res)
             this.setState({
-              contents: response.data.result,
+              contents: res,
               isLoading: false
             })
           })
@@ -45,14 +56,25 @@ class ViewCustomerModal extends Component {
         } else {
             const contents = this.state.contents
             const first_month = []
+            const row_span = []
+            var counter = 1;
             for (let i = 0; i < contents.length; i++) {
                 if (i !== 0 && contents[i].year === contents[i-1].year) {
                     first_month.push(false)
+                    counter++
+                    row_span[i] = 0
                 } else {
                     first_month.push(true)
+                    if (i != 0 ) {
+                        row_span[i - counter] = counter
+                    } else {
+                        row_span[i] = 0
+                    }
+                    counter = 1
                 }
             }
-            
+            row_span[contents.length - counter] = counter
+            console.log(row_span)
             content = (
             <Table structured celled>
                 <Table.Header>
@@ -67,7 +89,7 @@ class ViewCustomerModal extends Component {
                 {contents.map((item, i) => (
                     <Table.Row key={item['year'] + '-' + item['month']}>
                         { first_month[i] ? 
-                        (<Table.Cell rowSpan={item['month']}>
+                        (<Table.Cell rowSpan={row_span[i]}>
                             {item['year']}
                         </Table.Cell>):(null)
                         }

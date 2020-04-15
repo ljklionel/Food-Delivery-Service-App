@@ -8,7 +8,7 @@ class MonthlySummary extends Component {
         super(props)
         this.state = {
             isLoading: true,
-			contents: []
+			contents: {}
         }
 	}
 	
@@ -17,8 +17,14 @@ class MonthlySummary extends Component {
           .then(response => {
 			console.log(response);
 			if (response.data.result.length !== 0) {
+				var res = {}
+				res['year'] = response.data.result['orders_and_fee'][0][2]
+				res['month'] = response.data.result['orders_and_fee'][0][3]
+				res['all_orders'] = response.data.result['orders_and_fee'][0][0]
+				res['all_orders_costs'] = response.data.result['orders_and_fee'][0][1]
+				res['all_new_customers'] = response.data.result['all_new_customers'][0][0]
 				this.setState({
-				contents: response.data.result[0]
+				contents: res
 				})
 			}
 			this.setState({isLoading: false})
@@ -44,7 +50,7 @@ class MonthlySummary extends Component {
                 </Statistic>
                 <Statistic>
                 <Statistic.Value>  ${(this.state.contents.length == 0 ? 0 : this.state.contents['all_orders_costs'] == null) ?
-                                0 : this.state.contents['all_orders_costs'].toFixed(1)}</Statistic.Value>
+                                0 : this.state.contents['all_orders_costs'].toFixed(2)}</Statistic.Value>
 
 				<Statistic.Label>Spent</Statistic.Label>
                 </Statistic>
