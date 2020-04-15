@@ -99,8 +99,7 @@ CREATE TABLE DeliveryRiders (
 );
 
 CREATE TABLE PartTimers (
-    username VARCHAR(64) PRIMARY KEY REFERENCES DeliveryRiders ON DELETE CASCADE,
-    workHours INTEGER
+    username VARCHAR(64) PRIMARY KEY REFERENCES DeliveryRiders ON DELETE CASCADE
 );
 
 CREATE TABLE FullTimers (
@@ -258,9 +257,9 @@ check_total_hours_trigger()
 DECLARE
     totalHours INTEGER;
 BEGIN
-    SELECT PT.workHours INTO totalHours
-        FROM PartTimers PT
-        WHERE PT.username = NEW.username;
+    SELECT SUM(endHour - startHour) INTO totalHours
+        FROM WeeklyWorkSched 
+        WHERE username = NEW.username;
     IF totalHours > 48 THEN
         RAISE EXCEPTION '% cannot work for more than 48 hours', NEW.username;
     END IF;
@@ -384,7 +383,7 @@ check_total_hours_trigger();
 DROP TRIGGER IF EXISTS 
 check_total_hours_trigger ON WeeklyWorkSched CASCADE;
 CREATE CONSTRAINT TRIGGER at_least_five_check
-AFTER INSERT ON WeeklyWorkSched
+AFTER DELETE ON WeeklyWorkSched
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
 EXECUTE FUNCTION
@@ -394,7 +393,7 @@ at_least_five_check();
 DROP TRIGGER IF EXISTS 
 check_total_hours_trigger ON MonthlyWorkSched CASCADE;
 CREATE CONSTRAINT TRIGGER at_least_five_check
-AFTER INSERT ON MonthlyWorkSched
+AFTER DELETE ON MonthlyWorkSched
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
 EXECUTE FUNCTION

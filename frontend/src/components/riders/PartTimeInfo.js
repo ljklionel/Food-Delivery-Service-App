@@ -74,7 +74,6 @@ class PartTimeInfo extends Component {
                 .then(() => {
                     myAxios
                         .post('add_part_time', {
-                            totalHours: this.state.totalHours,
                             salary: this.state.salary
                         })
                         .then(response => {
@@ -335,9 +334,6 @@ class PartTimeInfo extends Component {
         this.setState(prevState => {
             return {
                 ...prevState,
-                day: 0,
-                dayString: '',
-                time: [],
                 noteList: [...this.state.noteList, note],
                 daysRecorded: [...this.state.daysRecorded, this.state.day],
                 totalHours: this.state.totalHours + size

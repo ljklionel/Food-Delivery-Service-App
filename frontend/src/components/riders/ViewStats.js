@@ -23,7 +23,7 @@ class ViewStats extends Component {
                     this.setState(prevState => {
                         return {
                             ...prevState,
-                            salary: salary
+                            salary: (parseFloat(salary)).toFixed(2),
                         };
                     });
                     if (this.props.isPartTime) {
@@ -65,7 +65,7 @@ class ViewStats extends Component {
                             console.log('rating',response.data.result[0]);
                             return {
                                 ...prevState,
-                                avgRating: response.data.result[0]
+                                avgRating: (parseFloat(response.data.result[0])).toFixed(1)
                             };
                         });
                     }
