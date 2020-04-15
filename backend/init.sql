@@ -149,7 +149,7 @@ CREATE TABLE Customers (
 );
 
 CREATE TABLE Locations (
-    location VARCHAR(32) PRIMARY KEY
+    location VARCHAR(256) PRIMARY KEY
 );
 
 CREATE TABLE Orders (
@@ -208,14 +208,6 @@ INSERT INTO FDSManagers(username) VALUES ('man');
 -- \COPY Orders(orderid,paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/correctorder.csv' CSV HEADER;
 \COPY Orders(paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
 \COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
-\copy users from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/delivery_users.csv' DELIMITER ',' CSV HEADER;
-\copy fulltimeshifts from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time_shifts.csv' DELIMITER ',' CSV HEADER;
-\copy parttimeshifts from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time_shifts.csv' DELIMITER ',' CSV HEADER;
-\copy deliveryriders from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/delivery_riders.csv' DELIMITER ',' CSV HEADER;
-\copy fulltimers from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time.csv' DELIMITER ',' CSV HEADER;
-\copy parttimers from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time.csv' DELIMITER ',' CSV HEADER;
-\copy weeklyworksched from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time_sched.csv' DELIMITER ',' CSV HEADER;
-\copy monthlyworksched from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time_sched.csv' DELIMITER ',' CSV HEADER;
                           
 ------ TRIGGERS ------
 

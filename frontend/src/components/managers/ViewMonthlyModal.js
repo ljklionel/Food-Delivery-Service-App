@@ -77,8 +77,8 @@ class ViewMonthlyModal extends Component {
                             {item['all_orders']}
                         </Table.Cell>
                         <Table.Cell>
-                            ${item['all_orders_cost'] == null ?
-                                    0 : item['all_orders_cost'].toFixed(2)}
+                            ${item['all_orders_costs'] == null ?
+                                    0 : item['all_orders_costs'].toFixed(2)}
                         </Table.Cell>
 						<Table.Cell>
                             {item['all_new_customers'] == null ?
