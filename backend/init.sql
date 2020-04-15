@@ -69,7 +69,7 @@ CREATE TABLE Promotions (
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
     discount NUMERIC(4,2) NOT NULL,
-    description VARCHAR(128) DEFAULT '',
+    description VARCHAR(128) NOT NULL DEFAULT '',
     PRIMARY KEY (promoId, rname)
 );
 
@@ -150,7 +150,7 @@ CREATE TABLE Customers (
 );
 
 CREATE TABLE Locations (
-    location VARCHAR(32) PRIMARY KEY
+    location VARCHAR(256) PRIMARY KEY
 );
 
 CREATE TABLE Orders (
@@ -206,7 +206,6 @@ INSERT INTO FDSManagers(username) VALUES ('man');
 \COPY FDSPromotions(promoId, promoDescription, startDate, endDate, discount, createdBy) FROM './csv/FDSpromotions.csv' CSV HEADER;
 \COPY Orders(paymentMethod,rating,location,amtPayable,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
 \COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
-
                           
 ------ TRIGGERS ------
 

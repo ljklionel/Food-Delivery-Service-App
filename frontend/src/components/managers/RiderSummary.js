@@ -12,7 +12,7 @@ class RiderSummary extends Component {
             monthlySummary: {},
             currentRider: props.rider
         }
-        this.updateSummary(props.customer)
+        this.updateSummary(props.rider)
 	}
 
 	updateSummary(username) {
@@ -24,7 +24,7 @@ class RiderSummary extends Component {
         .then(response => {
           console.log(response);
           this.setState({
-            monthlySummary: response.data.result,
+            monthlySummary: response.data.result[0],
             isLoading: false
           })
         })
@@ -47,18 +47,18 @@ class RiderSummary extends Component {
             <Grid.Column>
             <Statistic.Group horizontal>
                 <Statistic>
-                <Statistic.Value>{this.state.monthlySummary['riders_orders'] == null ? 0
-                  : this.state.monthlySummary['customer_orders']}</Statistic.Value>
-                <Statistic.Label>Order{this.state.monthlySummary['riders_orders'] !== 1 ? 's delivered':' delivered'}</Statistic.Label>
+                <Statistic.Value>{this.state.monthlySummary['rider_orders'] == null ? 0
+                  : this.state.monthlySummary['rider_orders']}</Statistic.Value>
+                <Statistic.Label>Order{this.state.monthlySummary['rider_orders'] !== 1 ? 's delivered':' delivered'}</Statistic.Label>
                 </Statistic>
                 <Statistic>
-                <Statistic.Value>{this.state.monthlySummary['hours'] == null ?
-                                0 : this.state.monthlySummary['hours'].toFixed(1)}</Statistic.Value>
-                <Statistic.Label>Hour{this.state.monthlySummary['hours'] !== 1 ? 's worked':' worked'}</Statistic.Label>
+                <Statistic.Value>{this.state.monthlySummary['hours_worked'] == null ?
+                                0 : this.state.monthlySummary['hours_worked']}</Statistic.Value>
+                <Statistic.Label>Hour{this.state.monthlySummary['hours_worked'] !== 1 ? 's worked':' worked'}</Statistic.Label>
                 </Statistic>
                 <Statistic>
                 <Statistic.Value>${this.state.monthlySummary['salary'] == null ?
-                                0 : this.state.monthlySummary['salary'].toFixed(1)}</Statistic.Value>
+                                0 : this.state.monthlySummary['salary'].toFixed(2)}</Statistic.Value>
                 <Statistic.Label>earned</Statistic.Label>
                 </Statistic>
             </Statistic.Group>
@@ -72,7 +72,7 @@ class RiderSummary extends Component {
             </Statistic>
             <Statistic>
             <Statistic.Value>{this.state.monthlySummary['num_rating'] == null ?
-                            0 : this.state.monthlySummary['num_rating'].toFixed(1)}</Statistic.Value>
+                            0 : this.state.monthlySummary['num_rating']}</Statistic.Value>
             <Statistic.Label>Rating{this.state.monthlySummary['num_rating'] !== 1 ? 's':''}</Statistic.Label>
             </Statistic>
             <Statistic>

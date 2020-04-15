@@ -8,7 +8,8 @@ class ViewLocationModal extends Component {
         this.state = {
             isLoading: true,
             contents: [],
-            modalOpen: false
+            modalOpen: false,
+            currentLocation: props.location
         }
     }
 
@@ -19,7 +20,7 @@ class ViewLocationModal extends Component {
     componentDidMount() {
         myAxios.get('/current_location_summary', {
             params: {
-                customer: this.state.currentCustomer
+                location: this.state.currentLocation
             }
           })
           .then(response => {
