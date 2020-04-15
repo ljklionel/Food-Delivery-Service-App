@@ -2,8 +2,6 @@
 pip3 install flask
 pip3 install psycopg2==2.7.6
 
-
-
 -- run backend --
 cd to backend 
 
@@ -18,8 +16,6 @@ CREATE DATABASE fds;
 
 -to run a file (example: init.sql, u have to be in the same directory)
 \i init.sql
-
-
 
 
 -- run webserver --
