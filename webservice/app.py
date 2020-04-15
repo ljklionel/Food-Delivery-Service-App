@@ -115,8 +115,60 @@ def logout():
     logout_user()
     return {}, 200
 
-# RESTAURANT STAFF
+@app.route("/user_data")
+@login_required
+def user_data():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT username, firstName, lastName, phoneNumber FROM Users WHERE username = %s", (username,)
+    )
+    return ({'result': cursor.fetchone()}, 200)
 
+@app.route("/edit_profile", methods=['POST'])
+@login_required
+def edit_profile():
+    username = current_user.get_id()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("BEGIN;")
+    updates = request.json['updates']
+    if 'firstName' in updates:
+        cursor.execute("UPDATE Users SET firstName = %s WHERE username = %s;", (updates['firstName'], username))
+
+    if 'lastName' in updates:
+        cursor.execute("UPDATE Users SET lastName = %s WHERE username = %s;", (updates['lastName'], username))
+
+    if 'phoneNumber' in updates:
+        cursor.execute("UPDATE Users SET phoneNUmber = %s WHERE username = %s;", (updates['phoneNumber'], username))
+
+    if 'password' in updates:
+        cursor.execute("UPDATE Users SET hashedPassword = %s WHERE username= %s;", (bcrypt.generate_password_hash(updates['password']).decode(), username))
+
+    cursor.execute('COMMIT;')
+    return ({'result': {'ok': 1, 'msg': 'Update successful'}}, 200)
+
+@app.route("/edit_password", methods=['POST'])
+@login_required
+def edit_password():
+    username = current_user.get_id()
+    conn = get_db()
+    oldPassword = request.json['updates']['oldPassword']
+    newPassword = request.json['updates']['newPassword']
+    cursor = conn.cursor()
+    cursor.execute("SELECT hashedPassword FROM Users WHERE username = %s;", (username,))
+    hashedPassword = cursor.fetchone()[0]
+    if bcrypt.check_password_hash(hashedPassword, oldPassword):
+        cursor = conn.cursor()
+        cursor.execute("BEGIN;")
+        cursor.execute("UPDATE Users SET hashedPassword = %s WHERE username= %s;", (bcrypt.generate_password_hash(newPassword).decode(), username))
+        cursor.execute("COMMIT;")
+        return {'result': {'ok': 1, 'msg': 'Update successful'}}
+    else:
+        return {'result': {'ok': 0, 'msg': 'Wrong Password'}}
+    
+# RESTAURANT STAFF
 
 @app.route("/restaurants")
 @login_required
@@ -205,7 +257,7 @@ def get_restaurant_summary():
     conn = get_db()
     # number of completed orders and total cost of all completed orders
     cursor = conn.cursor()
-    cursor.execute("SELECT count(*), sum(fee) * 10/12 FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+    cursor.execute("SELECT count(*), sum(amtPayable) * 10/12 FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
                    (rname, start_time, end_time))
     res = cursor.fetchone()
     completed_orders = res[0]
@@ -230,7 +282,7 @@ def get_all_restaurant_summary():
     conn = get_db()
 
     cursor = conn.cursor()
-    cursor.execute("SELECT count(*), sum(fee) * 10/12, extract(year from deliveryTime), extract(mon from deliveryTime) " +
+    cursor.execute("SELECT count(*), sum(amtPayable) * 10/12, extract(year from deliveryTime), extract(mon from deliveryTime) " +
         "FROM Orders " + 
         "WHERE rname = %s " + 
         "GROUP BY 3,4 "
@@ -504,7 +556,7 @@ def get_delivery():
     username = current_user.get_id()
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT orderid, location, orderTime, departTime1, arriveTime, departTime2, fee, rname FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NULL;" % (username))
+    cursor.execute("SELECT orderid, location, orderTime, departTime1, arriveTime, departTime2, amtPayable, rname FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NULL;" % (username))
     result = cursor.fetchone()
     return ({'result': result}, 200)
 
@@ -570,6 +622,7 @@ def set_delivery_time():
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': 'Arrival time %s has been recorded' % (deliveryTime)}, 200)
 
+# == Customers Start ==
 
 @app.route("/my_info")
 @login_required
@@ -609,7 +662,7 @@ def make_order():
         cursor = conn.cursor()
         cursor.execute("BEGIN;")
         # Update Orders first
-        cursor.execute("INSERT INTO Orders(paymentMethod, location, fee, orderTime, riderUsername, customerUsername, rname) VALUES (%s, %s, %s, %s, %s, %s, %s);",
+        cursor.execute("INSERT INTO Orders(paymentMethod, location, amtPayable, orderTime, riderUsername, customerUsername, rname) VALUES (%s, %s, %s, %s, %s, %s, %s);",
                        (creditCard, location, round(totalPrice + fee - totalDiscount, 2), timeStamp, deliveryRider, customer, rname,))
         cursor.execute("COMMIT;")
 
@@ -705,7 +758,7 @@ def customer_orders():
         'currentCustomer'), request.args.get('limit'), request.args.get('offset')
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT fname, quantity, orderTime, paymentMethod, location, fee, departTime1, arriveTime, departTime2, deliveryTime, riderUsername, rname, orderid FROM Orders NATURAL JOIN ContainsFood " +
+    cursor.execute("SELECT fname, quantity, orderTime, paymentMethod, location, amtPayable, departTime1, arriveTime, departTime2, deliveryTime, riderUsername, rname, orderid FROM Orders NATURAL JOIN ContainsFood " +
                    "WHERE quantity <> 0 AND customerUsername = %s ORDER BY orderTime DESC LIMIT %s OFFSET %s;", (currentCustomer, limit, offset))
     result = cursor.fetchall()
     return ({'result': result}, 200)
@@ -937,7 +990,7 @@ def get_all_customer_summary():  # TODO new customer of the month -yuting
     result = {}
     # number of orders
     cursor = conn.cursor()
-    cursor.execute("SELECT count(*), sum(fee) * 10/12, extract(year from deliveryTime), extract(mon from deliveryTime) "  +
+    cursor.execute("SELECT count(*), sum(amtPayable) * 10/12, extract(year from deliveryTime), extract(mon from deliveryTime) "  +
     "FROM Orders GROUP BY 3,4 ORDER BY 3 DESC, 4 DESC;")
     result['orders_and_fee'] = cursor.fetchall()
 
@@ -957,7 +1010,7 @@ def get_customer_summary():
     result = {}
 
     cursor = conn.cursor()
-    cursor.execute("SELECT count(*), sum(fee) * 10/12,  extract(year from deliveryTime), extract(mon from deliveryTime) " +
+    cursor.execute("SELECT count(*), sum(amtPayable) * 10/12,  extract(year from deliveryTime), extract(mon from deliveryTime) " +
     "FROM Orders WHERE customerUsername = %s GROUP BY 3,4 ORDER BY 3 DESC, 4 DESC ;",
                     (username,))
     result['orders_and_fee'] = cursor.fetchall()
