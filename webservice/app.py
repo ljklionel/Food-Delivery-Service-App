@@ -710,17 +710,17 @@ def connectDeliveryRider():
     dayInNumber = convertDayToNumber(day)
 
     # Randomly select one
-    cursor.execute("SELECT username FROM DeliveryRiders")
-    totalResult = cursor.fetchone()
-    allDr = totalResult
+    # cursor.execute("SELECT username FROM DeliveryRiders")
+    # totalResult = cursor.fetchone()
+    # allDr = totalResult
 
     # Select according to schedule
-    # cursor.execute("SELECT username FROM MonthlyWorkSched MWS natural join FullTimeShifts FTS WHERE MWS.workday = %s AND (%s < FTS.breakStart OR %s >= FTS.breakEnd) AND MWS.startHour <= %s AND MWS.endHour > %s", (dayInNumber, hour, hour, hour, hour))
-    # fullTimers = cursor.fetchall()
-    # cursor.execute("SELECT username FROM WeeklyWorkSched WWS natural join PartTimeShifts PTS WHERE WWS.workday = %s AND WWS.startHour <= %s AND WWS.endHour > %s", (dayInNumber, hour, hour))
-    # partTimers = cursor.fetchall()
+    cursor.execute("SELECT username FROM MonthlyWorkSched MWS natural join FullTimeShifts FTS WHERE MWS.workday = %s AND (%s < FTS.breakStart OR %s >= FTS.breakEnd) AND MWS.startHour <= %s AND MWS.endHour > %s", (dayInNumber, hour, hour, hour, hour))
+    fullTimers = cursor.fetchall()
+    cursor.execute("SELECT username FROM WeeklyWorkSched WWS natural join PartTimeShifts PTS WHERE WWS.workday = %s AND WWS.startHour <= %s AND WWS.endHour > %s", (dayInNumber, hour, hour))
+    partTimers = cursor.fetchall()
 
-    # allDr = fullTimers + partTimers
+    allDr = fullTimers + partTimers
     if (len(allDr) != 0):
         selectedDeliveryRider = random.choice(allDr)
         return ({'deliveryRider': selectedDeliveryRider}, 200)
