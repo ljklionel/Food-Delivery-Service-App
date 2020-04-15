@@ -83,7 +83,7 @@ class MyOrders extends Component {
                         <Table.Row>
                             <Table.HeaderCell><p align='middle'>View Orders</p></Table.HeaderCell>
                             <Table.HeaderCell>Restaurant</Table.HeaderCell>
-                            <Table.HeaderCell>Done</Table.HeaderCell>
+                            {/* <Table.HeaderCell>Done</Table.HeaderCell> */}
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -95,9 +95,9 @@ class MyOrders extends Component {
                                 <Table.Cell>
                                     {item[0][11]}
                                 </Table.Cell>
-                                <Table.Cell>
+                                {/* <Table.Cell>
                                     {item[0][9] === null ? "No" : "Yes"}
-                                </Table.Cell>
+                                </Table.Cell> */}
                             </Table.Row>
                         ))}
                     </Table.Body>
