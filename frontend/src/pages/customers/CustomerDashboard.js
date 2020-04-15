@@ -270,7 +270,7 @@ class CustomerDashboard extends React.Component {
             <div>
                 <Grid columns={4}>
                     <Grid.Column>
-                        <Image style={{}} avatar style={{ fontSize: '30px' }} src={'/images/avatar/customer.svg'} />
+                        <Image style={{}} avatar style={{ fontSize: '70px' }} src={'/images/avatar/customer.svg'} />
                     </Grid.Column>
                     {/* <Grid.Column></Grid.Column> */}
                     <Grid.Column>
