@@ -2,7 +2,7 @@
 ## CS2102 Project
 
 Team Members:
-Chen Hui, Jason Sathya Citro, Lim Jun Kuang, Lionel, Lin Yuting
+Chen Hui, Jason Sathya Citro, Lim Jun Kuang Lionel, Lin Yuting
 
 ### Introduction
 
@@ -10,9 +10,11 @@ Chen Hui, Jason Sathya Citro, Lim Jun Kuang, Lionel, Lin Yuting
 A Food Delivery Service App for Customers, Delivery Riders, Restaurant Staff and FDS Manager.
 
 <p align = 'center'>
-<img src="images/FDS.png" alt="Final-Schema" border="0"></a>
+<img src="images/FDS.png" alt="Homepagear" border="0"></a>
 </p>
 <p align = 'center'><b>Home page</b></p>
+
+<br>
 
 ### Database
 
@@ -82,7 +84,7 @@ python3 generate_orders.py
 2. You need to supply your own username and password for psql.
 
 ```sh
-cd ../backend
+cd ../../backend
 psql -h localhost -p 5432 --u [username]
 [input password]
 ```
@@ -100,9 +102,16 @@ CREATE DATABASE fds;
 ```
 11. Allow some time to load the data. (No longer than 30 seconds) 
 
-12.  FDS should now be operating. If the database is initialized correctly, you should be able to login with existing accounts or create a new account. Existing accounts all have passwords as their username. You may try logging in using the sample accounts listed below which have data pre-loaded.
+12.  FDS should now be operating. If the database is initialized correctly, you should be able to login with existing accounts or create a new account. Existing accounts all have username as their password. You may try logging in using the sample accounts listed below which have data pre-loaded.
 
 ```sh
 Sample Customer UserID: Emma
 Sample Customer password: Emma
 ```
+
+13. If you tried to register on localhost:3000 but failed, go to webservice/db.py and manually type in your psql username and password there, as shown in the picture below.
+
+```sh
+cd webservice/db.py
+```
+<img src="images/db_py.png" alt="db.py" border="0"></a>
