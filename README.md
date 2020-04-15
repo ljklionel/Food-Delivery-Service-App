@@ -10,7 +10,7 @@ Chen Hui, Jason Sathya Citro, Lim Jun Kuang Lionel, Lin Yuting
 A Food Delivery Service App for Customers, Delivery Riders, Restaurant Staff and FDS Manager.
 
 <p align = 'center'>
-<img src="images/FDS.png" alt="Final-Schema" border="0"></a>
+<img src="images/FDS.png" alt="Homepage" border="0"></a>
 </p>
 <p align = 'center'><b>Home page</b></p>
 
@@ -108,3 +108,10 @@ CREATE DATABASE fds;
 Sample Customer UserID: Emma
 Sample Customer password: Emma
 ```
+
+13. If you tried to register on localhost:3000 but failed, go to webservice/db.py and manually type in your psql username and password there, as shown in the picture below.
+
+```sh
+cd webservice/db.py
+```
+<img src="images/db_py.png" alt="db.py" border="0"></a>

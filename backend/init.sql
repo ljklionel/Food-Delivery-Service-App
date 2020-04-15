@@ -204,7 +204,7 @@ INSERT INTO FDSManagers(username) VALUES ('man');
 \COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
 \COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
 \COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/delivery_users.csv' CSV HEADER;
-\COPY Users(username, hashedPassword, firstName, lastName, phoneNumber, joindate) FROM './csv/customer_users.csv' CSV HEADER;
+\COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/customer_users.csv' CSV HEADER;
 \COPY DeliveryRiders(username, salary) FROM './csv/delivery_riders.csv' CSV HEADER;
 \COPY Customers(username, creditCard, rewardPoint) FROM './csv/customer.csv' CSV HEADER;
 \COPY PartTimers(username) FROM './csv/part_time.csv' CSV HEADER;
