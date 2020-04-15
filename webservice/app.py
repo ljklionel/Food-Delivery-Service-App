@@ -1048,7 +1048,7 @@ def get_rider_summary():
     cursor = conn.cursor()
     # number of orders, average delivery time, number of ratings, average rating
     cursor.execute("SELECT count(*), sum(EXTRACT(EPOCH FROM arriveTime - orderTime)/60)/count(*), count(rating), sum(rating)/count(rating), " + 
-    "extract(year from deliveryTime), extract(mon from deliveryTime) " +
+    "extract(year from deliveryTime), extract(mon from deliveryTime), sum(amtPayable) * 20/120 " +
     "FROM Orders WHERE riderUsername = %s GROUP BY 5, 6 ORDER BY 5 DESC, 6 DESC;",
                     (username,))
     result['orders_and_ratings'] = cursor.fetchall()
@@ -1056,16 +1056,19 @@ def get_rider_summary():
     # of hours worked
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT sum(endHour - startHour) FROM MonthlyWorkSched WHERE username = %s;", (username,))
+        "SELECT sum(endHour - startHour - (breakEnd - breakStart)) FROM MonthlyWorkSched natural join FullTimeShifts WHERE username = %s;", (username,))
     hours_worked = cursor.fetchone()[0]
+    work_type = "fulltime"
     if hours_worked is None:
+        work_type = "parttime"
         cursor = conn.cursor()
         cursor.execute(
             "SELECT sum(endHour - startHour) FROM WeeklyWorkSched WHERE username = %s;", (username,))
         hours_worked = cursor.fetchone()[0]
     result['hours_worked'] = hours_worked
+    result['work_type'] = work_type
 
-    # total salary
+    # basic salary
     cursor = conn.cursor()
     cursor.execute(
         "SELECT sum(salary) FROM DeliveryRiders WHERE username = %s;", (username,))
