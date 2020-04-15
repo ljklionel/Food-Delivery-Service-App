@@ -416,7 +416,7 @@ def get_salary():
     cursor.execute("SELECT amtPayable FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NOT NULL;" % username)
     result = cursor.fetchall()
     for val in result:
-        salary = salary + (float(val[0]) * (1/5))
+        salary = salary + (float(val[0]) * (1/6))
     return ({'result': salary}, 200)
 
 @app.route("/add_full_time", methods=['POST'])
