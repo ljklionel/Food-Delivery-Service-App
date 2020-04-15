@@ -211,7 +211,7 @@ def get_restaurant_summary():
     completed_orders = cursor.fetchone()[0]
     # total cost of all completed orders
     cursor = conn.cursor()
-    cursor.execute("SELECT sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+    cursor.execute("SELECT sum(amtPayable) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
                    (rname, start_time, end_time))
     total_cost = cursor.fetchone()[0]
     # top 5 favorite food items
@@ -249,7 +249,7 @@ def get_all_restaurant_summary():
         found = True
         # total cost of all completed orders
         cursor = conn.cursor()
-        cursor.execute("SELECT sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+        cursor.execute("SELECT sum(amtPayable) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
                        (rname, cur_start_time, cur_end_time))
         total_cost = cursor.fetchone()[0]
         # top 5 favorite food items
@@ -513,7 +513,7 @@ def get_delivery():
     username = current_user.get_id()
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT orderid, location, orderTime, departTime1, arriveTime, departTime2, fee, rname FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NULL;" % (username))
+    cursor.execute("SELECT orderid, location, orderTime, departTime1, arriveTime, departTime2, amtPayable, rname FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NULL;" % (username))
     result = cursor.fetchone()
     return ({'result': result}, 200)
 
@@ -579,6 +579,7 @@ def set_delivery_time():
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': 'Arrival time %s has been recorded' % (deliveryTime)}, 200)
 
+# == Customers Start ==
 
 @app.route("/my_info")
 @login_required
@@ -618,7 +619,7 @@ def make_order():
         cursor = conn.cursor()
         cursor.execute("BEGIN;")
         # Update Orders first
-        cursor.execute("INSERT INTO Orders(paymentMethod, location, fee, orderTime, riderUsername, customerUsername, rname) VALUES (%s, %s, %s, %s, %s, %s, %s);",
+        cursor.execute("INSERT INTO Orders(paymentMethod, location, amtPayable, orderTime, riderUsername, customerUsername, rname) VALUES (%s, %s, %s, %s, %s, %s, %s);",
                        (creditCard, location, round(totalPrice + fee - totalDiscount, 2), timeStamp, deliveryRider, customer, rname,))
         cursor.execute("COMMIT;")
 
@@ -714,7 +715,7 @@ def customer_orders():
         'currentCustomer'), request.args.get('limit'), request.args.get('offset')
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT fname, quantity, orderTime, paymentMethod, location, fee, departTime1, arriveTime, departTime2, deliveryTime, riderUsername, rname, orderid FROM Orders NATURAL JOIN ContainsFood " +
+    cursor.execute("SELECT fname, quantity, orderTime, paymentMethod, location, amtPayable, departTime1, arriveTime, departTime2, deliveryTime, riderUsername, rname, orderid FROM Orders NATURAL JOIN ContainsFood " +
                    "WHERE quantity <> 0 AND customerUsername = %s ORDER BY orderTime DESC LIMIT %s OFFSET %s;", (currentCustomer, limit, offset))
     result = cursor.fetchall()
     return ({'result': result}, 200)
@@ -958,7 +959,7 @@ def get_all_customer_summary():  # TODO new customer of the month -yuting
         all_orders = cursor.fetchone()[0]
         # total costs of all orders
         cursor = conn.cursor()
-        cursor.execute("SELECT sum(fee) FROM Orders WHERE deliveryTime BETWEEN %s AND %s;",
+        cursor.execute("SELECT sum(amtPayable) FROM Orders WHERE deliveryTime BETWEEN %s AND %s;",
                        (cur_start_time, cur_end_time))
         all_orders_costs = cursor.fetchone()[0]
         # number of new customers
@@ -994,7 +995,7 @@ def get_customer_summary():
         customer_orders = cursor.fetchone()[0]
         # total cost of all of customer's orders
         cursor = conn.cursor()
-        cursor.execute("SELECT sum(fee) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s",
+        cursor.execute("SELECT sum(amtPayable) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s",
                        (username, cur_start_time, cur_end_time))
         customer_orders_costs = cursor.fetchone()[0]
         res = {'year': cur_start_time.year, 'month': cur_start_time.month,
