@@ -69,7 +69,7 @@ CREATE TABLE Promotions (
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
     discount NUMERIC(4,2) NOT NULL,
-    description VARCHAR(128) DEFAULT '',
+    description VARCHAR(128) NOT NULL DEFAULT '',
     PRIMARY KEY (promoId, rname)
 );
 
@@ -159,8 +159,8 @@ CREATE TABLE Orders (
     -- Delivers combined
     rating INTEGER CHECK (rating in (1,2,3,4,5)),
 	location VARCHAR(32) NOT NULL REFERENCES Locations,
-	fee FLOAT NOT NULL,
-	orderTime TIMESTAMP,
+	amtPayable FLOAT NOT NULL,
+	orderTime TIMESTAMP NOT NULL,
 	departTime1 TIMESTAMP,
 	arriveTime TIMESTAMP,
 	departTime2 TIMESTAMP,
@@ -181,44 +181,6 @@ CREATE TABLE ContainsFood (
     orderid INTEGER REFERENCES Orders,
     PRIMARY KEY (fname, orderid)
 ); 
-
-BEGIN TRANSACTION;
-SET CONSTRAINTS ALL DEFERRED;
------ INSERT DATA -----
-INSERT INTO Users(username, hashedPassword, firstName, lastName, phoneNumber, joinDate) VALUES ('man', 'dummy', 'he','llo','123', now()::date);
-INSERT INTO FDSManagers(username) VALUES ('man');
-
-\COPY Locations(location) FROM './csv/locations.csv' CSV HEADER;
-\COPY FoodCategories(category) FROM './csv/food_categories.csv' CSV HEADER;
-\COPY Food(fname,category) FROM './csv/food.csv' CSV HEADER;
-\COPY Restaurants(rname, minSpending) FROM './csv/restaurants.csv' CSV HEADER;
-\COPY Promotions(promoId, rname, startDate, endDate, discount) FROM './csv/promotions.csv' CSV HEADER;
-\COPY Sells(fname,rname,avail,maxLimit,price) FROM './csv/sells.csv' CSV HEADER;
-\COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
-\COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
--- \COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/customer_users.csv' CSV HEADER;
-\COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/delivery_users.csv' CSV HEADER;
-\COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/customer_users.csv' CSV HEADER;
--- \COPY Customers(username, creditCard, rewardPoint) FROM './csv/customer.csv' CSV HEADER;
-\COPY DeliveryRiders(username, salary) FROM './csv/delivery_riders.csv' CSV HEADER;
-\COPY Customers(username, creditCard, rewardPoint) FROM './csv/customer.csv' CSV HEADER;
-\COPY PartTimers(username, workHours) FROM './csv/part_time.csv' CSV HEADER;
-\COPY FullTimers(username) FROM './csv/full_time.csv' CSV HEADER;
-\COPY WeeklyWorkSched(username,workday,starthour,endhour) FROM './csv/part_time_sched.csv' CSV HEADER;
-\COPY MonthlyWorkSched(username,workday,starthour,endhour) FROM './csv/full_time_sched.csv' CSV HEADER;
-\COPY FDSPromotions(promoId, promoDescription, startDate, endDate, discount, createdBy) FROM './csv/FDSpromotions.csv' CSV HEADER;
--- \COPY Orders(orderid,paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/correctorder.csv' CSV HEADER;
-\COPY Orders(paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
-\COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
-\copy users from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/delivery_users.csv' DELIMITER ',' CSV HEADER;
-\copy fulltimeshifts from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time_shifts.csv' DELIMITER ',' CSV HEADER;
-\copy parttimeshifts from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time_shifts.csv' DELIMITER ',' CSV HEADER;
-\copy deliveryriders from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/delivery_riders.csv' DELIMITER ',' CSV HEADER;
-\copy fulltimers from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time.csv' DELIMITER ',' CSV HEADER;
-\copy parttimers from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time.csv' DELIMITER ',' CSV HEADER;
-\copy weeklyworksched from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time_sched.csv' DELIMITER ',' CSV HEADER;
-\copy monthlyworksched from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time_sched.csv' DELIMITER ',' CSV HEADER;
-COMMIT;
                           
 ------ TRIGGERS ------
 
@@ -228,19 +190,20 @@ total_participation_orders_wrt_containsfood()
     RETURNS TRIGGER AS $$
 DECLARE
     order_id INTEGER;
-    ok boolean;
+    pass boolean;
 BEGIN
-    IF (TG_TABLE_NAME = 'Orders') THEN
+    IF (TG_TABLE_NAME = 'orders') THEN
         order_id = NEW.orderid;
+        RAISE NOTICE 'Total participation orders wrt contains food is working for orderid: %', order_id;
     ELSE
         order_id = OLD.orderid;
     END IF;
-
-    SELECT true INTO ok
+    
+    SELECT true INTO pass
         FROM ContainsFood
         WHERE orderid = order_id;
     IF NOT FOUND THEN
-        SELECT false INTO ok
+        SELECT false INTO pass
             FROM Orders
             WHERE orderid = order_id;
         IF FOUND THEN
@@ -251,6 +214,41 @@ BEGIN
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Trigger to enforce every order must contain food from an associated restaurant
+CREATE OR REPLACE function
+order_contains_food_from_an_associated_restaurant()
+    RETURNS TRIGGER AS $$
+DECLARE
+    order_id INTEGER;
+    pass boolean;
+    r_name VARCHAR;
+    f_name VARCHAR;
+BEGIN
+    -- RAISE NOTICE 'Order contains food from an associated restaurant trigger %', TG_TABLE_NAME;
+    RAISE NOTICE 'order_id is %', NEW.orderid;
+    -- RAISE NOTICE 'f_name is %', NEW.fname;
+
+    order_id = NEW.orderid;
+    f_name = NEW.fname;
+    SELECT rname into r_name
+        FROM Orders
+        WHERE orderid = order_id;
+    -- RAISE NOTICE 'r_name is %', r_name;
+
+    SELECT true INTO pass
+        FROM Sells
+        WHERE rname = r_name
+        AND fname = f_name;
+    IF NOT FOUND THEN
+        RAISE exception
+        'Order ID % contains food % that is not from %', order_id, f_name, r_name;
+    END IF;
+    RAISE NOTICE 'Found food % from %', f_name, r_name;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
 
 -- Trigger to enforce total work hours constraint
 CREATE OR REPLACE FUNCTION 
@@ -271,6 +269,7 @@ BEGIN
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- Trigger to enforce break between to work interval
 CREATE OR REPLACE FUNCTION 
@@ -405,7 +404,7 @@ FOR EACH ROW
 EXECUTE FUNCTION
 check_total_hours_trigger();
 
-/* Trigger for insert on WWS */
+/* Trigger for delete or update on WWS */
 DROP TRIGGER IF EXISTS 
 at_least_five_check ON WeeklyWorkSched CASCADE;
 CREATE CONSTRAINT TRIGGER 
@@ -416,7 +415,7 @@ FOR EACH ROW
 EXECUTE FUNCTION
 at_least_five_check();
 
-/* Trigger for insert on MWS */
+/* Trigger for delete or update on MWS */
 DROP TRIGGER IF EXISTS 
 at_least_five_check ON MonthlyWorkSched CASCADE;
 CREATE CONSTRAINT TRIGGER 
@@ -437,3 +436,49 @@ DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
 EXECUTE FUNCTION
 consecutive_workdays();
+
+
+/* Trigger for insert/update on ContainsFood to enforce every order must contain food from an associated restaurant */
+DROP TRIGGER IF EXISTS 
+order_contains_food_from_an_associated_restaurant on ContainsFood CASCADE;
+CREATE constraint TRIGGER
+order_contains_food_from_an_associated_restaurant
+AFTER INSERT OR UPDATE of fname ON ContainsFood deferrable initially deferred
+FOR EACH ROW
+EXECUTE FUNCTION
+order_contains_food_from_an_associated_restaurant();
+
+
+/* Testing the two constraints. Take a lot of time */
+-- BEGIN TRANSACTION;
+-- \COPY Orders(paymentMethod,rating,location,amtPayable,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
+-- \COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
+-- COMMIT;
+BEGIN TRANSACTION;
+SET CONSTRAINTS ALL DEFERRED;
+
+----- INSERT DATA -----
+INSERT INTO Users(username, hashedPassword, firstName, lastName, phoneNumber, joinDate) VALUES ('man', 'dummy', 'he','llo','123', now()::date);
+INSERT INTO FDSManagers(username) VALUES ('man');
+\COPY Locations(location) FROM './csv/locations.csv' CSV HEADER;
+\COPY FoodCategories(category) FROM './csv/food_categories.csv' CSV HEADER;
+\COPY Food(fname,category) FROM './csv/food.csv' CSV HEADER;
+\COPY Restaurants(rname, minSpending) FROM './csv/restaurants.csv' CSV HEADER;
+\COPY Promotions(promoId, rname, startDate, endDate, discount) FROM './csv/promotions.csv' CSV HEADER;
+\COPY Sells(fname,rname,avail,maxLimit,price) FROM './csv/sells.csv' CSV HEADER;
+\COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
+\COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
+\COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/delivery_users.csv' CSV HEADER;
+\COPY Users(username, hashedPassword, firstName, lastName, phoneNumber, joindate) FROM './csv/customer_users.csv' CSV HEADER;
+\COPY DeliveryRiders(username, salary) FROM './csv/delivery_riders.csv' CSV HEADER;
+\COPY Customers(username, creditCard, rewardPoint) FROM './csv/customer.csv' CSV HEADER;
+\COPY PartTimers(username, workHours) FROM './csv/part_time.csv' CSV HEADER;
+\COPY FullTimers(username) FROM './csv/full_time.csv' CSV HEADER;
+\COPY WeeklyWorkSched(username,workday,starthour,endhour) FROM './csv/part_time_sched.csv' CSV HEADER;
+\COPY MonthlyWorkSched(username,workday,starthour,endhour) FROM './csv/full_time_sched.csv' CSV HEADER;
+\COPY FDSPromotions(promoId, promoDescription, startDate, endDate, discount, createdBy) FROM './csv/FDSpromotions.csv' CSV HEADER;
+/* Tested with the two constraints and passed */
+/* Is inserted without the constraints so that init.sql will not be slow */
+\COPY Orders(paymentMethod,rating,location,amtPayable,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
+\COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
+COMMIT;

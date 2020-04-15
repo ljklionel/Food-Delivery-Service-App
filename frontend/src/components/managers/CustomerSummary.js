@@ -23,8 +23,13 @@ class CustomerSummary extends Component {
         })
         .then(response => {
           console.log(response);
+          var res = {}
+          if (response.data.result.length !== 0) {
+            res['customer_orders'] = response.data.result['orders_and_fee'][0][0]
+            res['customer_orders_costs'] = response.data.result['orders_and_fee'][0][1]
+          }
           this.setState({
-            monthlySummary: response.data.result[0],
+            monthlySummary: res,
             isLoading: false
           })
         })

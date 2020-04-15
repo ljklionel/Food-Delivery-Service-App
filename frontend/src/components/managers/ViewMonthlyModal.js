@@ -17,15 +17,40 @@ class ViewMonthlyModal extends Component {
     handleClose = () => this.setState({ modalOpen: false })
 
 	componentDidMount() {
-        myAxios.get('/all_customer_summary', {
-            params: {
-                customer: this.state.currentCustomer
-            }
-          })
+        myAxios.get('/all_customer_summary')
           .then(response => {
             console.log(response);
+            var res = []
+            var orders_and_fee = response.data.result['orders_and_fee']
+            var total_cus = response.data.result['all_new_customers']
+            var j = 0
+            for (var i = 0; i < orders_and_fee.length; ++i) {
+                var data = {}
+                data['year'] = orders_and_fee[i][2]
+                data['month'] = orders_and_fee[i][3]
+                data['all_orders'] = orders_and_fee[i][0]
+                data['all_orders_costs'] = orders_and_fee[i][1]
+                if (j < total_cus.length && total_cus[j][1] == data['year'] && total_cus[j][2] == data['month']) {
+                    data['all_new_customers'] = total_cus[j][0]
+                    j++
+                } else {
+                    data['all_new_customers'] = 0
+                }
+                res.push(data)
+            }
+            while(j < total_cus.length) {
+                var data = {}
+                data['year'] = total_cus[j][1]
+                data['month'] = total_cus[j][2]
+                data['all_orders'] = 0
+                data['all_orders_costs'] = 0
+                data['all_new_customers'] = total_cus[j][0]
+                res.push(data)
+                j++
+            }
+            console.log(res)
             this.setState({
-              contents: response.data.result,
+              contents: res,
               isLoading: false
             })
           })
