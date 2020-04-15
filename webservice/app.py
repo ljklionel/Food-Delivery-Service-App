@@ -1047,7 +1047,7 @@ def get_rider_summary():
     conn = get_db()
     cursor = conn.cursor()
     # number of orders, average delivery time, number of ratings, average rating
-    cursor.execute("SELECT count(*), sum(EXTRACT(EPOCH FROM arriveTime - orderTime)/60)/count(*), count(rating), sum(rating)/count(rating), " + 
+    cursor.execute("SELECT count(*), sum(EXTRACT(EPOCH FROM arriveTime - orderTime)/60)/count(*), count(rating), CAST (avg(rating) AS FLOAT), " + 
     "extract(year from deliveryTime), extract(mon from deliveryTime), sum(amtPayable) * 20/120 " +
     "FROM Orders WHERE riderUsername = %s GROUP BY 5, 6 ORDER BY 5 DESC, 6 DESC;",
                     (username,))
