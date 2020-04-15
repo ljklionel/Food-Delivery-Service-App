@@ -12,10 +12,7 @@ from random import randint
 import sys
 from random import randrange
 import datetime
-
 bcrypt = Bcrypt()
-
-# Choose one for loop to run, comment the other
 
 customers = []
 checkDup = []
@@ -43,8 +40,10 @@ startDate = datetime.datetime(2013, 9, 20, 16, 00) # time to be normalised from 
 # for x in random_date(startDate, 5):
 #     print(x.strftime("%d/%m/%y %H:%M"))
 
+# print(datetime.datetime.now().hour)
+
 start_date = datetime.date(2019, 4, 1)
-end_date = datetime.date(2020, 4, 10)
+end_date = datetime.date(2020, datetime.datetime.now().month, datetime.datetime.now().day)
 time_between_dates = end_date - start_date
 days_between_dates = time_between_dates.days
 
@@ -126,29 +125,54 @@ def sortingKey(x):
 
 timeArray.sort(key=sortingKey)
 
+header = True
+hashedPasswordArray = []
+f_hashes = open("hashedpasswords.txt", "r")
+for line in f_hashes:
+    if header:
+        header = False
+        continue
+    # print(line)
+    if line.rstrip() == 'End of users':
+        break
+    hashedPassword = line.rstrip().split(',')[1]
+    hashedPasswordArray.append(hashedPassword)
+
+# print(hashedPasswordArray)
+
+f_users = open("../csv/customer_users.csv", "w+")
+f_users.write("username,hashedPassword,phoneNumber,firstName,lastName,joindate\n")
+i = 0
 for name in customers:
         username = name[0]
-        firstName = "customer"
-        lastName = "customer"
-        phoneNumber = runningVariable * 123456
+        firstName = username
+        lastName = random.choice(customers)[0]
+        phoneNumber = randint(80000001, 99000000)
         password = username
         joinDate = timeArray[runningVariable][0]
-        hash = bcrypt.generate_password_hash(password).decode()
-        # hash ='test'
+        # hash = bcrypt.generate_password_hash(password).decode()
+        hash = hashedPasswordArray[i]
         # print(hash)
-        user = [str(username), str(hash), str(firstName), str(lastName), str(phoneNumber), str(joinDate)]
-        print(','.join(user))
+        user = [str(username), str(hash), str(phoneNumber), str(firstName), str(lastName), str(joinDate)]
+        # print(','.join(user))
         runningVariable += 1
+        i += 1
+        f_users.write(','.join(user)+"\n")
         
-
+f_users.close()
 # print(timeArray)
-print("End of users")
+# print("End of users")
 
+f_customers = open("../csv/customer.csv", "w+")
+f_customers.write("username,creditCard,rewardPoint\n")
 for name in customers:
         username = name[0]
         payment = ['Cash', 'Mastercard', 'Visa']
         selectedPayment = random.choice(payment)
         rewardpoint = randint(0,3000)
-        print(username + ',' + selectedPayment + ',' +str(rewardpoint))
+        # print(username + ',' + selectedPayment + ',' +str(rewardpoint), end = "")
+        f_customers.write(username + ',' + selectedPayment + ',' +str(rewardpoint)+"\n")
+
+f_customers.close()
 
 # print(runningVariable)

@@ -13,7 +13,7 @@ class EditNameModal extends Component {
         }
     }
 
-    handleOpen = () => this.setState({ modalOpen: true })
+    handleOpen = () => this.setState({ modalOpen: true, firstName: this.props.firstName, lastName: this.props.lastName })
   
     handleClose = () => {
         this.setState({

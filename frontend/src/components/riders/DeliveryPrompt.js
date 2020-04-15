@@ -21,7 +21,6 @@ class DeliveryPrompt extends Component {
         otwTime: '',
         deliveredTime: '',
         showInfo: false,
-        fee: '',
         restaurant: ''
     };
 
@@ -40,7 +39,7 @@ class DeliveryPrompt extends Component {
         this.setState(prevState => {
             return {
                 ...prevState,
-                showInfo: true
+                showInfo: !this.state.showInfo
             };
         });
     };
@@ -59,8 +58,7 @@ class DeliveryPrompt extends Component {
                         dispatchTime: response.data.result[3],
                         arriveTime: response.data.result[4],
                         otwTime: response.data.result[5],
-                        fee: response.data.result[6],
-                        restaurant: response.data.result[7]
+                        restaurant: response.data.result[6]
                     };
                 });
             }
@@ -120,7 +118,6 @@ class DeliveryPrompt extends Component {
                 .post('set_delivery_time', {
                     orderId: this.state.orderId,
                     deliveryTime: time,
-                    fee: this.state.fee
                 })
                 .then(response => {
                     console.log(response);
@@ -198,7 +195,7 @@ class DeliveryPrompt extends Component {
         console.log(timelineCheck);
         return (
             <Grid>
-                {this.state.showInfo && <DeliveryInfo />}
+                {this.state.showInfo && <DeliveryInfo/>}
                 <GridRow style={{ height: '10%' }}>
                     <GridColumn style={{ width: '40%' }}>
                         <h3 style={{ textAlign: 'center' }}>New delivery!!</h3>

@@ -7,8 +7,9 @@ class DeliveryInfo extends Component {
     };
 
     handleConfirm = () => {
-        this.setState({ showModal: false });
+        this.setState({ showModal: !this.state.showModal });
     };
+
 
     render() {
         return (

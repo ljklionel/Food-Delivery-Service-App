@@ -399,10 +399,9 @@ def get_work_hours():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT workHours FROM PartTimers WHERE username = '%s';" % username)
+        "SELECT SUM(endHour - startHour) FROM WeeklyWorkSched WHERE username = '%s';" % (username))
     result = cursor.fetchone()
     return ({'result': result}, 200)
-
 
 @app.route("/get_salary")
 @login_required
@@ -412,47 +411,71 @@ def get_salary():
     cursor = conn.cursor()
     cursor.execute(
         "SELECT salary FROM DeliveryRiders WHERE username = '%s';" % username)
-    result = cursor.fetchone()
-    return ({'result': result}, 200)
-
+    salary = cursor.fetchone()
+    salary = float(salary[0])
+    cursor.execute("SELECT amtPayable FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NOT NULL;" % username)
+    result = cursor.fetchall()
+    for val in result:
+        salary = salary + (float(val[0]) * (1/6))
+    return ({'result': salary}, 200)
 
 @app.route("/add_full_time", methods=['POST'])
 @login_required
 def add_full_time():
     username = current_user.get_id()
     data = request.json
-    workDay, startHour, salary = data['startDay'], data['shift'], data['salary']
+    salary = data['salary']
     if salary == '0':
         salary = '1000'
-    startHour = str(int(startHour)+9)
     conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT endHour FROM FullTimeShifts WHERE workDay = %s AND startHour = %s;", (workDay, startHour))
-    endHour = cursor.fetchone()[0]
     cursor = conn.cursor()
     cursor.execute("BEGIN;")
     cursor.execute(
         "UPDATE DeliveryRiders SET salary = %s WHERE username = %s;", (salary, username))
     cursor.execute(
         "INSERT INTO FullTimers(username) VALUES ('%s') ON CONFLICT DO NOTHING;" % (username))
-    cursor.execute("INSERT INTO MonthlyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);",
-                   (username, workDay, startHour, endHour))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': '%s now works as Fulltimer!' % (username)}, 200)
 
+@app.route("/add_full_time_sched", methods=['POST'])
+@login_required
+def add_full_time_sched():
+    username = current_user.get_id()
+    data = request.json
+    workDayShift = data['workDayShift']
+    conn = get_db()
+    cursor = conn.cursor()
+    endHourDict = {}
+    for workDay in workDayShift:
+        cursor.execute(
+            "SELECT endHour FROM FullTimeShifts WHERE workDay = %s AND startHour = %s;", (workDay,str(int(workDayShift[workDay])+9)))
+        endHourDict[workDay] = cursor.fetchone()[0]
+    cursor = conn.cursor()
+    cursor.execute("BEGIN TRANSACTION;")
+    cursor.execute("SET CONSTRAINTS ALL DEFERRED;")
+    result = cursor.execute(
+        "DELETE FROM MonthlyWorkSched WHERE username = '%s';" % (username))
+    for workDay in workDayShift:
+        cursor.execute("INSERT INTO MonthlyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);", 
+                (username, workDay, str(int(workDayShift[workDay])+9), str(endHourDict[workDay])))
+    cursor.execute("COMMIT;")
+    return ({'ok': 1, 'msg': '%s now works as fulltimer!' % (username)}, 200)
 
 @app.route("/add_part_time_sched", methods=['POST'])
 @login_required
 def add_part_time_sched():
     username = current_user.get_id()
     data = request.json
-    workDay, startHour, endHour = data['workDay'], data['startHour'], data['endHour']
+    triple = data['triple']
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("BEGIN;")
-    cursor.execute("INSERT INTO WeeklyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);",
-                   (username, workDay, startHour, endHour))
+    cursor.execute("BEGIN TRANSACTION;")
+    cursor.execute("SET CONSTRAINTS ALL DEFERRED;")
+    result = cursor.execute(
+        "DELETE FROM WeeklyWorkSched WHERE username = '%s';" % (username))
+    for i in triple:
+        cursor.execute("INSERT INTO WeeklyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);",
+                    (username, i['day'], i['start'], i['end']))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': '%s now works as Parttimer!' % (username)}, 200)
 
@@ -462,7 +485,7 @@ def add_part_time_sched():
 def add_part_time():
     username = current_user.get_id()
     data = request.json
-    totalHours, salary = data['totalHours'], data['salary']
+    salary = data['salary']
     if salary == '0':
         salary = '500'
     conn = get_db()
@@ -470,8 +493,7 @@ def add_part_time():
     cursor.execute("BEGIN;")
     cursor.execute(
         "UPDATE DeliveryRiders SET salary = %s WHERE username = %s;", (salary, username))
-    cursor.execute("INSERT INTO PartTimers(username, workHours) VALUES (%s, %s) ON CONFLICT (username) DO UPDATE SET workHours = %s;",
-                   (username, totalHours, totalHours))
+    cursor.execute("INSERT INTO PartTimers(username) VALUES ('%s') ON CONFLICT (username) DO NOTHING;"% (username))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': '%s now works as Parttimer!' % (username)}, 200)
 
@@ -495,36 +517,9 @@ def get_full_time_sched():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT workDay, startHour FROM MonthlyWorkSched WHERE username = '%s';" % (username))
+        "SELECT workDay, startHour FROM MonthlyWorkSched WHERE username = '%s' ORDER BY (workDay, startHour);" % (username))
     result = cursor.fetchall()
     return ({'result': result}, 200)
-
-
-@app.route("/delete_full_time", methods=['DELETE'])
-@login_required
-def delete_full_time():
-    username = current_user.get_id()
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("BEGIN;")
-    result = cursor.execute(
-        "DELETE FROM MonthlyWorkSched WHERE EXISTS (SELECT 1 FROM MonthlyWorkSched MWS WHERE MWS.username = '%s');" % (username))
-    cursor.execute("COMMIT;")
-    return ({'result': result}, 200)
-
-
-@app.route("/delete_part_time", methods=['DELETE'])
-@login_required
-def delete_part_time():
-    username = current_user.get_id()
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("BEGIN;")
-    result = cursor.execute(
-        "DELETE FROM WeeklyWorkSched WHERE EXISTS (SELECT 1 FROM WeeklyWorkSched WWS WHERE WWS.username = '%s');" % (username))
-    cursor.execute("COMMIT;")
-    return ({'result': result}, 200)
-
 
 @app.route("/get_delivery_count")
 @login_required
@@ -556,7 +551,7 @@ def get_delivery():
     username = current_user.get_id()
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT orderid, location, orderTime, departTime1, arriveTime, departTime2, amtPayable, rname FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NULL;" % (username))
+    cursor.execute("SELECT orderid, location, orderTime, departTime1, arriveTime, departTime2, rname FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NULL;" % (username))
     result = cursor.fetchone()
     return ({'result': result}, 200)
 
@@ -611,14 +606,12 @@ def set_otw_time():
 def set_delivery_time():
     username = current_user.get_id()
     data = request.json
-    deliveryTime, orderId, fee = data['deliveryTime'], data['orderId'], data['fee']
+    deliveryTime, orderId = data['deliveryTime'], data['orderId']
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("BEGIN;")
     cursor.execute(
         "UPDATE Orders SET deliveryTime = %s WHERE orderid = %s;", (deliveryTime, orderId))
-    cursor.execute(
-        "UPDATE DeliveryRiders SET salary = salary +  %s WHERE username = %s;", (fee, username))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': 'Arrival time %s has been recorded' % (deliveryTime)}, 200)
 
@@ -660,24 +653,15 @@ def make_order():
         # Response have to include: orderID, riderUsername
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("BEGIN;")
-        # Update Orders first
-        cursor.execute("INSERT INTO Orders(paymentMethod, location, amtPayable, orderTime, riderUsername, customerUsername, rname) VALUES (%s, %s, %s, %s, %s, %s, %s);",
-                       (creditCard, location, round(totalPrice + fee - totalDiscount, 2), timeStamp, deliveryRider, customer, rname,))
-        cursor.execute("COMMIT;")
 
-        # Retrieve orderId from Orders
-        cursor = conn.cursor()
         cursor.execute(
             "SELECT max(orderid) from Orders")
-        # cursor.execute(
-        #     "SELECT orderid from Orders WHERE orderid >= all(SELECT orderid from Orders)")
-        # cursor.execute(
-        #     "SELECT orderid from Orders WHERE orderTime == %s AND riderUsername = %s and customerUsername = %s", (timeStamp, deliveryRider, customer))
-        orderId = cursor.fetchone()[0]
+        orderId = cursor.fetchone()[0] + 1
 
-        cursor = conn.cursor()
-        cursor.execute("BEGIN;")
+        # To make sure the constraint is not violated, we have to insert orders and contains in one transaction
+        cursor.execute("BEGIN TRANSACTION;")
+        cursor.execute("INSERT INTO Orders(paymentMethod, location, amtPayable, orderTime, riderUsername, customerUsername, rname) VALUES (%s, %s, %s, %s, %s, %s, %s);",
+                       (creditCard, location, round(totalPrice + fee - totalDiscount, 2), timeStamp, deliveryRider, customer, rname,))
         for fname in order:
             if order[fname] == 0:  # Quantity is 0
                 continue
@@ -721,6 +705,7 @@ def connectDeliveryRider():
     # Randomly select one
     # cursor.execute("SELECT username FROM DeliveryRiders")
     # totalResult = cursor.fetchone()
+    # allDr = totalResult
 
     # Select according to schedule
     cursor.execute("SELECT username FROM MonthlyWorkSched MWS natural join FullTimeShifts FTS WHERE MWS.workday = %s AND (%s < FTS.breakStart OR %s >= FTS.breakEnd) AND MWS.startHour <= %s AND MWS.endHour > %s", (dayInNumber, hour, hour, hour, hour))
@@ -1027,9 +1012,19 @@ def get_location_summary():
     end_time = start_time + timedelta(hours=1) - timedelta(seconds=1)
     conn = get_db()
     result = []
-    for i in range(0, 25):  # show at most the last 1 day of summmary
-        cur_start_time = start_time - relativedelta(hours=i)
-        cur_end_time = end_time - relativedelta(hours=i)
+    
+    i = 0
+    j = 0
+    # for i in range(0, 25):  # show at most the last 1 day of summmary
+    while i <= 24:
+        cur_start_time = start_time - relativedelta(hours=j)
+        print("In while loop")
+        print("Curstarttime.hour: ", cur_start_time.hour)
+
+        if cur_start_time.hour < 10 or cur_start_time.hour > 22:
+            j += 1
+            continue
+        cur_end_time = end_time - relativedelta(hours=j)
         # of orders placed
         cursor = conn.cursor()
         cursor.execute("SELECT count(*) FROM Orders WHERE location = %s AND orderTime BETWEEN %s AND %s;",
@@ -1039,6 +1034,9 @@ def get_location_summary():
         res = {'day': cur_start_time, 'hour': cur_start_time.hour,
                'location_orders': location_orders}
         result.append(res)
+        j += 1
+        i += 1
+    print("Result:", result)
     return ({'result': result}, 200)
 
 

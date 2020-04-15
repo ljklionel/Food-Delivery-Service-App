@@ -19,7 +19,9 @@ class ViewStats extends Component {
             .get('/get_salary')
             .then(response => {
                 if (response.data.result !== null && this._isMounted) {
-                    const salary = response.data.result[0];
+                    const salary = (parseFloat(response.data.result)).toFixed(2);
+                    console.log('salary',salary);
+                    console.log('response.data.result[0]', response.data.result);
                     this.setState(prevState => {
                         return {
                             ...prevState,
@@ -63,9 +65,15 @@ class ViewStats extends Component {
                     if (response.data.result !== null && this._isMounted) {
                         this.setState(prevState => {
                             console.log('rating',response.data.result[0]);
+                            var avgRating;
+                            if (isNaN((parseFloat(response.data.result[0])).toFixed(1))) {
+                                avgRating = 0;
+                            } else {
+                                avgRating = (parseFloat(response.data.result[0])).toFixed(1);
+                            }
                             return {
                                 ...prevState,
-                                avgRating: response.data.result[0]
+                                avgRating: avgRating
                             };
                         });
                     }
