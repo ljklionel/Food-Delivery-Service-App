@@ -245,8 +245,9 @@ def get_all_restaurant_summary():
                 "ORDER BY quantity DESC"
             ") FROM (" +
                 "SELECT sum(quantity) as quantity, fname, extract(year from deliveryTime) as year, extract(month from deliveryTime) as mon " +
-                "FROM Orders O JOIN ContainsFood C ON rname = %s AND O.orderid = C.orderid " +
-                "GROUP BY 3,4,fname"
+                "FROM Orders NATURAL JOIN ContainsFood " +
+                "WHERE rname = %s "
+                "GROUP BY extract(year from deliveryTime), extract(month from deliveryTime), fname"
             ") as FoodQuantities " + 
         ") SELECT * FROM Ranked WHERE rank <= 5 ORDER BY year DESC, mon DESC, rank", (rname,))
     result['top_five'] = cursor.fetchall()
@@ -262,7 +263,7 @@ def get_ongoing_restaurant_promo():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT promoId, endDate, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname " + 
-        "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) WHERE P.rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' " +
+        "AND deliveryTime BETWEEN startDate AND endDate WHERE P.rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' " +
                    "GROUP BY promoId, endDate ORDER BY endDate;", (rname, now))
     result = cursor.fetchall()
     return ({'result': result}, 200)
@@ -275,7 +276,7 @@ def get_restaurant_promo():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT promoId, description, startDate, endDate, discount, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname " + 
-        "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) " +
+        "AND deliveryTime BETWEEN startDate AND endDate " +
         "WHERE P.rname = %s GROUP BY promoId, P.rname ORDER BY startDate DESC, endDate DESC;", (rname,))
     result = cursor.fetchall()
     
