@@ -31,6 +31,7 @@ class RiderSummary extends Component {
             res['avg_rating'] = response.data.result['orders_and_ratings'][0][3]
             res['salary'] = response.data.result['salary'] + response.data.result['orders_and_ratings'][0][6]
             res['hours_worked'] = response.data.result['hours_worked']
+            res['work_type'] = response.data.result['work_type']
           } else {
             res = null
           }
@@ -62,11 +63,11 @@ class RiderSummary extends Component {
                   : this.state.monthlySummary['rider_orders']}</Statistic.Value>
                 <Statistic.Label>Order{this.state.monthlySummary['rider_orders'] !== 1 ? 's delivered':' delivered'}</Statistic.Label>
                 </Statistic>
-                <Statistic>
+                {this.state.monthlySummary['work_type'] == 'fulltime'? <Statistic>
                 <Statistic.Value>{this.state.monthlySummary['hours_worked'] == null ?
                                 0 : this.state.monthlySummary['hours_worked']}</Statistic.Value>
                 <Statistic.Label>Hour{this.state.monthlySummary['hours_worked'] !== 1 ? 's worked':' worked'}</Statistic.Label>
-                </Statistic>
+                </Statistic>:<></>}
                 <Statistic>
                 <Statistic.Value>${this.state.monthlySummary['salary'] == null ?
                                 0 : this.state.monthlySummary['salary'].toFixed(2)}</Statistic.Value>
