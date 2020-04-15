@@ -181,7 +181,44 @@ CREATE TABLE ContainsFood (
     orderid INTEGER REFERENCES Orders,
     PRIMARY KEY (fname, orderid)
 ); 
-                          
+
+DROP TRIGGER IF EXISTS 
+order_contains_food_from_an_associated_restaurant on ContainsFood CASCADE;
+/* Testing the two constraints. Take a lot of time */
+-- BEGIN TRANSACTION;
+-- \COPY Orders(paymentMethod,rating,location,amtPayable,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
+-- \COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
+-- COMMIT;
+BEGIN TRANSACTION;
+SET CONSTRAINTS ALL DEFERRED;
+
+----- INSERT DATA -----
+INSERT INTO Users(username, hashedPassword, firstName, lastName, phoneNumber, joinDate) VALUES ('man', 'dummy', 'he','llo','123', now()::date);
+INSERT INTO FDSManagers(username) VALUES ('man');
+\COPY Locations(location) FROM './csv/locations.csv' CSV HEADER;
+\COPY FoodCategories(category) FROM './csv/food_categories.csv' CSV HEADER;
+\COPY Food(fname,category) FROM './csv/food.csv' CSV HEADER;
+\COPY Restaurants(rname, minSpending) FROM './csv/restaurants.csv' CSV HEADER;
+\COPY Promotions(promoId, rname, startDate, endDate, discount) FROM './csv/promotions.csv' CSV HEADER;
+\COPY Sells(fname,rname,avail,maxLimit,price) FROM './csv/sells.csv' CSV HEADER;
+\COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
+\COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
+\COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/delivery_users.csv' CSV HEADER;
+\COPY Users(username, hashedPassword, firstName, lastName, phoneNumber, joindate) FROM './csv/customer_users.csv' CSV HEADER;
+\COPY DeliveryRiders(username, salary) FROM './csv/delivery_riders.csv' CSV HEADER;
+\COPY Customers(username, creditCard, rewardPoint) FROM './csv/customer.csv' CSV HEADER;
+\COPY PartTimers(username) FROM './csv/part_time.csv' CSV HEADER;
+\COPY FullTimers(username) FROM './csv/full_time.csv' CSV HEADER;
+\COPY WeeklyWorkSched(username,workday,starthour,endhour) FROM './csv/part_time_sched.csv' CSV HEADER;
+\COPY MonthlyWorkSched(username,workday,starthour,endhour) FROM './csv/full_time_sched.csv' CSV HEADER;
+\COPY FDSPromotions(promoId, promoDescription, startDate, endDate, discount, createdBy) FROM './csv/FDSpromotions.csv' CSV HEADER;
+/* Tested with the two constraints and passed */
+/* Is inserted without the constraints so that init.sql will not be slow */
+\COPY Orders(paymentMethod,rating,location,amtPayable,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
+\COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
+COMMIT;
+
+
 ------ TRIGGERS ------
 
 -- Trigger to enforce total participation constraint on Orders wrt to ContainsFood
@@ -194,7 +231,6 @@ DECLARE
 BEGIN
     IF (TG_TABLE_NAME = 'orders') THEN
         order_id = NEW.orderid;
-        RAISE NOTICE 'Total participation orders wrt contains food is working for orderid: %', order_id;
     ELSE
         order_id = OLD.orderid;
     END IF;
@@ -283,7 +319,7 @@ BEGIN
         FROM WeeklyWorkSched
         WHERE username = NEW.username
         AND workDay = NEW.workday
-        AND endHour = NEW.startHour;
+        AND (endHour = NEW.startHour OR startHour = NEW.endHour);
     IF NOT ok THEN 
         RAISE EXCEPTION '% does not have an hour break between 2 consecutive interval', NEW.username;
     END IF;
@@ -336,27 +372,28 @@ DECLARE
     isPattern BOOLEAN := false;
     toCheck INTEGER [];
 BEGIN
-    CREATE TEMP TABLE IF NOT EXISTS WorkDaySched AS
-        SELECT workDay
+    DROP TABLE IF EXISTS zzWorkDaySched;
+    CREATE TEMP TABLE zzWorkDaySched AS
+        SELECT DISTINCT workDay
             FROM MonthlyWorkSched MWS
             WHERE MWS.username = NEW.username
             ORDER BY workDay;
     
-    FOR t_row IN SELECT * FROM WorkDaySched LOOP
+    FOR t_row IN SELECT * FROM zzWorkDaySched LOOP
         toCheck := array_append(toCheck, t_row);
     END LOOP;
-    IF toCheck = pattern1 THEN isPattern := true;
-    ElSIF toCheck = pattern2 THEN isPattern := true;
-    ElSIF toCheck = pattern3 THEN isPattern := true;
-    ElSIF toCheck = pattern4 THEN isPattern := true;
-    ElSIF toCheck = pattern5 THEN isPattern := true;
-    ElSIF toCheck = pattern6 THEN isPattern := true;
-    ElSIF toCheck = pattern7 THEN isPattern := true;
+    IF toCheck = pattern1 OR 
+        toCheck = pattern2 OR 
+        toCheck = pattern3 OR 
+        toCheck = pattern4 OR 
+        toCheck = pattern5 OR 
+        toCheck = pattern6 OR 
+        toCheck = pattern7 THEN isPattern := true;
     END IF;
-    IF isPattern = false THEN 
+    IF NOT isPattern THEN 
         RAISE EXCEPTION '% does not work for 5 consecutive days', NEW.username;
     END IF;
-    DROP TABLE WorkDaySched;
+    DROP TABLE zzWorkDaySched;
     RETURN NULL;
 END;
 $$LANGUAGE plpgsql;
@@ -444,38 +481,3 @@ AFTER INSERT OR UPDATE of fname ON ContainsFood deferrable initially deferred
 FOR EACH ROW
 EXECUTE FUNCTION
 order_contains_food_from_an_associated_restaurant();
-
-
-/* Testing the two constraints. Take a lot of time */
--- BEGIN TRANSACTION;
--- \COPY Orders(paymentMethod,rating,location,amtPayable,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
--- \COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
--- COMMIT;
-BEGIN TRANSACTION;
-SET CONSTRAINTS ALL DEFERRED;
-
------ INSERT DATA -----
-INSERT INTO Users(username, hashedPassword, firstName, lastName, phoneNumber, joinDate) VALUES ('man', 'dummy', 'he','llo','123', now()::date);
-INSERT INTO FDSManagers(username) VALUES ('man');
-\COPY Locations(location) FROM './csv/locations.csv' CSV HEADER;
-\COPY FoodCategories(category) FROM './csv/food_categories.csv' CSV HEADER;
-\COPY Food(fname,category) FROM './csv/food.csv' CSV HEADER;
-\COPY Restaurants(rname, minSpending) FROM './csv/restaurants.csv' CSV HEADER;
-\COPY Promotions(promoId, rname, startDate, endDate, discount) FROM './csv/promotions.csv' CSV HEADER;
-\COPY Sells(fname,rname,avail,maxLimit,price) FROM './csv/sells.csv' CSV HEADER;
-\COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
-\COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
-\COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/delivery_users.csv' CSV HEADER;
-\COPY Users(username, hashedPassword, firstName, lastName, phoneNumber, joindate) FROM './csv/customer_users.csv' CSV HEADER;
-\COPY DeliveryRiders(username, salary) FROM './csv/delivery_riders.csv' CSV HEADER;
-\COPY Customers(username, creditCard, rewardPoint) FROM './csv/customer.csv' CSV HEADER;
-\COPY PartTimers(username) FROM './csv/part_time.csv' CSV HEADER;
-\COPY FullTimers(username) FROM './csv/full_time.csv' CSV HEADER;
-\COPY WeeklyWorkSched(username,workday,starthour,endhour) FROM './csv/part_time_sched.csv' CSV HEADER;
-\COPY MonthlyWorkSched(username,workday,starthour,endhour) FROM './csv/full_time_sched.csv' CSV HEADER;
-\COPY FDSPromotions(promoId, promoDescription, startDate, endDate, discount, createdBy) FROM './csv/FDSpromotions.csv' CSV HEADER;
-/* Tested with the two constraints and passed */
-/* Is inserted without the constraints so that init.sql will not be slow */
-\COPY Orders(paymentMethod,rating,location,amtPayable,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
-\COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
-COMMIT;
