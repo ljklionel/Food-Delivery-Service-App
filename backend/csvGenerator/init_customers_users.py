@@ -133,8 +133,8 @@ for name in customers:
         phoneNumber = runningVariable * 123456
         password = username
         joinDate = timeArray[runningVariable][0]
-        # hash = bcrypt.generate_password_hash(password).decode()
-        hash ='test'
+        hash = bcrypt.generate_password_hash(password).decode()
+        # hash ='test'
         # print(hash)
         user = [str(username), str(hash), str(firstName), str(lastName), str(phoneNumber), str(joinDate)]
         print(','.join(user))
