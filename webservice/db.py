@@ -3,9 +3,7 @@ import psycopg2
 def get_db():
     conn = psycopg2.connect(host = "localhost",
                             port = "5432",
-                            database = "fds",
-                            user = 'postgres',
-                            password = 'chris')
+                            database = "fds")
     return conn # example usage: 'conn.cursor().execute("SELECT * from abc;")'
     
 
