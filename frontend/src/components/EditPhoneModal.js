@@ -12,7 +12,7 @@ class EditPhoneModal extends Component {
         }
     }
 
-    handleOpen = () => this.setState({ modalOpen: true })
+    handleOpen = () => this.setState({ modalOpen: true, phoneNumber: this.props.phoneNumber })
   
     handleClose = () => {
         this.setState({

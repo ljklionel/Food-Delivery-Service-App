@@ -13,7 +13,7 @@ class EditPasswordModal extends Component {
         }
     }
 
-    handleOpen = () => this.setState({ modalOpen: true })
+    handleOpen = () => this.setState({ modalOpen: true, oldPassword: '', newPassword: '' })
   
     handleClose = () => {
         this.setState({
@@ -53,12 +53,14 @@ class EditPasswordModal extends Component {
             <Form.Input 
                 label='Old Password'
                 fluid placeholder='Old Password'
+                type='password'
                 name='oldPassword'
                 value={oldPassword}
                 onChange={this.handleChange}/>
             <Form.Input 
                 label='New Password'
                 fluid placeholder='New Password' 
+                type='password'
                 name='newPassword'
                 value={newPassword}
                 onChange={this.handleChange}/>
