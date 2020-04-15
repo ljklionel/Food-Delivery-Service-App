@@ -1,0 +1,5 @@
+paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname
+Cash,1,Yew Tee,57.0,2019-04-12 16:02:32,2019-04-12 16:5:56,2019-04-12 16:7:16,2019-04-12 16:12:17,2019-04-12 16:15:07,ii,Stevie,Rally's Springfield
+Visa,1,HarbourFront,13.2,2019-04-12 16:02:46,2019-04-12 16:7:40,2019-04-12 16:11:18,2019-04-12 16:13:54,2019-04-12 16:15:19,rr,Roy,Checker's Hamburgers
+Cash,2,Siglap,51.6,2019-04-12 16:03:11,2019-04-12 16:4:00,2019-04-12 16:9:22,2019-04-12 16:11:31,2019-04-12 16:12:15,ffff,Jaziel,Alice's
+Cash,4,Hume,34.2,2019-04-12 16:03:39,2019-04-12 16:5:18,2019-04-12 16:7:57,2019-04-12 16:12:31,2019-04-12 16:13:42,gg,Luis,Steak Escape
