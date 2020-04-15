@@ -25,8 +25,26 @@ class ViewRiderModal extends Component {
           })
           .then(response => {
             console.log(response);
+            var res = []
+            var orders_and_ratings = response.data.result['orders_and_ratings']
+            var salary = response.data.result['salary']
+            var hours_worked = response.data.result['hours_worked']
+            
+            for (var i = 0; i < orders_and_ratings.length; ++i) {
+                var data = {}
+                data['year'] = orders_and_ratings[i][4]
+                data['month'] = orders_and_ratings[i][5]
+                data['rider_orders'] = orders_and_ratings[i][0]
+                data['delivery_time'] = orders_and_ratings[i][1]
+                data['num_rating'] = orders_and_ratings[i][2]
+                data['avg_rating'] = orders_and_ratings[i][3]
+                data['salary'] = salary
+                data['hours_worked'] = hours_worked
+                res.push(data)
+            }
+            console.log(res)
             this.setState({
-              contents: response.data.result,
+              contents: res,
               isLoading: false
             })
           })
@@ -45,13 +63,24 @@ class ViewRiderModal extends Component {
         } else {
             const contents = this.state.contents
             const first_month = []
+            const row_span = []
+            var counter = 1;
             for (let i = 0; i < contents.length; i++) {
                 if (i !== 0 && contents[i].year === contents[i-1].year) {
                     first_month.push(false)
+                    counter++
+                    row_span[i] = 0
                 } else {
                     first_month.push(true)
+                    if (i != 0 ) {
+                        row_span[i - counter] = counter
+                    } else {
+                        row_span[i] = 0
+                    }
+                    counter = 1
                 }
             }
+            row_span[contents.length - counter] = counter
             
             content = (
             <Table structured celled>
@@ -71,7 +100,7 @@ class ViewRiderModal extends Component {
                 {contents.map((item, i) => (
                     <Table.Row key={item['year'] + '-' + item['month']}>
                         { first_month[i] ? 
-                        (<Table.Cell rowSpan={item['month']}>
+                        (<Table.Cell rowSpan={row_span[i]}>
                             {item['year']}
                         </Table.Cell>):(null)
                         }
