@@ -1060,12 +1060,15 @@ def get_rider_summary():
     cursor.execute(
         "SELECT sum(endHour - startHour - (breakEnd - breakStart)) FROM MonthlyWorkSched natural join FullTimeShifts WHERE username = %s;", (username,))
     hours_worked = cursor.fetchone()[0]
+    work_type = "fulltime"
     if hours_worked is None:
+        work_type = "parttime"
         cursor = conn.cursor()
         cursor.execute(
             "SELECT sum(endHour - startHour) FROM WeeklyWorkSched WHERE username = %s;", (username,))
         hours_worked = cursor.fetchone()[0]
     result['hours_worked'] = hours_worked
+    result['work_type'] = work_type
 
     # basic salary
     cursor = conn.cursor()
