@@ -276,16 +276,15 @@ CREATE OR REPLACE FUNCTION
 part_time_break_check() 
     RETURNS TRIGGER AS $$
 DECLARE
-    endHour INTEGER;
+    ok BOOLEAN;
 BEGIN
-    SELECT WWS.endHour INTO endHour
-        FROM WeeklyWorkSched WWS, WeeklyWorkSched WWS1
-        WHERE WWS.username = NEW.username
-        AND WWS.workDay = NEW.workDay
-        AND WWS1.username = NEW.username
-        AND WWS1.workDay = NEW.workDay
-        AND WWS.endHour > WWS1.endHour;
-    IF endHour = NEW.startHour THEN 
+    ok := true;
+    SELECT false INTO ok
+        FROM WeeklyWorkSched
+        WHERE username = NEW.username
+        AND workDay = NEW.workday
+        AND endHour = NEW.startHour;
+    IF NOT ok THEN 
         RAISE EXCEPTION '% does not have an hour break between 2 consecutive interval', NEW.username;
     END IF;
     RETURN NEW;
@@ -388,7 +387,7 @@ DROP TRIGGER IF EXISTS
 part_time_break_check ON WeeklyWorkSched CASCADE;
 CREATE TRIGGER 
 part_time_break_check
-BEFORE INSERT ON WeeklyWorkSched
+BEFORE INSERT OR UPDATE ON WeeklyWorkSched
 FOR EACH ROW
 EXECUTE FUNCTION 
 part_time_break_check();
@@ -407,22 +406,20 @@ check_total_hours_trigger();
 /* Trigger for delete or update on WWS */
 DROP TRIGGER IF EXISTS 
 at_least_five_check ON WeeklyWorkSched CASCADE;
-CREATE CONSTRAINT TRIGGER 
+CREATE TRIGGER 
 at_least_five_check
 AFTER DELETE OR UPDATE ON WeeklyWorkSched
-DEFERRABLE INITIALLY DEFERRED
-FOR EACH ROW
+FOR EACH STATEMENT
 EXECUTE FUNCTION
 at_least_five_check();
 
 /* Trigger for delete or update on MWS */
 DROP TRIGGER IF EXISTS 
 at_least_five_check ON MonthlyWorkSched CASCADE;
-CREATE CONSTRAINT TRIGGER 
+CREATE TRIGGER 
 at_least_five_check
 AFTER DELETE OR UPDATE ON MonthlyWorkSched
-DEFERRABLE INITIALLY DEFERRED
-FOR EACH ROW
+FOR EACH STATEMENT 
 EXECUTE FUNCTION
 at_least_five_check();
 
@@ -472,7 +469,7 @@ INSERT INTO FDSManagers(username) VALUES ('man');
 \COPY Users(username, hashedPassword, firstName, lastName, phoneNumber, joindate) FROM './csv/customer_users.csv' CSV HEADER;
 \COPY DeliveryRiders(username, salary) FROM './csv/delivery_riders.csv' CSV HEADER;
 \COPY Customers(username, creditCard, rewardPoint) FROM './csv/customer.csv' CSV HEADER;
-\COPY PartTimers(username, workHours) FROM './csv/part_time.csv' CSV HEADER;
+\COPY PartTimers(username) FROM './csv/part_time.csv' CSV HEADER;
 \COPY FullTimers(username) FROM './csv/full_time.csv' CSV HEADER;
 \COPY WeeklyWorkSched(username,workday,starthour,endhour) FROM './csv/part_time_sched.csv' CSV HEADER;
 \COPY MonthlyWorkSched(username,workday,starthour,endhour) FROM './csv/full_time_sched.csv' CSV HEADER;
