@@ -205,7 +205,7 @@ def get_restaurant_summary():
     conn = get_db()
     # number of completed orders and total cost of all completed orders
     cursor = conn.cursor()
-    cursor.execute("SELECT count(*), sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+    cursor.execute("SELECT count(*), sum(fee) * 10/12 FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
                    (rname, start_time, end_time))
     res = cursor.fetchone()
     completed_orders = res[0]
@@ -230,7 +230,7 @@ def get_all_restaurant_summary():
     conn = get_db()
 
     cursor = conn.cursor()
-    cursor.execute("SELECT count(*), sum(fee), extract(year from deliveryTime), extract(mon from deliveryTime) " +
+    cursor.execute("SELECT count(*), sum(fee) * 10/12, extract(year from deliveryTime), extract(mon from deliveryTime) " +
         "FROM Orders " + 
         "WHERE rname = %s " + 
         "GROUP BY 3,4 "
