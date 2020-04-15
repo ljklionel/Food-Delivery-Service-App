@@ -1019,9 +1019,19 @@ def get_location_summary():
     end_time = start_time + timedelta(hours=1) - timedelta(seconds=1)
     conn = get_db()
     result = []
-    for i in range(0, 25):  # show at most the last 1 day of summmary
-        cur_start_time = start_time - relativedelta(hours=i)
-        cur_end_time = end_time - relativedelta(hours=i)
+    
+    i = 0
+    j = 0
+    # for i in range(0, 25):  # show at most the last 1 day of summmary
+    while i <= 24:
+        cur_start_time = start_time - relativedelta(hours=j)
+        print("In while loop")
+        print("Curstarttime.hour: ", cur_start_time.hour)
+
+        if cur_start_time.hour < 10 or cur_start_time.hour > 22:
+            j += 1
+            continue
+        cur_end_time = end_time - relativedelta(hours=j)
         # of orders placed
         cursor = conn.cursor()
         cursor.execute("SELECT count(*) FROM Orders WHERE location = %s AND orderTime BETWEEN %s AND %s;",
@@ -1031,6 +1041,9 @@ def get_location_summary():
         res = {'day': cur_start_time, 'hour': cur_start_time.hour,
                'location_orders': location_orders}
         result.append(res)
+        j += 1
+        i += 1
+    print("Result:", result)
     return ({'result': result}, 200)
 
 
