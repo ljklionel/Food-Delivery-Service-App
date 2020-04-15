@@ -160,8 +160,8 @@ CREATE TABLE Orders (
     -- Delivers combined
     rating INTEGER CHECK (rating in (1,2,3,4,5)),
 	location VARCHAR(32) NOT NULL REFERENCES Locations,
-	fee FLOAT NOT NULL,
-	orderTime TIMESTAMP,
+	amtPayable FLOAT NOT NULL,
+	orderTime TIMESTAMP NOT NULL,
 	departTime1 TIMESTAMP,
 	arriveTime TIMESTAMP,
 	departTime2 TIMESTAMP,
@@ -195,10 +195,8 @@ INSERT INTO FDSManagers(username) VALUES ('man');
 \COPY Sells(fname,rname,avail,maxLimit,price) FROM './csv/sells.csv' CSV HEADER;
 \COPY FullTimeShifts(workDay, startHour, endHour, breakStart, breakEnd) FROM './csv/full_time_shifts.csv' CSV HEADER;
 \COPY PartTimeShifts(workDay, startHour, endHour) FROM './csv/part_time_shifts.csv' CSV HEADER;
--- \COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/customer_users.csv' CSV HEADER;
 \COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/delivery_users.csv' CSV HEADER;
 \COPY Users(username, hashedPassword, phoneNumber, firstName, lastName, joindate) FROM './csv/customer_users.csv' CSV HEADER;
--- \COPY Customers(username, creditCard, rewardPoint) FROM './csv/customer.csv' CSV HEADER;
 \COPY DeliveryRiders(username, salary) FROM './csv/delivery_riders.csv' CSV HEADER;
 \COPY Customers(username, creditCard, rewardPoint) FROM './csv/customer.csv' CSV HEADER;
 \COPY PartTimers(username, workHours) FROM './csv/part_time.csv' CSV HEADER;
@@ -206,8 +204,7 @@ INSERT INTO FDSManagers(username) VALUES ('man');
 \COPY WeeklyWorkSched(username,workday,starthour,endhour) FROM './csv/part_time_sched.csv' CSV HEADER;
 \COPY MonthlyWorkSched(username,workday,starthour,endhour) FROM './csv/full_time_sched.csv' CSV HEADER;
 \COPY FDSPromotions(promoId, promoDescription, startDate, endDate, discount, createdBy) FROM './csv/FDSpromotions.csv' CSV HEADER;
--- \COPY Orders(orderid,paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/correctorder.csv' CSV HEADER;
-\COPY Orders(paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
+\COPY Orders(paymentMethod,rating,location,amtPayable,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
 \COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
                           
 ------ TRIGGERS ------
