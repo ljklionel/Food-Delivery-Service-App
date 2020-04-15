@@ -149,7 +149,7 @@ CREATE TABLE Customers (
 );
 
 CREATE TABLE Locations (
-    location VARCHAR(256) PRIMARY KEY
+    location VARCHAR(32) PRIMARY KEY
 );
 
 CREATE TABLE Orders (
@@ -182,6 +182,8 @@ CREATE TABLE ContainsFood (
     PRIMARY KEY (fname, orderid)
 ); 
 
+BEGIN TRANSACTION;
+SET CONSTRAINTS ALL DEFERRED;
 ----- INSERT DATA -----
 INSERT INTO Users(username, hashedPassword, firstName, lastName, phoneNumber, joinDate) VALUES ('man', 'dummy', 'he','llo','123', now()::date);
 INSERT INTO FDSManagers(username) VALUES ('man');
@@ -208,6 +210,15 @@ INSERT INTO FDSManagers(username) VALUES ('man');
 -- \COPY Orders(orderid,paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/correctorder.csv' CSV HEADER;
 \COPY Orders(paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
 \COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
+\copy users from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/delivery_users.csv' DELIMITER ',' CSV HEADER;
+\copy fulltimeshifts from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time_shifts.csv' DELIMITER ',' CSV HEADER;
+\copy parttimeshifts from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time_shifts.csv' DELIMITER ',' CSV HEADER;
+\copy deliveryriders from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/delivery_riders.csv' DELIMITER ',' CSV HEADER;
+\copy fulltimers from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time.csv' DELIMITER ',' CSV HEADER;
+\copy parttimers from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time.csv' DELIMITER ',' CSV HEADER;
+\copy weeklyworksched from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time_sched.csv' DELIMITER ',' CSV HEADER;
+\copy monthlyworksched from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time_sched.csv' DELIMITER ',' CSV HEADER;
+COMMIT;
                           
 ------ TRIGGERS ------
 
@@ -257,7 +268,7 @@ BEGIN
     IF totalHours < 10 THEN
         RAISE EXCEPTION '% cannot work less than 10 hours per week', NEW.username;
     END IF;
-    RETURN NEW;
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -287,30 +298,71 @@ CREATE OR REPLACE FUNCTION
 at_least_five_check()
     RETURNS TRIGGER AS $$
 DECLARE
-    ftNum INTEGER;
-    ptNum INTEGER;
+    ok BOOLEAN;
+    failHour INTEGER;
+    failDay INTEGER;
 BEGIN
-    FOR i IN 1..7 LOOP
-        FOR j IN 10..21 LOOP
-            -- Count the number of workers for that work day in part time schedule for old value
-            SELECT COUNT(*) INTO ftNum
-                FROM WeeklyWorkSched WWS
-                WHERE i = WWS.workDay
-                AND j >= WWS.startHour
-                AND j < WWS.endHour;
-            -- Count the number of workers for that work day in full time schedule for old value
-            SELECT COUNT(username) INTO ptNum
-                FROM MonthlyWorkSched MWS;
-            RAISE EXCEPTION 'There is less than 5 workers for this hour % on day % with fulltimers % and parttimers %', j, i, ptNum, ftNum;
-            -- check if after deleting ftNum + ptNum < 5
-            IF fNum + ptNum < 5 THEN
-                RAISE EXCEPTION 'There is less than 5 workers for this hour % on day % with fulltimers % and parttimers %', j, i, ftNum, ptNum;
-            END IF;
-        END LOOP;
-    END LOOP;
+    ok := true;
+    
+    WITH WorkHours AS (
+        SELECT generate_series AS hour FROM generate_series(10,21)
+    ), WorkDays AS (
+        SELECT generate_series AS day from generate_series(1,7)
+    )
+    SELECT false, hour, day INTO ok, failHour, failDay
+        FROM WorkHours, WorkDays
+        WHERE 5 > (
+            (SELECT count(*) FROM WeeklyWorkSched WHERE startHour <= hour and hour < endHour) +
+                (SELECT count(*) FROM MonthlyWorkSched NATURAL JOIN FullTimeShifts WHERE startHour <= hour and hour < endHour and not (breakStart <= hour and hour < breakEnd))
+        );
+    IF NOT ok THEN
+        RAISE EXCEPTION 'At least 5 riders per hour not satisfied for hour %s day %s.', failHour, failDay;
+    END IF;
     RETURN NULL;
 END;
 $$LANGUAGE plpgsql;
+
+-- Trigger to enforce consecutive 5 workdays
+CREATE OR REPLACE FUNCTION 
+consecutive_workdays() 
+    RETURNS TRIGGER AS $$
+DECLARE
+    t_row INTEGER;
+    pattern1 INTEGER ARRAY DEFAULT ARRAY[1,2,3,4,5];
+    pattern2 INTEGER ARRAY DEFAULT ARRAY[2,3,4,5,6];
+    pattern3 INTEGER ARRAY DEFAULT ARRAY[3,4,5,6,7];
+    pattern4 INTEGER ARRAY DEFAULT ARRAY[1,4,5,6,7];
+    pattern5 INTEGER ARRAY DEFAULT ARRAY[1,2,5,6,7];
+    pattern6 INTEGER ARRAY DEFAULT ARRAY[1,2,3,6,7];
+    pattern7 INTEGER ARRAY DEFAULT ARRAY[1,2,3,4,7];
+    isPattern BOOLEAN := false;
+    toCheck INTEGER [];
+BEGIN
+    CREATE TEMP TABLE IF NOT EXISTS WorkDaySched AS
+        SELECT workDay
+            FROM MonthlyWorkSched MWS
+            WHERE MWS.username = NEW.username
+            ORDER BY workDay;
+    
+    FOR t_row IN SELECT * FROM WorkDaySched LOOP
+        toCheck := array_append(toCheck, t_row);
+    END LOOP;
+    IF toCheck = pattern1 THEN isPattern := true;
+    ElSIF toCheck = pattern2 THEN isPattern := true;
+    ElSIF toCheck = pattern3 THEN isPattern := true;
+    ElSIF toCheck = pattern4 THEN isPattern := true;
+    ElSIF toCheck = pattern5 THEN isPattern := true;
+    ElSIF toCheck = pattern6 THEN isPattern := true;
+    ElSIF toCheck = pattern7 THEN isPattern := true;
+    END IF;
+    IF isPattern = false THEN 
+        RAISE EXCEPTION '% does not work for 5 consecutive days', NEW.username;
+    END IF;
+    DROP TABLE WorkDaySched;
+    RETURN NULL;
+END;
+$$LANGUAGE plpgsql;
+
 
 /* Trigger for insert/update on Orders */
 DROP TRIGGER IF EXISTS 
@@ -342,21 +394,23 @@ FOR EACH ROW
 EXECUTE FUNCTION 
 part_time_break_check();
 
-/* Trigger for insert/update on PartTimers*/
+/* Trigger for insert/update on WeeklyWorkSched*/
 DROP TRIGGER IF EXISTS 
-check_total_hours_trigger ON PartTimers CASCADE;
-CREATE TRIGGER 
+check_total_hours_trigger ON WeeklyWorkSched CASCADE;
+CREATE CONSTRAINT TRIGGER 
 check_total_hours_trigger
-BEFORE UPDATE OR INSERT ON PartTimers
+AFTER INSERT ON WeeklyWorkSched
+DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
 EXECUTE FUNCTION
 check_total_hours_trigger();
 
 /* Trigger for insert on WWS */
 DROP TRIGGER IF EXISTS 
-check_total_hours_trigger ON WeeklyWorkSched CASCADE;
-CREATE CONSTRAINT TRIGGER at_least_five_check
-AFTER DELETE ON WeeklyWorkSched
+at_least_five_check ON WeeklyWorkSched CASCADE;
+CREATE CONSTRAINT TRIGGER 
+at_least_five_check
+AFTER DELETE OR UPDATE ON WeeklyWorkSched
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
 EXECUTE FUNCTION
@@ -364,10 +418,22 @@ at_least_five_check();
 
 /* Trigger for insert on MWS */
 DROP TRIGGER IF EXISTS 
-check_total_hours_trigger ON MonthlyWorkSched CASCADE;
-CREATE CONSTRAINT TRIGGER at_least_five_check
-AFTER DELETE ON MonthlyWorkSched
+at_least_five_check ON MonthlyWorkSched CASCADE;
+CREATE CONSTRAINT TRIGGER 
+at_least_five_check
+AFTER DELETE OR UPDATE ON MonthlyWorkSched
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
 EXECUTE FUNCTION
 at_least_five_check();
+
+/* Trigger for insert on MWS */
+DROP TRIGGER IF EXISTS 
+consecutive_workdays ON MonthlyWorkSched CASCADE;
+CREATE CONSTRAINT TRIGGER 
+consecutive_workdays
+AFTER INSERT ON MonthlyWorkSched
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW
+EXECUTE FUNCTION
+consecutive_workdays();

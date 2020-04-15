@@ -351,7 +351,6 @@ def get_work_hours():
     result = cursor.fetchone()
     return ({'result': result}, 200)
 
-
 @app.route("/get_salary")
 @login_required
 def get_salary():
@@ -360,8 +359,13 @@ def get_salary():
     cursor = conn.cursor()
     cursor.execute(
         "SELECT salary FROM DeliveryRiders WHERE username = '%s';" % username)
-    result = cursor.fetchone()
-    return ({'result': result}, 200)
+    salary = cursor.fetchone()
+    salary = float(salary[0])
+    cursor.execute("SELECT fee FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NOT NULL;" % username)
+    result = cursor.fetchall()
+    for val in result:
+        salary = salary + (float(val[0]) * (1/5))
+    return ({'result': salary}, 200)
 
 @app.route("/add_full_time", methods=['POST'])
 @login_required
@@ -386,17 +390,22 @@ def add_full_time():
 def add_full_time_sched():
     username = current_user.get_id()
     data = request.json
-    workDay, startHour = data['workDay'], data['shift']
-    startHour = str(int(startHour)+9)
+    workDayShift = data['workDayShift']
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT endHour FROM FullTimeShifts WHERE workDay = %s AND startHour = %s;", (workDay, startHour))
-    endHour = cursor.fetchone()[0]
+    endHourDict = {}
+    for workDay in workDayShift:
+        cursor.execute(
+            "SELECT endHour FROM FullTimeShifts WHERE workDay = %s AND startHour = %s;", (workDay,str(int(workDayShift[workDay])+9)))
+        endHourDict[workDay] = cursor.fetchone()[0]
     cursor = conn.cursor()
-    cursor.execute("BEGIN;")
-    cursor.execute("INSERT INTO MonthlyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);",
-                   (username, workDay, startHour, endHour))
+    cursor.execute("BEGIN TRANSACTION;")
+    cursor.execute("SET CONSTRAINTS ALL DEFERRED;")
+    result = cursor.execute(
+        "DELETE FROM MonthlyWorkSched WHERE username = '%s';" % (username))
+    for workDay in workDayShift:
+        cursor.execute("INSERT INTO MonthlyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);", 
+                (username, workDay, str(int(workDayShift[workDay])+9), str(endHourDict[workDay])))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': '%s now works as fulltimer!' % (username)}, 200)
 
@@ -405,12 +414,16 @@ def add_full_time_sched():
 def add_part_time_sched():
     username = current_user.get_id()
     data = request.json
-    workDay, startHour, endHour = data['workDay'], data['startHour'], data['endHour']
+    triple = data['triple']
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("BEGIN;")
-    cursor.execute("INSERT INTO WeeklyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);",
-                   (username, workDay, startHour, endHour))
+    cursor.execute("BEGIN TRANSACTION;")
+    cursor.execute("SET CONSTRAINTS ALL DEFERRED;")
+    result = cursor.execute(
+        "DELETE FROM WeeklyWorkSched WHERE username = '%s';" % (username))
+    for i in triple:
+        cursor.execute("INSERT INTO WeeklyWorkSched(username, workDay, startHour, endHour) VALUES (%s, %s, %s, %s);",
+                    (username, i['day'], i['start'], i['end']))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': '%s now works as Parttimer!' % (username)}, 200)
 
@@ -456,33 +469,6 @@ def get_full_time_sched():
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
-
-@app.route("/delete_full_time", methods=['DELETE'])
-@login_required
-def delete_full_time():
-    username = current_user.get_id()
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("BEGIN;")
-    result = cursor.execute(
-        "DELETE FROM MonthlyWorkSched WHERE EXISTS (SELECT 1 FROM MonthlyWorkSched MWS WHERE MWS.username = '%s');" % (username))
-    cursor.execute("COMMIT;")
-    return ({'result': result}, 200)
-
-
-@app.route("/delete_part_time", methods=['DELETE'])
-@login_required
-def delete_part_time():
-    username = current_user.get_id()
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("BEGIN;")
-    result = cursor.execute(
-        "DELETE FROM WeeklyWorkSched WHERE EXISTS (SELECT 1 FROM WeeklyWorkSched WWS WHERE WWS.username = '%s');" % (username))
-    cursor.execute("COMMIT;")
-    return ({'result': result}, 200)
-
-
 @app.route("/get_delivery_count")
 @login_required
 def get_delivery_count():
@@ -513,7 +499,7 @@ def get_delivery():
     username = current_user.get_id()
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT orderid, location, orderTime, departTime1, arriveTime, departTime2, fee, rname FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NULL;" % (username))
+    cursor.execute("SELECT orderid, location, orderTime, departTime1, arriveTime, departTime2, rname FROM Orders WHERE riderUsername = '%s' AND deliveryTime IS NULL;" % (username))
     result = cursor.fetchone()
     return ({'result': result}, 200)
 
@@ -568,14 +554,12 @@ def set_otw_time():
 def set_delivery_time():
     username = current_user.get_id()
     data = request.json
-    deliveryTime, orderId, fee = data['deliveryTime'], data['orderId'], data['fee']
+    deliveryTime, orderId = data['deliveryTime'], data['orderId']
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("BEGIN;")
     cursor.execute(
         "UPDATE Orders SET deliveryTime = %s WHERE orderid = %s;", (deliveryTime, orderId))
-    cursor.execute(
-        "UPDATE DeliveryRiders SET salary = salary +  %s WHERE username = %s;", (fee, username))
     cursor.execute("COMMIT;")
     return ({'ok': 1, 'msg': 'Arrival time %s has been recorded' % (deliveryTime)}, 200)
 
