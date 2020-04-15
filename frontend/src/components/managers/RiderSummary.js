@@ -29,7 +29,7 @@ class RiderSummary extends Component {
             res['delivery_time'] = response.data.result['orders_and_ratings'][0][1]
             res['num_rating'] = response.data.result['orders_and_ratings'][0][2]
             res['avg_rating'] = response.data.result['orders_and_ratings'][0][3]
-            res['salary'] = response.data.result['salary']
+            res['salary'] = response.data.result['salary'] + response.data.result['orders_and_ratings'][0][6]
             res['hours_worked'] = response.data.result['hours_worked']
           } else {
             res = null

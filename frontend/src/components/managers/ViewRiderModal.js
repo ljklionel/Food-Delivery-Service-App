@@ -38,7 +38,7 @@ class ViewRiderModal extends Component {
                 data['delivery_time'] = orders_and_ratings[i][1]
                 data['num_rating'] = orders_and_ratings[i][2]
                 data['avg_rating'] = orders_and_ratings[i][3]
-                data['salary'] = salary
+                data['salary'] = orders_and_ratings[i][6] + salary
                 data['hours_worked'] = hours_worked
                 res.push(data)
             }
