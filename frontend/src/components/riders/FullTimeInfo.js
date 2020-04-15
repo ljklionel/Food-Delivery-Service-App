@@ -194,6 +194,11 @@ class FullTimeInfo extends Component {
     };
 
     addNote = () => {
+        const emptyFieldError = 'Do not leave any fields blank!!';
+        if (this.state.day.length == 0 || this.state.shift.length == 0) {
+            alert(emptyFieldError);
+            return;
+        }
         const dayError =
             'You cannot choose the same day!! Delete that entry if you want to update!!';
         var validDay = this.state.daysList.includes(this.state.day);

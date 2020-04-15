@@ -38,10 +38,11 @@ class ViewRiderModal extends Component {
                 data['delivery_time'] = orders_and_ratings[i][1]
                 data['num_rating'] = orders_and_ratings[i][2]
                 data['avg_rating'] = orders_and_ratings[i][3]
-                data['salary'] = salary
+                data['salary'] = orders_and_ratings[i][6] + salary
                 data['hours_worked'] = hours_worked
                 res.push(data)
             }
+            res['work_type'] = response.data.result['work_type']
             console.log(res)
             this.setState({
               contents: res,
@@ -89,7 +90,8 @@ class ViewRiderModal extends Component {
                     <Table.HeaderCell>Year</Table.HeaderCell>
                     <Table.HeaderCell>Month</Table.HeaderCell>
                     <Table.HeaderCell>Orders</Table.HeaderCell>
-                    <Table.HeaderCell>Hours</Table.HeaderCell>
+                    {this.state.contents['work_type'] == 'fulltime'? <Table.HeaderCell>Hours</Table.HeaderCell>
+                    :<></>}
 					<Table.HeaderCell>Salary</Table.HeaderCell>
 					<Table.HeaderCell>Avg Delivery Time</Table.HeaderCell>
 					<Table.HeaderCell>No. of Ratings</Table.HeaderCell>
@@ -110,10 +112,12 @@ class ViewRiderModal extends Component {
                         <Table.Cell>
                             {item['rider_orders']}
                         </Table.Cell>
-                        <Table.Cell>
+                        {this.state.contents['work_type'] == 'fulltime' 
+                        ? <Table.Cell>
                             {item['hours_worked'] == null ?
                                     0 : item['hours_worked']}
                         </Table.Cell>
+                        :<></>}
 						<Table.Cell>
                             ${item['salary'] == null ?
                                     0 : item['salary'].toFixed(2)}
