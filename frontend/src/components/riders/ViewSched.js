@@ -55,7 +55,7 @@ class ViewStats extends Component {
         if (this.props.isPartTime) {
             myAxios.get('get_part_time_sched').then(response => {
                 if (response.data.result !== null) {
-                    console.log(response.data.result)
+                    console.log(response.data.result);
                     this.setState(prevState => {
                         return {
                             ...prevState,
@@ -76,18 +76,16 @@ class ViewStats extends Component {
                 }
             });
         }
-        myAxios
-            .get('/get_salary')
-            .then(response => {
-                if (response.data.result !== null) {
-                    this.setState(prevState => {
-                        return {
-                            ...prevState,
-                            salary: response.data.result[0]
-                        };
-                    });
-                }
-            });
+        myAxios.get('/get_salary').then(response => {
+            if (response.data.result !== null) {
+                this.setState(prevState => {
+                    return {
+                        ...prevState,
+                        salary: response.data.result[0]
+                    };
+                });
+            }
+        });
     }
 
     partTimeTable = () => {
@@ -137,47 +135,49 @@ class ViewStats extends Component {
     };
 
     fullTimeTable = () => {
-        const fiveDayStringMap = {
-            '1': 'Monday to Friday',
-            '2': 'Tuesday to Saturday',
-            '3': 'Wednesday to Sunday',
-            '4': 'Thursday to Monday',
-            '5': 'Friday to Tuesday',
-            '6': 'Saturday to Wednesday',
-            '7': 'Sunday to Thursday'
-        };
-
         const shiftOptionStringMap = {
-            '1': '10am to 2pm and 3pm to 7pm',
-            '2': '11am to 3pm and 4pm to 8pm',
-            '3': '12pm to 4pm and 5pm to 9pm',
-            '4': '1pm to 5pm and 6pm to 10pm'
+            10: '10am to 2pm and 3pm to 7pm',
+            11: '11am to 3pm and 4pm to 8pm',
+            12: '12pm to 4pm and 5pm to 9pm',
+            13: '1pm to 5pm and 6pm to 10pm'
         };
 
-        console.log('fulltimesched', this.state.fullTimeSched);
-        var sched = this.state.fullTimeSched[0];
-        var dayOption = '';
-        var shiftOption = 0;
-        this.state.fullTimeSched.forEach(element => {
-            dayOption = element[0];
-            shiftOption = parseInt(element[1]) - 9;
+        console.log(this.state.fullTimeSched);
+        var dup = this.state.fullTimeSched;
+        console.log('ft', dup);
+        var toPrint = [
+            { value: '1', time: '' },
+            { value: '2', time: '' },
+            { value: '3', time: '' },
+            { value: '4', time: '' },
+            { value: '5', time: '' },
+            { value: '6', time: '' },
+            { value: '7', time: '' }
+        ];
+
+        dup.forEach(element => {
+            toPrint[parseInt(element[0]) - 1].time =
+                shiftOptionStringMap[parseInt(element[1])];
+            console.log('print', toPrint[parseInt(element[0]) - 1].time);
         });
-        console.log('sched', sched);
+
         return (
             <Table basic="very" celled>
                 <Table.Header>
                     <Table.Row>
-                        <Table.HeaderCell>5-Day option</Table.HeaderCell>
-                        <Table.HeaderCell>Shift option</Table.HeaderCell>
+                        <Table.HeaderCell>Day</Table.HeaderCell>
+                        <Table.HeaderCell>Time</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    <TableRow>
-                        <Table.Cell>{fiveDayStringMap[dayOption]}</Table.Cell>
-                        <Table.Cell>
-                            {shiftOptionStringMap[shiftOption.toString()]}
-                        </Table.Cell>
-                    </TableRow>
+                    {toPrint.map((item, index) => (
+                        <Table.Row key={index}>
+                            <Table.Cell>
+                                {dayStringMap[parseInt(item.value)]}
+                            </Table.Cell>
+                            <Table.Cell>{item.time}</Table.Cell>
+                        </Table.Row>
+                    ))}
                 </Table.Body>
             </Table>
         );
@@ -186,8 +186,12 @@ class ViewStats extends Component {
     render() {
         return (
             <Card style={{ width: '100%' }}>
-                {this.state.showPartTimeInfo && <PartTimeInfo salary = {this.state.salary}/>}
-                {this.state.showFullTimeInfo && <FullTimeInfo salary = {this.state.salary}/>}
+                {this.state.showPartTimeInfo && (
+                    <PartTimeInfo salary={this.state.salary} />
+                )}
+                {this.state.showFullTimeInfo && (
+                    <FullTimeInfo salary={this.state.salary} />
+                )}
                 <CardContent>
                     <CardHeader>Schedule</CardHeader>
                 </CardContent>

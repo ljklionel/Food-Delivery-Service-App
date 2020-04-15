@@ -99,8 +99,7 @@ CREATE TABLE DeliveryRiders (
 );
 
 CREATE TABLE PartTimers (
-    username VARCHAR(64) PRIMARY KEY REFERENCES DeliveryRiders ON DELETE CASCADE,
-    workHours INTEGER
+    username VARCHAR(64) PRIMARY KEY REFERENCES DeliveryRiders ON DELETE CASCADE
 );
 
 CREATE TABLE FullTimers (
@@ -209,7 +208,14 @@ INSERT INTO FDSManagers(username) VALUES ('man');
 -- \COPY Orders(orderid,paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/correctorder.csv' CSV HEADER;
 \COPY Orders(paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
 \COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
-
+\copy users from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/delivery_users.csv' DELIMITER ',' CSV HEADER;
+\copy fulltimeshifts from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time_shifts.csv' DELIMITER ',' CSV HEADER;
+\copy parttimeshifts from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time_shifts.csv' DELIMITER ',' CSV HEADER;
+\copy deliveryriders from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/delivery_riders.csv' DELIMITER ',' CSV HEADER;
+\copy fulltimers from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time.csv' DELIMITER ',' CSV HEADER;
+\copy parttimers from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time.csv' DELIMITER ',' CSV HEADER;
+\copy weeklyworksched from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/part_time_sched.csv' DELIMITER ',' CSV HEADER;
+\copy monthlyworksched from 'C:/Users/user/OneDrive/NUS/CS2102/FDS/Food-Delivery-Service-App/backend/csv/full_time_sched.csv' DELIMITER ',' CSV HEADER;
                           
 ------ TRIGGERS ------
 
@@ -250,9 +256,9 @@ check_total_hours_trigger()
 DECLARE
     totalHours INTEGER;
 BEGIN
-    SELECT PT.workHours INTO totalHours
-        FROM PartTimers PT
-        WHERE PT.username = NEW.username;
+    SELECT SUM(endHour - startHour) INTO totalHours
+        FROM WeeklyWorkSched 
+        WHERE username = NEW.username;
     IF totalHours > 48 THEN
         RAISE EXCEPTION '% cannot work for more than 48 hours', NEW.username;
     END IF;
@@ -289,51 +295,24 @@ CREATE OR REPLACE FUNCTION
 at_least_five_check()
     RETURNS TRIGGER AS $$
 DECLARE
-    ftNum INTEGER := 0;
+    ftNum INTEGER;
     ptNum INTEGER;
 BEGIN
     FOR i IN 1..7 LOOP
         FOR j IN 10..21 LOOP
-            -- Count the number of workers for that work day in full time schedule for old value
-            SELECT ftNum + COUNT(*) INTO ftNum
-                FROM MonthlyWorkSched MWS NATURAL JOIN FullTimeShifts FTS
-                WHERE i = MWS.workDay
-                AND j >= MWS.startHour
-                AND j <= MWS.endHour
-                AND j <> FTS.breakStart;
-            SELECT ftNum + COUNT(*) INTO ftNum
-                FROM MonthlyWorkSched MWS NATURAL JOIN FullTimeShifts FTS
-                WHERE (i+7-1)%8 = MWS.workDay
-                AND j >= MWS.startHour
-                AND j <= MWS.endHour
-                AND j <> FTS.breakStart;
-            SELECT ftNum + COUNT(*) INTO ftNum
-                FROM MonthlyWorkSched MWS NATURAL JOIN FullTimeShifts FTS
-                WHERE (i+7-2)%8 = MWS.workDay
-                AND j >= MWS.startHour
-                AND j <= MWS.endHour
-                AND j <> FTS.breakStart;
-            SELECT ftNum + COUNT(*) INTO ftNum
-                FROM MonthlyWorkSched MWS NATURAL JOIN FullTimeShifts FTS
-                WHERE (i+7-3)%8 = MWS.workDay
-                AND j >= MWS.startHour
-                AND j <= MWS.endHour
-                AND j <> FTS.breakStart;
-            SELECT ftNum + COUNT(*) INTO ftNum
-                FROM MonthlyWorkSched MWS NATURAL JOIN FullTimeShifts FTS
-                WHERE (i+7-4)%8 = MWS.workDay
-                AND j >= MWS.startHour
-                AND j <= MWS.endHour
-                AND j <> FTS.breakStart;
-            -- COunt the number of workers for that work day in part time schedule for old value
-            SELECT COUNT(*) INTO ptNum
+            -- Count the number of workers for that work day in part time schedule for old value
+            SELECT COUNT(*) INTO ftNum
                 FROM WeeklyWorkSched WWS
                 WHERE i = WWS.workDay
                 AND j >= WWS.startHour
-                AND j <= WWS.endHour;
-            -- if same workday, check for same timing. if both same, check if total count is less than 4.
-            IF ftNum + ptNum < 5 THEN
-                RAISE EXCEPTION 'There is less than 5 workers for this hour %', i;
+                AND j < WWS.endHour;
+            -- Count the number of workers for that work day in full time schedule for old value
+            SELECT COUNT(username) INTO ptNum
+                FROM MonthlyWorkSched MWS;
+            RAISE EXCEPTION 'There is less than 5 workers for this hour % on day % with fulltimers % and parttimers %', j, i, ptNum, ftNum;
+            -- check if after deleting ftNum + ptNum < 5
+            IF fNum + ptNum < 5 THEN
+                RAISE EXCEPTION 'There is less than 5 workers for this hour % on day % with fulltimers % and parttimers %', j, i, ftNum, ptNum;
             END IF;
         END LOOP;
     END LOOP;
