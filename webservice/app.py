@@ -660,24 +660,15 @@ def make_order():
         # Response have to include: orderID, riderUsername
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("BEGIN;")
-        # Update Orders first
-        cursor.execute("INSERT INTO Orders(paymentMethod, location, amtPayable, orderTime, riderUsername, customerUsername, rname) VALUES (%s, %s, %s, %s, %s, %s, %s);",
-                       (creditCard, location, round(totalPrice + fee - totalDiscount, 2), timeStamp, deliveryRider, customer, rname,))
-        cursor.execute("COMMIT;")
 
-        # Retrieve orderId from Orders
-        cursor = conn.cursor()
         cursor.execute(
             "SELECT max(orderid) from Orders")
-        # cursor.execute(
-        #     "SELECT orderid from Orders WHERE orderid >= all(SELECT orderid from Orders)")
-        # cursor.execute(
-        #     "SELECT orderid from Orders WHERE orderTime == %s AND riderUsername = %s and customerUsername = %s", (timeStamp, deliveryRider, customer))
-        orderId = cursor.fetchone()[0]
+        orderId = cursor.fetchone()[0] + 1
 
-        cursor = conn.cursor()
-        cursor.execute("BEGIN;")
+        # To make sure the constraint is not violated, we have to insert orders and contains in one transaction
+        cursor.execute("BEGIN TRANSACTION;")
+        cursor.execute("INSERT INTO Orders(paymentMethod, location, amtPayable, orderTime, riderUsername, customerUsername, rname) VALUES (%s, %s, %s, %s, %s, %s, %s);",
+                       (creditCard, location, round(totalPrice + fee - totalDiscount, 2), timeStamp, deliveryRider, customer, rname,))
         for fname in order:
             if order[fname] == 0:  # Quantity is 0
                 continue
@@ -719,16 +710,17 @@ def connectDeliveryRider():
     dayInNumber = convertDayToNumber(day)
 
     # Randomly select one
-    # cursor.execute("SELECT username FROM DeliveryRiders")
-    # totalResult = cursor.fetchone()
+    cursor.execute("SELECT username FROM DeliveryRiders")
+    totalResult = cursor.fetchone()
+    allDr = totalResult
 
     # Select according to schedule
-    cursor.execute("SELECT username FROM MonthlyWorkSched MWS natural join FullTimeShifts FTS WHERE MWS.workday = %s AND (%s < FTS.breakStart OR %s >= FTS.breakEnd) AND MWS.startHour <= %s AND MWS.endHour > %s", (dayInNumber, hour, hour, hour, hour))
-    fullTimers = cursor.fetchall()
-    cursor.execute("SELECT username FROM WeeklyWorkSched WWS natural join PartTimeShifts PTS WHERE WWS.workday = %s AND WWS.startHour <= %s AND WWS.endHour > %s", (dayInNumber, hour, hour))
-    partTimers = cursor.fetchall()
+    # cursor.execute("SELECT username FROM MonthlyWorkSched MWS natural join FullTimeShifts FTS WHERE MWS.workday = %s AND (%s < FTS.breakStart OR %s >= FTS.breakEnd) AND MWS.startHour <= %s AND MWS.endHour > %s", (dayInNumber, hour, hour, hour, hour))
+    # fullTimers = cursor.fetchall()
+    # cursor.execute("SELECT username FROM WeeklyWorkSched WWS natural join PartTimeShifts PTS WHERE WWS.workday = %s AND WWS.startHour <= %s AND WWS.endHour > %s", (dayInNumber, hour, hour))
+    # partTimers = cursor.fetchall()
 
-    allDr = fullTimers + partTimers
+    # allDr = fullTimers + partTimers
     if (len(allDr) != 0):
         selectedDeliveryRider = random.choice(allDr)
         return ({'deliveryRider': selectedDeliveryRider}, 200)
