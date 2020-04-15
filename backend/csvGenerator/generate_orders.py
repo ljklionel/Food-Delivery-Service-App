@@ -7,6 +7,7 @@ from random import randint
 from random import randrange
 import datetime
 
+
 def random_date(start, l):
     current = start
     while l >= 0:
@@ -15,6 +16,7 @@ def random_date(start, l):
         l -= 1
 
 customers = []
+customer_users = []
 sells = []
 full_timers = []
 full_time_shifts = []
@@ -26,9 +28,19 @@ restaurants = []
 locations = []
 timeArray = []
 
+f = open("../csv/customer_users.csv", "r")
+f1 = f.readlines()
+header = True
+for x in f1:
+    if header:
+        header = False
+        continue
+    c = x.rstrip().split(',')
+    customer_users.append(c)
+
 f = open("../csv/customer.csv", "r")
 f1 = f.readlines()
-header = True;
+header = True
 for x in f1:
     if header:
         header = False
@@ -38,14 +50,17 @@ for x in f1:
 
 f = open("../csv/sells.csv", "r")
 f1 = f.readlines()
-# Sells has no header for some reason
+header = True
 for x in f1:
+    if header:
+        header = False
+        continue
     c = x.rstrip().split(',')
     sells.append(c)
 
 f = open("../csv/restaurants.csv", "r")
 f1 = f.readlines()
-header = True;
+header = True
 for x in f1:
     if header:
         header = False
@@ -55,14 +70,14 @@ for x in f1:
 
 sellsDict = {}
 for x in sells:
-    if sellsDict.get(x[1]) is not None: # May be []
+    if sellsDict.get(x[1]) is not None:  # May be []
         sellsDict[x[1]].append(x[0] + "," + x[2] + "," + x[3] + "," + x[4])
     else:
         sellsDict[x[1]] = []
         sellsDict[x[1]].append(x[0] + "," + x[2] + "," + x[3] + "," + x[4])
 
 for x in restaurants:
-    if sellsDict.get(x[0]) is not None: # May be []
+    if sellsDict.get(x[0]) is not None:  # May be []
         sellsDict[x[0]].append(x[1])
     else:
         x = "read the string: rname from csv file"
@@ -70,7 +85,7 @@ for x in restaurants:
 
 f = open("../csv/full_time_sched.csv", "r")
 f1 = f.readlines()
-header = True;
+header = True
 for x in f1:
     if header:
         header = False
@@ -80,7 +95,7 @@ for x in f1:
 
 f = open("../csv/full_time_shifts.csv", "r")
 f1 = f.readlines()
-header = True;
+header = True
 for x in f1:
     if header:
         header = False
@@ -90,7 +105,7 @@ for x in f1:
 
 f = open("../csv/part_time_sched.csv", "r")
 f1 = f.readlines()
-header = True;
+header = True
 for x in f1:
     if header:
         header = False
@@ -100,7 +115,7 @@ for x in f1:
 
 f = open("../csv/part_time_shifts.csv", "r")
 f1 = f.readlines()
-header = True;
+header = True
 for x in f1:
     if header:
         header = False
@@ -128,25 +143,31 @@ for x in f1:
         continue
     locations.append(c)
 
-# print(locations)
-# print(full_time_shifts)
 
-startDate = datetime.datetime(2013, 9, 20, 16, 00) # time to be normalised from 4pm
+# time to be normalised from 4pm
+startDate = datetime.datetime(2013, 9, 20, 16, 00)
 # for x in random_date(startDate, 5):
 #     print(x.strftime("%d/%m/%y %H:%M"))
 
 start_date = datetime.date(2019, 4, 12)
-end_date = datetime.date(2020, 4, 12)
+end_date = datetime.date(
+    2020, datetime.datetime.now().month, datetime.datetime.now().day)
 time_between_dates = end_date - start_date
 days_between_dates = time_between_dates.days
 
+
 def nextTiming(hh, mm):
-    mm += randint(1, 5)
+    mm += randint(4, 11)
     if (mm >= 60):
         mm -= 60
         hh += 1
     return [hh, mm]
 
+def formatDigits(d):
+    if (d < 10):
+        return "0" + str(d)
+    else:
+        return str(d)
 
 def genSeconds():
     n = randint(0, 59)
@@ -171,20 +192,23 @@ def convertDayToNumber(day):
     if day == 'Sun':
         return '7'
 
+
 def generateRandomReview(fname):
     return fname + " is " + random.choice(adverbs)[0] + " " + random.choice(adjectives)[0]
+
 
 containsFoodCsv = []
 totalOrders = 120000
 
 # randomize time and sort them for orders
-for i in range(0, totalOrders + 1):
+j = 0
+while j < totalOrders+1:
     thisTime = []
     random_number_of_days = random.randrange(days_between_dates)
     ran_date = start_date + datetime.timedelta(days=random_number_of_days)
 
     startHour = 0  # To be filled in the one loop
-    for x in random_date(startDate, 0): # loop runs one time
+    for x in random_date(startDate, 0):  # loop runs one time
         startHour = x.hour
         [v1, v2] = nextTiming(x.hour, x.minute)
         [v3, v4] = nextTiming(v1, v2)
@@ -193,55 +217,46 @@ for i in range(0, totalOrders + 1):
         secs = genSeconds()
         timestamp = str(ran_date) + " " + \
             str(x.strftime("%H:%M")) + ":" + secs
-        departTime1 = str(ran_date) + " " + str(v1) + \
-            ":" + str(v2) + ":" + genSeconds()
-        arriveTime = str(ran_date) + " " + str(v3) + \
-            ":" + str(v4) + ":" + genSeconds()
-        departTime2 = str(ran_date) + " " + str(v5) + \
-            ":" + str(v6) + ":" + genSeconds()
-        deliveryTime = str(ran_date) + " " + str(v7) + \
-            ":" + str(v8) + ":" + genSeconds()
-        val = ran_date.year * 1000000 + ran_date.month * 10000 + ran_date.day * 100 + startHour * 1 + x.minute/100 + int(secs)/10000
-    thisTime = [timestamp, departTime1, arriveTime, departTime2, deliveryTime, val]
+        departTime1 = str(ran_date) + " " + formatDigits(v1) + \
+            ":" + formatDigits(v2) + ":" + genSeconds()
+        arriveTime = str(ran_date) + " " + formatDigits(v3) + \
+            ":" + formatDigits(v4) + ":" + genSeconds()
+        departTime2 = str(ran_date) + " " + formatDigits(v5) + \
+            ":" + formatDigits(v6) + ":" + genSeconds()
+        deliveryTime = str(ran_date) + " " + formatDigits(v7) + \
+            ":" + formatDigits(v8) + ":" + genSeconds()
+        val = ran_date.year * 1000000 + ran_date.month * 10000 + \
+            ran_date.day * 100 + startHour * 1 + x.minute/100 + int(secs)/10000
+    if ran_date.year == datetime.datetime.now().year and ran_date.month == datetime.datetime.now().month and ran_date.day == datetime.datetime.now().day \
+    and ran_date.hour > datetime.datetime.now().hour and (ran_date.hour == datetime.datetime.now().hour and ran_date.minute >= datetime.datetime.now().minute):
+        # in the future
+        continue
+
+    thisTime = [timestamp, departTime1,
+                arriveTime, departTime2, deliveryTime, val]
     timeArray.append(thisTime)
+    j += 1
+
 
 def sortingKey(x):
     return x[5]
+
 
 # sorted(timeArray, key=sortingKey(x))
 timeArray.sort(key=sortingKey)
 # print(timeArray)
 
 runningVariable = 1
-print("paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname")
+# print("paymentMethod,rating,location,amtPayable,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname")
 
-# for i in range(0, 3000):
+f_orders = open("../csv/orders.csv", "w+")
+f_orders.write("paymentMethod,rating,location,amtPayable,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname\n")
+
+# print("quantity,review,fname,orderid")
+for list in containsFoodCsv:
+    f_containsFood.write(','.join(list)+"\n")
+
 while runningVariable <= totalOrders:
-    # orderId
-    # orderId = i
-
-    # Get the time required
-    # random_number_of_days = random.randrange(days_between_dates)
-    # ran_date = start_date + datetime.timedelta(days=random_number_of_days)
-
-    # startHour = 0  # To be filled in the one loop
-    # for x in random_date(startDate, 0):
-    #     startHour = x.hour
-    #     [v1, v2] = nextTiming(x.hour, x.minute)
-    #     [v3, v4] = nextTiming(v1, v2)
-    #     [v5, v6] = nextTiming(v3, v4)
-    #     [v7, v8] = nextTiming(v5, v6)
-
-    #     timestamp = str(ran_date) + " " + \
-    #         str(x.strftime("%H:%M")) + ":" + genSeconds()
-    #     departTime1 = str(ran_date) + " " + str(v1) + \
-    #         ":" + str(v2) + ":" + genSeconds()
-    #     arriveTime = str(ran_date) + " " + str(v3) + \
-    #         ":" + str(v4) + ":" + genSeconds()
-    #     departTime2 = str(ran_date) + " " + str(v5) + \
-    #         ":" + str(v6) + ":" + genSeconds()
-    #     deliveryTime = str(ran_date) + " " + str(v7) + \
-    #         ":" + str(v8) + ":" + genSeconds()
     timestamp = timeArray[runningVariable][0]
     departTime1 = timeArray[runningVariable][1]
     arriveTime = timeArray[runningVariable][2]
@@ -249,7 +264,24 @@ while runningVariable <= totalOrders:
     deliveryTime = timeArray[runningVariable][4]
 
     # Customer
-    c = random.choice(customers)
+    customerNotFound = True # Customer needs to join before making an order
+    c = []
+    while customerNotFound:
+        randomIndex = randint(0, len(customers) - 1)
+        c = customers[randomIndex]
+        cJoinDate = customer_users[randomIndex][5]
+        joinDateInteger = ''.join(''.join(''.join(cJoinDate.split(' ')).split(':')).split('-'))
+        timestampInteger = ''.join(''.join(''.join(timestamp.split(' ')).split(':')).split('-'))
+        if (joinDateInteger > timestampInteger):
+            # print("fail")
+            # print(cJoinDate)
+            # print(timestamp)
+            continue
+        else:
+            # print("Pass, found customer")
+            break
+        # if (cJoinDate)
+
     rewardPoint = c[2]
     payment = c[1]
     customerName = c[0]
@@ -258,7 +290,8 @@ while runningVariable <= totalOrders:
     # Get delivery rider
     drNotSelected = True
     partTimeDrNotSelected = True
-    day = datetime.datetime(ran_date.year, ran_date.month, ran_date.day).strftime("%a")
+    day = datetime.datetime(ran_date.year, ran_date.month,
+                            ran_date.day).strftime("%a")
     dayInNumber = convertDayToNumber(day)
     correctShiftCheck = ""
     dr = ""
@@ -267,7 +300,8 @@ while runningVariable <= totalOrders:
 
     # Select full time & parttime driver
     while drNotSelected and partTimeDrNotSelected:
-        dice = randint(0, 4) # Choose partTime or Full time, Give more chance for part time to balance 
+        # Choose partTime or Full time, Give more chance for part time to balance
+        dice = randint(0, 4)
 
         if not dice:
             dr = random.choice(full_timers)
@@ -276,7 +310,7 @@ while runningVariable <= totalOrders:
                     for shifts in full_time_shifts:
                         if shifts[0] == dayInNumber and shifts[1] == dr[2] and shifts[2] == dr[3]:
                             # We found the correct shift
-                            if int(shifts[3]) <= startHour < int(shifts[4]):                            
+                            if int(shifts[3]) <= startHour < int(shifts[4]):
                                 x = 'dr is taking a break'
                             else:
                                 # dr is working, pick this dr
@@ -284,7 +318,7 @@ while runningVariable <= totalOrders:
                                 partTimeDr = "No Part Time"
                                 drNotSelected = False
                                 break
-        else: 
+        else:
             partTimeDr = random.choice(part_timers)
             if partTimeDr[1] == dayInNumber:
                 if int(partTimeDr[2]) <= startHour < int(partTimeDr[3]):
@@ -294,7 +328,7 @@ while runningVariable <= totalOrders:
 
     if drNotSelected:
         deliveryRider = partTimeDr
-    else: # partTimeDrNotSelected
+    else:  # partTimeDrNotSelected
         deliveryRider = dr
 
     # Select restaurants from Sells
@@ -302,91 +336,58 @@ while runningVariable <= totalOrders:
     originalList = sellsDict[restaurant]
     minSpend = originalList[-1]
     menu = list.copy(originalList)
-    menu.pop() # Remove minSpend, only for this iteration. Need to maintain the original menu
-    # print("Restaurant: ", restaurant, "\nMenu: ", menu, "\nMinSpend: ", minSpend)
-    
+    menu.pop()  # Remove minSpend, only for this iteration. Need to maintain the original menu
+
     multipleContainsFood = []
     fee = 0
     totalFood = 0
     for food in menu:
         # if totalFood == 4:
         #     break
-        dice = randint(0,5)
+        dice = randint(0, 5)
         if not dice:
             foodArray = food.split(',')
             foodName = foodArray[0]
-            dice2 = randint(0, 5) / 100 # percentage
-            amount = round(dice2 * int(foodArray[1])) # in integer
+            dice2 = randint(0, 5) / 100  # percentage
+            amount = round(dice2 * int(foodArray[1]))  # in integer
             if (amount == 0):
                 amount = randint(1, 3)
             totalPrice = amount * float(foodArray[3])
-            reviewdice = randint(0,6)
+            reviewdice = randint(0, 6)
             if not reviewdice:
                 review = generateRandomReview(foodArray[0])
             else:
                 review = ''
-            containsfood = [str(amount), review, foodName, str(runningVariable)]
+            containsfood = [str(amount), review, foodName,
+                            str(runningVariable)]
             multipleContainsFood.append(containsfood)
-            # print(containsfood)
             fee += totalPrice
             totalFood += 1
-    
+
+
     if (fee < float(minSpend)):
         continue
 
-    # print(multipleContainsFood)
-
     for containsfood in multipleContainsFood:
         containsFoodCsv.append(containsfood)
-    fee = round(fee * 1.2, 2) # 20% 
+    fee = round(fee * 1.2, 2)  # 20%
     # containsfood = [qty, review, fname, orderid]
     # order = [str(orderId), payment, str(randint(1, 5)), location, str(fee), timestamp, departTime1, arriveTime, departTime2, deliveryTime, deliveryRider[0], customerName, restaurant]
 
-    
-    order = [payment, str(randint(1, 5)), location, str(fee), timestamp, departTime1, arriveTime, departTime2, deliveryTime, deliveryRider[0], customerName, restaurant]
-    print(','.join(order))
+    order = [payment, str(randint(1, 5)), location, str(fee), timestamp, departTime1,
+             arriveTime, departTime2, deliveryTime, deliveryRider[0], customerName, restaurant]
+    # print(','.join(order))
+    f_orders.write(','.join(order)+"\n")
     runningVariable += 1
 
-# orderid,paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname
-# quantity,review,fname,orderid
-# username,creditCard,rewardPoint
-# username,hashedPassword,phoneNumber,firstName,lastName,joindate
-# 
-print("END OF ORDERS")
+# print("END OF ORDERS")
 
-print("quantity,review,fname,orderid")
+f_containsFood = open("../csv/containsfood.csv", "w+")
+f_containsFood.write("quantity,review,fname,orderid\n")
+
+# print("quantity,review,fname,orderid")
 for list in containsFoodCsv:
-    print(','.join(list))
+    f_containsFood.write(','.join(list)+"\n")
+    # print(','.join(list))
 # print('\n'.join(containsFoodCsv))
-
-    # order = [orderId, payment, randint(0, 5), fee, timeStamp, departTime1, arriveTime, departTime2, deliveryTime, riderUsername, customerName, rname]
-
-    # CREATE TABLE Orders (
-# 	orderid SERIAL PRIMARY KEY,
-# 	paymentMethod VARCHAR(32) NOT NULL,
-
-#     -- Delivers combined
-#     rating INTEGER CHECK (rating in (1,2,3,4,5)),
-# 	location VARCHAR(32) NOT NULL REFERENCES Locations,
-# 	fee FLOAT NOT NULL,
-# 	orderTime TIMESTAMP,
-# 	departTime1 TIMESTAMP,
-# 	arriveTime TIMESTAMP,
-# 	departTime2 TIMESTAMP,
-# 	deliveryTime TIMESTAMP,
-#     riderUsername VARCHAR(64) NOT NULL REFERENCES DeliveryRiders,
-
-#     -- Makes combined
-#     customerUsername VARCHAR(64) NOT NULL REFERENCES Customers,
-
-#     -- From combined
-#     rname VARCHAR(64) NOT NULL REFERENCES Restaurants
-# );
-
-# CREATE TABLE ContainsFood (
-# 	quantity INTEGER NOT NULL,
-# 	review VARCHAR(500),
-#     fname VARCHAR(64) REFERENCES Food,
-#     orderid INTEGER REFERENCES Orders,
-#     PRIMARY KEY (fname, orderid)
-# );
+# order = [orderId, payment, randint(0, 5), fee, timeStamp, departTime1, arriveTime, departTime2, deliveryTime, riderUsername, customerName, rname]
