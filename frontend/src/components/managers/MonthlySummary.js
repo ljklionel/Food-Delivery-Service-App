@@ -34,29 +34,24 @@ class MonthlySummary extends Component {
         return (
             <Statistic.Group horizontal>
                 <Statistic>
-				<Statistic.Label>Month: </Statistic.Label>
-					<Statistic.Value>{this.monthNames[this.state.contents['month'] -1]}
+					<Statistic.Value>{this.monthNames[this.state.contents['month'] -1]} {this.state.contents.length == 0? 0 :this.state.contents['year']}
 					</Statistic.Value>
                 </Statistic>
 				<Statistic>
-				<Statistic.Label>Year: </Statistic.Label>
-					<Statistic.Value>{this.state.contents.length === 0? 0 :this.state.contents['year']}
+					<Statistic.Value>{this.state.contents.length == 0? 0 :this.state.contents['all_orders']}
 					</Statistic.Value>
-                </Statistic>
-				<Statistic>
-					<Statistic.Label>Total orders: </Statistic.Label>
-					<Statistic.Value>{this.state.contents.length === 0? 0 :this.state.contents['all_orders']}
-					</Statistic.Value>
+					<Statistic.Label>Orders</Statistic.Label>
                 </Statistic>
                 <Statistic>
-				<Statistic.Label>Total Orders' Costs: </Statistic.Label>
-                <Statistic.Value>  ${(this.state.contents.length === 0 ? 0 : this.state.contents['all_orders_costs'] === null) ?
-                                0 : this.state.monthlySummary['all_orders_costs'].toFixed(1)}</Statistic.Value>
+                <Statistic.Value>  ${(this.state.contents.length == 0 ? 0 : this.state.contents['all_orders_costs'] == null) ?
+                                0 : this.state.contents['all_orders_costs'].toFixed(1)}</Statistic.Value>
+
+				<Statistic.Label>Spent</Statistic.Label>
                 </Statistic>
 				<Statistic>
-					<Statistic.Label>Total new customers: </Statistic.Label>
-					<Statistic.Value>{this.state.contents.length === 0? 0 :this.state.contents['all_new_customers']}
+					<Statistic.Value>{this.state.contents.length == 0? 0 :this.state.contents['all_new_customers']}
 					</Statistic.Value>
+					<Statistic.Label>New customers</Statistic.Label>
                 </Statistic>
             </Statistic.Group>
 		);

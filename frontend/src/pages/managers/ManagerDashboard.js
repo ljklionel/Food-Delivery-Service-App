@@ -59,7 +59,7 @@ class ManagerDashboard extends React.Component {
         <div>
           <Header textAlign='left' style={{fontSize:'60px', paddingLeft:'5%'}}>{this.state.currentCustomer}</Header>
           <br/>
-            <CustomerSummary customer={this.state.currentcustomer}/>
+            <CustomerSummary customer={this.state.currentCustomer}/>
         </div>
       );
     }
@@ -129,7 +129,7 @@ class ManagerDashboard extends React.Component {
         <Header style={headerStyle}><i>Select to View</i></Header>
         <br/>
         <Button primary onClick={this.showAll}>
-          SHOW ALL
+          HOME
         </Button>
         <br/>
         <br/>

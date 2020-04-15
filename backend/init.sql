@@ -150,7 +150,7 @@ CREATE TABLE Customers (
 );
 
 CREATE TABLE Locations (
-    location VARCHAR(32) PRIMARY KEY
+    location VARCHAR(256) PRIMARY KEY
 );
 
 CREATE TABLE Orders (
@@ -209,7 +209,6 @@ INSERT INTO FDSManagers(username) VALUES ('man');
 -- \COPY Orders(orderid,paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/correctorder.csv' CSV HEADER;
 \COPY Orders(paymentMethod,rating,location,fee,orderTime,departTime1,arriveTime,departTime2,deliveryTime,riderUsername,customerUsername,rname) FROM './csv/orders.csv' CSV HEADER;
 \COPY ContainsFood(quantity,review,fname,orderid) FROM './csv/containsfood.csv' CSV HEADER;
-
                           
 ------ TRIGGERS ------
 

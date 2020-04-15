@@ -16,36 +16,45 @@ bcrypt = Bcrypt()
 # Choose one for loop to run, comment the other
 
 customers = []
-f = open("./customernames.txt", "r")
+checkDup = []
+f = open("./names_2000.txt", "r")
 f1 = f.readlines()
 for x in f1:
     c = x.rstrip().split(' ')
     if c in customers:
-        c[0] = c[0] + "n"
-        print(c)
+        c[0] = c[0] + "a"
+        if c in customers:
+                c[0] = c[0] + "e"
+                # print("Add e", c)
+                if c in customers:
+                        c[0] = c[0] + "i"
+                        # print("Add i", c)
+        # print(c)
     customers.append(c)
 
 print(customers)
 
 runningVariable = 1
-for name in customers:
-        username = name[0]
-        firstName = "customer"
-        lastName = "customer"
-        phoneNumber = runningVariable * 123456
-        password = username
-        now = str(datetime.now()).split(' ')[0]
-        hash = bcrypt.generate_password_hash(password).decode()
-        # print(hash)
-        user = [str(username), str(hash), str(firstName), str(lastName), str(phoneNumber), str(now)]
-        print(','.join(user))
-        runningVariable += 1
+# for name in customers:
+#         username = name[0]
+#         firstName = "customer"
+#         lastName = "customer"
+#         phoneNumber = runningVariable * 123456
+#         password = username
+#         now = str(datetime.now()).split(' ')[0]
+#         hash = bcrypt.generate_password_hash(password).decode()
+#         # print(hash)
+#         user = [str(username), str(hash), str(firstName), str(lastName), str(phoneNumber), str(now)]
+#         print(','.join(user))
+#         runningVariable += 1
 
 print("End of users")
 
-for name in customers:
-        username = name[0]
-        payment = ['Cash', 'Mastercard', 'Visa']
-        selectedPayment = random.choice(payment)
-        rewardpoint = randint(0,2000)
-        print(username + ',' + selectedPayment + ',' +str(rewardpoint))
+# for name in customers:
+#         username = name[0]
+#         payment = ['Cash', 'Mastercard', 'Visa']
+#         selectedPayment = random.choice(payment)
+#         rewardpoint = randint(0,3000)
+#         print(username + ',' + selectedPayment + ',' +str(rewardpoint))
+
+# print(runningVariable)

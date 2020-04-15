@@ -179,8 +179,7 @@ def get_restaurant_items():
 @app.route("/restaurant_orders")
 @login_required
 def get_restaurant_orders():
-    rname, limit, offset = request.args.get(
-        'restaurant'), request.args.get('limit'), request.args.get('offset')
+    rname, limit, offset = request.args.get('restaurant'), request.args.get('limit'), request.args.get('offset')
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT fname, quantity, orderTime FROM Orders NATURAL JOIN ContainsFood " +
@@ -202,21 +201,18 @@ def get_restaurant_summary():
     now = datetime.now()
     year, month = now.year, now.month
     start_time = datetime(year, month, 1)
-    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
     conn = get_db()
-    # number of completed orders
+    # number of completed orders and total cost of all completed orders
     cursor = conn.cursor()
-    cursor.execute("SELECT count(*) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
+    cursor.execute("SELECT count(*), sum(fee) * 10/12 FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
                    (rname, start_time, end_time))
-    completed_orders = cursor.fetchone()[0]
-    # total cost of all completed orders
-    cursor = conn.cursor()
-    cursor.execute("SELECT sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
-                   (rname, start_time, end_time))
-    total_cost = cursor.fetchone()[0]
+    res = cursor.fetchone()
+    completed_orders = res[0]
+    total_cost = res[1]
     # top 5 favorite food items
     cursor = conn.cursor()
-    cursor.execute('SELECT fname, sum(quantity) FROM Orders NATURAL JOIN ContainsFood WHERE rname = %s AND deliveryTime BETWEEN %s AND %s GROUP BY fname ORDER BY sum(quantity) DESC LIMIT 5',
+    cursor.execute('SELECT fname, sum(quantity) FROM Orders O JOIN ContainsFood C ON rname = %s AND deliveryTime BETWEEN %s AND %s AND O.orderid = C.orderid GROUP BY fname ORDER BY sum(quantity) DESC LIMIT 5',
                    (rname, start_time, end_time))
     top_five = cursor.fetchall()
 
@@ -230,37 +226,32 @@ def get_restaurant_summary():
 def get_all_restaurant_summary():
     rname = request.args.get('restaurant')
 
-    now = datetime.now()
-    year, month = now.year, now.month
-    start_time = datetime(year, month, 1)
+    result = {}
     conn = get_db()
-    result = []
-    found = False
-    for i in range(24, -1, -1):  # show at most the last 2 years of summary
-        cur_start_time = start_time - relativedelta(months=i)
-        cur_end_time = cur_start_time + relativedelta(months=1) - relativedelta(seconds=1)
-        # number of completed orders
-        cursor = conn.cursor()
-        cursor.execute("SELECT count(*) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
-                       (rname, cur_start_time, cur_end_time))
-        completed_orders = cursor.fetchone()[0]
-        if not found and completed_orders == 0 and i != 0:
-            continue
-        found = True
-        # total cost of all completed orders
-        cursor = conn.cursor()
-        cursor.execute("SELECT sum(fee) FROM Orders WHERE rname = %s AND deliveryTime BETWEEN %s AND %s",
-                       (rname, cur_start_time, cur_end_time))
-        total_cost = cursor.fetchone()[0]
-        # top 5 favorite food items
-        cursor = conn.cursor()
-        cursor.execute('SELECT fname, sum(quantity) FROM Orders NATURAL JOIN ContainsFood WHERE rname = %s AND deliveryTime BETWEEN %s AND %s GROUP BY fname ORDER BY sum(quantity) DESC LIMIT 5',
-                       (rname, cur_start_time, cur_end_time))
-        top_five = cursor.fetchall()
-        res = {'year': cur_start_time.year, 'month': cur_start_time.month,
-               'completed_orders': completed_orders, 'total_cost': total_cost, 'top_five': top_five}
-        result.append(res)
-    result.reverse()
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT count(*), sum(fee) * 10/12, extract(year from deliveryTime), extract(mon from deliveryTime) " +
+        "FROM Orders " + 
+        "WHERE rname = %s " + 
+        "GROUP BY 3,4 "
+        "ORDER BY 3 DESC,4 DESC", (rname,))
+    result['orders_and_fee'] = cursor.fetchall()
+
+    cursor = conn.cursor()
+    cursor.execute(
+        "with Ranked as (" +
+            "SELECT *, rank() OVER (" + 
+                "PARTITION BY year, mon " +
+                "ORDER BY quantity DESC"
+            ") FROM (" +
+                "SELECT sum(quantity) as quantity, fname, extract(year from deliveryTime) as year, extract(month from deliveryTime) as mon " +
+                "FROM Orders NATURAL JOIN ContainsFood " +
+                "WHERE rname = %s "
+                "GROUP BY extract(year from deliveryTime), extract(month from deliveryTime), fname"
+            ") as FoodQuantities " + 
+        ") SELECT * FROM Ranked WHERE rank <= 5 ORDER BY year DESC, mon DESC, rank", (rname,))
+    result['top_five'] = cursor.fetchall()
+
     return ({'result': result}, 200)
 
 
@@ -272,7 +263,7 @@ def get_ongoing_restaurant_promo():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT promoId, endDate, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname " + 
-        "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) WHERE P.rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' " +
+        "AND deliveryTime BETWEEN startDate AND endDate WHERE P.rname = %s and %s BETWEEN startDate AND endDate + INTERVAL '1 day' " +
                    "GROUP BY promoId, endDate ORDER BY endDate;", (rname, now))
     result = cursor.fetchall()
     return ({'result': result}, 200)
@@ -285,7 +276,7 @@ def get_restaurant_promo():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT promoId, description, startDate, endDate, discount, count(deliveryTime) FROM Promotions P LEFT JOIN Orders O ON P.rname = O.rname " + 
-        "AND (deliveryTime IS NULL OR deliveryTime BETWEEN startDate AND endDate) " +
+        "AND deliveryTime BETWEEN startDate AND endDate " +
         "WHERE P.rname = %s GROUP BY promoId, P.rname ORDER BY startDate DESC, endDate DESC;", (rname,))
     result = cursor.fetchall()
     
@@ -741,7 +732,7 @@ def get_locations():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT location FROM Locations WHERE location ILIKE '%s%%';" % keyword)
+        "SELECT location FROM Locations WHERE location ILIKE '%s%%' ORDER BY location ASC;" % keyword)
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
@@ -910,7 +901,7 @@ def filterCategories(allFood, foodCategories):
 def get_all_customers():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT username FROM Customers;")
+    cursor.execute("SELECT username FROM Customers ORDER BY username ASC;")
     result = cursor.fetchall()
     return ({'result': result}, 200)
 
@@ -922,7 +913,7 @@ def get_customers():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT username FROM Customers WHERE username ILIKE '%s%%';" % keyword)
+        "SELECT username FROM Customers WHERE username ILIKE '%s%%' ORDER BY username ASC;" % keyword)
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
@@ -934,7 +925,7 @@ def get_riders():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT username FROM DeliveryRiders WHERE username ILIKE '%s%%';" % keyword)
+        "SELECT username FROM DeliveryRiders WHERE username ILIKE '%s%%' ORDER BY username ASC;" % keyword)
     result = cursor.fetchmany(10)
     return ({'result': result}, 200)
 
@@ -945,7 +936,7 @@ def get_all_customer_summary():  # TODO new customer of the month -yuting
     now = datetime.now()
     year, month = now.year, now.month
     start_time = datetime(year, month, 1)
-    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
     conn = get_db()
     result = []
     for i in range(0, 25):  # show at most the last 2 years of summary
@@ -981,7 +972,7 @@ def get_customer_summary():
     now = datetime.now()
     year, month = now.year, now.month
     start_time = datetime(year, month, 1)
-    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
     conn = get_db()
     result = []
     for i in range(0, 25):  # show at most the last 2 years of summary
@@ -989,12 +980,12 @@ def get_customer_summary():
         cur_end_time = end_time - relativedelta(months=i)
         # of customer's orders
         cursor = conn.cursor()
-        cursor.execute("SELECT count(*) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s",
+        cursor.execute("SELECT count(*) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s ;",
                        (username, cur_start_time, cur_end_time))
         customer_orders = cursor.fetchone()[0]
         # total cost of all of customer's orders
         cursor = conn.cursor()
-        cursor.execute("SELECT sum(fee) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s",
+        cursor.execute("SELECT sum(fee) from Orders WHERE customerUsername = %s AND deliveryTime BETWEEN %s AND %s ;",
                        (username, cur_start_time, cur_end_time))
         customer_orders_costs = cursor.fetchone()[0]
         res = {'year': cur_start_time.year, 'month': cur_start_time.month,
@@ -1006,6 +997,7 @@ def get_customer_summary():
 @app.route("/current_location_summary")
 def get_location_summary():
     location = request.args.get('location')
+    print(location)
     now = datetime.now()
     start_time = datetime(now.year, now.month, now.day, now.hour)
     end_time = start_time + timedelta(hours=1) - timedelta(seconds=1)
@@ -1019,6 +1011,7 @@ def get_location_summary():
         cursor.execute("SELECT count(*) FROM Orders WHERE location = %s AND orderTime BETWEEN %s AND %s;",
                        (location, cur_start_time, cur_end_time))
         location_orders = cursor.fetchone()[0]
+        print(location_orders)
         res = {'day': cur_start_time, 'hour': cur_start_time.hour,
                'location_orders': location_orders}
         result.append(res)
@@ -1027,11 +1020,11 @@ def get_location_summary():
 
 @app.route("/current_rider_summary")
 def get_rider_summary():
-    username = request.args.get('username')
+    username = request.args.get('rider')
     now = datetime.now()
     year, month = now.year, now.month
     start_time = datetime(year, month, 1)
-    end_time = addMonths(start_time, 1) - timedelta(seconds=1)
+    end_time = start_time + relativedelta(months=1) - relativedelta(seconds=1)
     conn = get_db()
     result = []
     for i in range(0, 25):  # show at most the last 2 years of summary
@@ -1047,7 +1040,7 @@ def get_rider_summary():
         cursor.execute(
             "SELECT sum(endHour - startHour) FROM MonthlyWorkSched WHERE username = %s;", (username,))
         hours_worked = cursor.fetchone()[0]
-        if not hours_worked:
+        if hours_worked is None:
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT sum(endHour - startHour) FROM WeeklyWorkSched WHERE username = %s;", (username,))
@@ -1069,7 +1062,7 @@ def get_rider_summary():
         num_rating = cursor.fetchone()[0]
         # average rating
         cursor = conn.cursor()
-        cursor.execute("SELECT avg(rating) FROM Orders where riderUsername = %s AND deliveryTime BETWEEN %s AND %s",
+        cursor.execute("SELECT sum(rating)/count(rating) FROM Orders where riderUsername = %s AND deliveryTime BETWEEN %s AND %s",
                        (username, cur_start_time, cur_end_time))
         avg_rating = cursor.fetchone()[0]
 

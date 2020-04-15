@@ -48,10 +48,12 @@ class ViewPromoModal extends Component {
                 <Table.Row>
                     <Table.HeaderCell>ID</Table.HeaderCell>
                     <Table.HeaderCell>Description</Table.HeaderCell>
-                    <Table.HeaderCell>Orders</Table.HeaderCell>
+                    <Table.HeaderCell>Orders/Day</Table.HeaderCell>
                     <Table.HeaderCell>Discount</Table.HeaderCell>
                     <Table.HeaderCell>Start</Table.HeaderCell>
                     <Table.HeaderCell>End</Table.HeaderCell>
+                    <Table.HeaderCell>Duration</Table.HeaderCell>
+
                 </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -64,7 +66,7 @@ class ViewPromoModal extends Component {
                             {item[1]}
                         </Table.Cell>
                         <Table.Cell>
-                            {item[5]}
+                            {(item[5]/((new Date(item[3])-new Date(item[2]))/(1000 * 60 * 60 * 24))).toFixed(2)}
                         </Table.Cell>
                         <Table.Cell>
                             {item[4]}%
@@ -74,6 +76,9 @@ class ViewPromoModal extends Component {
                         </Table.Cell>
                         <Table.Cell>
                             {item[3].substring(5,16)}
+                        </Table.Cell>
+                        <Table.Cell>
+                            {(new Date(item[3])-new Date(item[2]))/(1000 * 60 * 60 * 24)} {(new Date(item[3])-new Date(item[2]))/(1000 * 60 * 60 * 24) == 1 ? 'day' : 'days'}
                         </Table.Cell>
                     </Table.Row>
                 ))}
