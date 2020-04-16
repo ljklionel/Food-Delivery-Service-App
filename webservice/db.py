@@ -7,7 +7,6 @@ def get_db():
     return conn # example usage: 'conn.cursor().execute("SELECT * from abc;")'
     
 
-
 def close_db(conn): 
     if conn:
         conn.close()
